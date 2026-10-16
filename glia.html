@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Glial Cells</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a cell-level diorama on the NYC map (CNS park left, PNS sea right); SOMA notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 80% 70% at 40% 35%,#2a1d4a 0%,#140f24 60%,#0b0912 100%)}
+.plabel b{color:var(--chalk)}
+.plabel.big{font-size:14px}
+#hudCanvas[hidden]{display:none}
+.soma{display:flex;flex-direction:column;gap:7px}
+.soma-row{display:grid;grid-template-columns:48px minmax(0,1fr);gap:12px;align-items:center;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.soma-row:hover,.soma-row:focus-visible{border-color:var(--c)}
+.soma-row .L{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;color:var(--c);text-align:center}
+.soma-row b{font-family:var(--f-display);font-size:17px}
+.soma-row .where{display:inline-block;margin-left:8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:0 5px;vertical-align:2px}
+.soma-row .mem{display:block;color:var(--chalk);font-size:13px;margin-top:2px}
+.mimgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mim{all:unset;cursor:pointer;position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);aspect-ratio:4/3;background:#f4ead2}
+.mim img{width:100%;height:100%;object-fit:cover;display:block}
+.mim span{position:absolute;left:6px;bottom:6px;background:rgba(11,14,20,.85);border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700}
+.mim:hover,.mim:focus-visible{outline:2px solid var(--chalk)}
+.kids{display:flex;flex-direction:column;gap:7px}
+.kids .mbtn .mn{width:14px;height:14px}
+.figure.narrow img{max-height:280px;object-fit:contain}
+.figure img{background:#f4ead2}
+.plabel.below{transform:translate(-50%,40%)}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the scene…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Glial cells</h1>
+  <div class="brand-sub">SOMA: Schwann, Oligos, Microglia, Astrocytes</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle">Glial cells</div>
+  <canvas id="hudCanvas" width="900" height="240" aria-label="Live view of the current demo"></canvas>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<div id="lightbox" hidden><img alt="Slide image, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Glia (from Professor Freed's Glia deck) ============ */
+const NODES = [
+  { id:'glia', title:'Glial cells', short:'Overview', color:'#f4d27a', mn:'SOMA: Schwann, Oligodendrocytes, Microglia, Astrocytes',
+    lead:'Neurons do the signaling, but they can’t do it alone. Glial cells insulate axons, clean up damage, guard the blood supply and keep the chemistry around neurons just right.',
+    img:['img/glia/glia-art.jpg','Glia surrounding neurons. From your slides.'],
+    demos:[['Fire the neuron','fire']],
+    points:[
+      '“Glia” comes from the Greek for <b>glue</b> ([[glue|why]]). Scientists first thought glia just held neurons together. They do much more.',
+      'Your brain has about 86 billion neurons and roughly as many glial cells, not ten times as many as older textbooks claimed ([[count|how we know]]).',
+      'Remember the four main types with <b>SOMA</b>: <b>S</b>chwann cells, <b>O</b>ligodendrocytes, <b>M</b>icroglia, <b>A</b>strocytes.',
+      'On this map, the left side is the <b>CNS</b> (Central Park) and the right side is the <b>PNS</b> (Purple Sea). Schwann cells are the only one of the four that lives in the PNS.'] },
+
+  { id:'schwann', letter:'S', title:'Schwann cells', short:'Schwann', color:'#e9e4ff', where:'PNS',
+    mn:'Swans on the Purple Sea. “Schwann is selfish”: one cell, one axon.',
+    lead:'Schwann cells make the myelin around axons in the peripheral nervous system. Each one wraps a single segment of a single axon, like a jelly roll.',
+    img:['img/glia/swans.jpg','Swans (Schwann) on the Purple Sea (PNS). From your slides.'],
+    demos:[['Wrap the axon in myelin','wrap'],['Cut the nerve and watch it regrow','regrow'],['Guillain-Barré: attack PNS myelin','gbs']],
+    points:[
+      'Location: the <b>PNS</b>, every nerve outside the brain and spinal cord.',
+      'Myelin: each Schwann cell wraps <b>one segment of one axon</b>. The gaps between segments are the nodes of Ranvier.',
+      'Repair: after a nerve is cut, Schwann cells clear debris and line up into tunnels ([[bungner|bands of Büngner]]) that guide the axon as it regrows. They also release growth factors such as nerve growth factor (NGF).',
+      'They wrap unmyelinated axons too, tucking several small ones into their cytoplasm for support.',
+      'In [[gbs|Guillain-Barré syndrome]], the immune system attacks peripheral nerves, often the myelin made by Schwann cells.'],
+    extra:[['img/glia/schwann-diagram.jpg','Schwann cells along a peripheral axon, and satellite cells around the neuron’s cell body. From your slides.']],
+    cases:[['trepal','The poisoned Coca-Cola case']] },
+
+  { id:'oligo', letter:'O', title:'Oligodendrocytes', short:'Oligos', color:'#ff9ec0', where:'CNS',
+    mn:'Octopuses in the Central Park trees. “Oligo is an octopus”: many arms, many axons.',
+    lead:'Oligodendrocytes make the myelin in the central nervous system. One cell reaches out with many arms and wraps segments of many different axons.',
+    img:['img/glia/octopus.jpg','Octopuses (oligodendrocytes) in the Central Park trees (CNS). From your slides.'],
+    demos:[['Light up its arms','arms'],['Multiple sclerosis: attack CNS myelin','ms']],
+    points:[
+      'Location: the <b>CNS</b>, the brain and spinal cord.',
+      'One oligodendrocyte can myelinate segments of roughly 10–50 axons. Compare: Schwann is selfish (one axon), Oligo is an octopus (many).',
+      'They also feed axons and keep them healthy. Losing that support can make axons degenerate.',
+      'New oligodendrocytes come from oligodendrocyte precursor cells ([[opc|OPCs]]), which can restore lost myelin (remyelination), though repair is often incomplete.',
+      'In multiple sclerosis (MS), the immune system attacks CNS myelin and oligodendrocytes ([[ms|more]]).'],
+    extra:[['img/glia/oligo-arms.jpg','One oligodendrocyte, many axons. From your slides.']],
+    cases:[['sarin','The Tokyo subway sarin attack'],['dai','Side quest: diffuse axonal injury']] },
+
+  { id:'micro', letter:'M', title:'Microglia', short:'Microglia', color:'#b58bff', where:'CNS',
+    mn:'Microcleaner = Microglia: the brain’s cleaning crew.',
+    lead:'Microglia are the immune cells of the CNS. Their branches constantly sweep the brain, and when something is damaged they move in, clean up and call for help.',
+    img:['img/glia/microcleaner.jpg','Microcleaner = Microglia. From your slides.'],
+    demos:[['Injure a neuron','injure'],['Prune a synapse','prune']],
+    points:[
+      'Surveillance: even at rest, their branches move constantly, checking their patch of brain every few hours.',
+      'Phagocytosis: they engulf and digest microbes, dead cells and debris.',
+      'They release signals (cytokines) that ramp inflammation up or calm it down ([[inflam|neuroinflammation]]).',
+      'Synaptic pruning: they remove extra synapses, helping refine brain circuits during development and adulthood.',
+      'They don’t “see” damage. They follow chemical trails such as ATP leaking from hurt cells ([[chemotaxis|chemotaxis]]). It looks like a chase, but no thinking is involved.'],
+    extra:[['img/glia/microglia-reactive.jpg','Reactive microglia get larger as they swallow debris. From your slides (Wikipedia).']],
+    cases:[['hernandez','Repeated head injury and CTE']] },
+
+  { id:'astro', letter:'A', title:'Astrocytes', short:'Astrocytes', color:'#ffd166', where:'CNS',
+    mn:'Astro = stars. Stars around the neck: astrocytes help keep up the blood–brain barrier.',
+    lead:'Star-shaped cells that run the neighborhood around neurons: they wrap blood vessels, feed neurons, mop up extra neurotransmitter and patch up damage.',
+    img:['img/glia/astro-stars.jpg','Astrocytes = stars. The real barrier is in the brain’s tiny blood vessels. From your slides.'],
+    demos:[['Spill glutamate at the synapse','glu'],['Turn astrocytes off','astroOff'],['Test the blood–brain barrier','bbb']],
+    points:[
+      'Blood–brain barrier: their end-feet wrap the brain’s capillaries and help maintain the barrier ([[bbb|how it works]]).',
+      'Blood flow: they help send more blood to busy brain areas.',
+      'Cleanup: they remove extra glutamate and potassium. Without them, glutamate builds up and can kill neurons ([[excito|excitotoxicity]]).',
+      'Energy: they store glycogen and can pass lactate to neurons as fuel.',
+      'Synapses: they wrap synapses and help regulate communication and plasticity.',
+      'Injury: they become reactive and can form a glial scar ([[scar|astrogliosis]]). The scar walls off damage but can block axons from regrowing.',
+      'Astrocytes are a major glial population in the CNS. Whether they’re the most abundant depends on the brain region and how you count.'],
+    extra:[['img/glia/bbb.jpg','Astrocyte end-feet on the brain’s blood vessels. From your slides.'],['img/glia/astro-micro.jpg','Astrocytes under the microscope (stained red). From your slides (Wikipedia).']],
+    cases:[['whitman','The UT tower shooting and the brain tumor'],['tox','Drug in the blood, but in the brain?']] },
+
+  { id:'myelin', title:'Myelin: deeper dive', short:'Myelin', color:'#7ad7ff',
+    mn:'Dominoes (unmyelinated) vs. skipping stone (myelinated). MS = “Myelin Slaughter.”',
+    lead:'Myelin speeds signals by letting the action potential jump from node to node. That’s called saltatory conduction, from the Latin for “to dance” or “leap.”',
+    img:['img/glia/myelin.jpg','Myelinated vs. unmyelinated axons. From your slides.'],
+    demos:[['Race: unmyelinated vs. myelinated','race'],['Multiple sclerosis (CNS)','ms'],['Guillain-Barré (PNS)','gbs'],['Healthy again','heal']],
+    points:[
+      '<b>Unmyelinated</b> axon = dominoes: every bit of membrane has to fire in turn. About 0.5–2 m/s.',
+      '<b>Myelinated</b> axon = a skipping stone: the action potential fires only at the nodes of Ranvier, which are packed with Na⁺ channels. Large myelinated axons reach about 100–120 m/s.',
+      'Myelin insulates: less current leaks out, so it spreads farther under the myelin to the next node.',
+      'Fast signals matter for things like balance: your posture muscles need to react in real time.',
+      '<b>MS → CNS → oligodendrocytes attacked.</b> <b>Guillain-Barré → PNS → Schwann cells attacked.</b>',
+      'MS: an autoimmune attack on CNS myelin. Risk factors include genes, Epstein-Barr virus infection, low vitamin D (MS is more common farther from the equator), and smoking ([[ms|more]]).',
+      'Guillain-Barré: rapid weakness that usually starts in the legs and climbs, often days or weeks after an infection ([[gbs|more]]).'],
+    extra:[['img/glia/ms-map.jpg','MS is more common farther from the equator. This is a correlation, not a complete explanation. From your slides (Wikipedia).'],['img/glia/gbs-patterns.jpg','Guillain-Barré comes in several patterns. From your slides (Wikipedia).']],
+    cases:[['drunk','“Is she drunk?” An MS flare at a traffic stop']] },
+
+  { id:'other', title:'Other glial cells', short:'Others', color:'#5fe0a3',
+    mn:'Beyond SOMA',
+    lead:'Four more glial types you should recognize.',
+    img:['img/glia/types.jpg','Types of glia in the CNS and PNS. From your slides (Blausen, Wikipedia).'],
+    points:[
+      '<b>Ependymal cells</b>: line the brain’s ventricles and the spinal cord’s central canal. Their cilia help circulate cerebrospinal fluid (CSF). Specialized cells in the choroid plexus make most of the CSF.',
+      '<b>Radial glia</b>: during development, they act as scaffolding that newborn neurons climb to reach their place, and they give rise to neurons and other glia.',
+      '<b>Satellite glial cells</b>: surround neuron cell bodies in peripheral ganglia and control their chemical environment.',
+      '<b>Enteric glia</b>: support the neurons of the gut’s own nervous system (the enteric system, the guts in the back of the sub).'],
+    cases:[['secondary','Side quest: injury doesn’t end when the blow ends']] }
+];
+const NODE = Object.fromEntries(NODES.map(n => [n.id, n]));
+const ORDER = NODES.map(n => n.id);
+
+const REFS = {
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (2021). Principles of Neural Science (6th ed.). McGraw Hill.',
+  vonbartheld:'von Bartheld, C. S., Bahney, J., & Herculano-Houzel, S. (2016). The search for true numbers of neurons and glial cells in the human brain: A review of 150 years of cell counting. Journal of Comparative Neurology, 524(18), 3865–3895.',
+  jessen:'Jessen, K. R., & Mirsky, R. (2016). The repair Schwann cell and its function in regenerating nerves. Journal of Physiology, 594(13), 3521–3531.',
+  nave:'Nave, K.-A., & Werner, H. B. (2014). Myelination of the nervous system: Mechanisms and functions. Annual Review of Cell and Developmental Biology, 30, 503–533.',
+  nimmerjahn:'Nimmerjahn, A., Kirchhoff, F., & Helmchen, F. (2005). Resting microglial cells are highly dynamic surveillants of brain parenchyma in vivo. Science, 308(5726), 1314–1318.',
+  davalos:'Davalos, D., et al. (2005). ATP mediates rapid microglial response to local brain injury in vivo. Nature Neuroscience, 8(6), 752–758.',
+  schafer:'Schafer, D. P., et al. (2012). Microglia sculpt postnatal neural circuits in an activity and complement-dependent manner. Neuron, 74(4), 691–705.',
+  sofroniew:'Sofroniew, M. V., & Vinters, H. V. (2010). Astrocytes: Biology and pathology. Acta Neuropathologica, 119(1), 7–35.',
+  abbott:'Abbott, N. J., Rönnbäck, L., & Hansson, E. (2006). Astrocyte–endothelial interactions at the blood–brain barrier. Nature Reviews Neuroscience, 7(1), 41–53.',
+  bjornevik:'Bjornevik, K., et al. (2022). Longitudinal analysis reveals high prevalence of Epstein-Barr virus associated with multiple sclerosis. Science, 375(6578), 296–301.',
+  willison:'Willison, H. J., Jacobs, B. C., & van Doorn, P. A. (2016). Guillain-Barré syndrome. The Lancet, 388(10045), 717–727.',
+  mckee:'McKee, A. C., et al. (2013). The spectrum of disease in chronic traumatic encephalopathy. Brain, 136(1), 43–64.',
+  yamasue:'Yamasue, H., et al. (2007). Human brain structural change related to acute single exposure to sarin. Annals of Neurology, 61(1), 37–46.',
+  whitman:'Governor’s Committee and Consultants (1966). Report to the Governor, Medical Aspects: Charles J. Whitman Catastrophe. Austin, Texas.',
+  trepal:'Trepal v. State, 621 So. 2d 1361 (Fla. 1993).',
+  waxman:'Waxman, S. G. (1980). Determinants of conduction velocity in myelinated nerve fibers. Muscle & Nerve, 3(2), 141–150.',
+  smith:'Smith, D. H., Meaney, D. F., & Shull, W. H. (2003). Diffuse axonal injury in head trauma. Journal of Head Trauma Rehabilitation, 18(4), 307–316.',
+  franklin:'Franklin, R. J. M., & ffrench-Constant, C. (2017). Regenerating CNS myelin: From mechanisms to experimental medicines. Nature Reviews Neuroscience, 18(12), 753–769.',
+  lipton:'Lipton, S. A., & Rosenberg, P. A. (1994). Excitatory amino acids as a final common pathway for neurologic disorders. New England Journal of Medicine, 330(9), 613–622.'
+};
+const CARDS = {
+  glue:{title:'Glia = glue', kicker:'Where the word comes from', body:['“Glia” comes from the Ancient Greek γλία (glía), meaning glue. In the 1800s, Rudolf Virchow described a “nerve glue” that seemed to hold neurons in place.','We now know glia are active partners: they insulate, feed, protect, clean and even help shape synapses.'], refs:['kandel']},
+  count:{title:'How many glia?', kicker:'The 10-to-1 myth', body:['Many textbooks said glia outnumber neurons ten to one. Careful counts, including dissolving brains and counting cell nuclei, found roughly a 1:1 ratio in the human brain overall, about 86 billion neurons.','The ratio varies a lot by region: the cerebellum is packed with small neurons, while the cerebral cortex has more glia per neuron.'], refs:['vonbartheld']},
+  bungner:{title:'Bands of Büngner', kicker:'How a cut nerve regrows', body:['When a peripheral nerve is cut, the axon beyond the cut dies back. Schwann cells switch into a repair mode: they clear debris, multiply and line up into columns, the bands of Büngner.','These act like tunnels that guide the regrowing axon back to its target, about 1 mm a day. Schwann cells also release growth factors such as NGF.','Then they wrap the new axon in fresh myelin. CNS axons rarely get this kind of help, which is one reason brain and spinal cord injuries heal so poorly.'], refs:['jessen']},
+  opc:{title:'Oligodendrocyte precursor cells (OPCs)', kicker:'The repair crew', body:['OPCs are found throughout the adult brain. After myelin damage, they can multiply and mature into new oligodendrocytes that rebuild myelin (remyelination).','Remyelination mostly comes from these new cells rather than old oligodendrocytes patching their own sheaths, and in diseases like MS it is often incomplete.'], refs:['franklin']},
+  ms:{title:'Multiple sclerosis', kicker:'“Myelin Slaughter”', body:['MS is an autoimmune disease: immune cells (T cells and B cells) cross the blood–brain barrier and attack CNS myelin and oligodendrocytes. Early on, the axons underneath can survive; over time, they can be lost too.','Symptoms depend on where the damage is: vision problems, numbness, weakness, poor balance and coordination, slurred speech, fatigue.','Risk factors: genes and family history; Epstein-Barr virus infection, which a large study linked to a sharp rise in MS risk, though most people with EBV never get MS; low vitamin D and distance from the equator, which are associations, not a full explanation; and smoking.'], refs:['bjornevik','franklin']},
+  gbs:{title:'Guillain-Barré syndrome', kicker:'Pronounced “gee-YAN bah-RAY”', body:['An immune attack on the peripheral nerves, often days or weeks after an infection such as Campylobacter jejuni (a common cause of food poisoning) or the flu. Depending on the type, it mainly damages the myelin or the axons themselves.','Typical pattern: weakness that starts in the legs and climbs, tingling or numbness, and reduced or absent reflexes. Severe cases can affect breathing and the autonomic system.','Rarely it follows vaccination, but the infections themselves (like the flu) carry a higher risk than the vaccines.','Variants include Miller Fisher syndrome: eye-movement paralysis, ataxia (poor coordination) and absent reflexes.'], refs:['willison']},
+  inflam:{title:'Neuroinflammation', kicker:'The brain’s immune response', body:['When the brain is injured or infected, microglia and astrocytes release chemical signals:','Cytokines (such as IL-1β, IL-6, TNF-α) coordinate the immune response; chemokines attract and guide immune cells; prostaglandins contribute to pain and fever; reactive oxygen species (“free radicals”) fight threats but can harm nearby cells; anti-inflammatory cytokines such as IL-10 help shut it down.','Short-term inflammation supports repair. Excessive or prolonged inflammation can damage neurons. It can cause swelling, but inflammation can also happen without obvious swelling.'], refs:['kandel']},
+  chemotaxis:{title:'Chemotaxis', kicker:'Side quest', body:['Injured cells leak signals such as ATP, which spread out and form a concentration gradient. Microglia sense the gradient (purinergic signaling) and extend their branches, or move, toward the source. Once there, they engulf the debris (phagocytosis).','It looks like pursuit, but there’s no seeing and no planning: the cell just responds to the chemical slope around it. Like an AI chatbot, it can look like thinking when it isn’t.'], refs:['davalos','nimmerjahn']},
+  excito:{title:'Excitotoxicity', kicker:'When the brain’s own transmitter kills', body:['Glutamate is the brain’s main excitatory neurotransmitter. Too much of it outside cells overactivates receptors, calcium floods into neurons, and they can die.','Astrocytes normally pull excess glutamate out of the synapse. After stroke, brain injury or oxygen loss, that cleanup can fail, so damage keeps spreading after the original event.','Forensic question: someone is struck, talks normally at first, then deteriorates and dies. Secondary injury processes like this one help explain how.'], refs:['lipton','sofroniew']},
+  bbb:{title:'The blood–brain barrier', kicker:'Side quest', body:['The barrier itself is the wall of the brain’s capillaries: endothelial cells sealed together by tight junctions. Astrocyte end-feet wrap the capillaries and help maintain and regulate the barrier.','Small, fat-soluble molecules (alcohol, caffeine, nicotine) slip through. Glucose gets carried in by transporters. Large or charged molecules, and most microbes, are kept out.'], refs:['abbott']},
+  scar:{title:'Astrogliosis and the glial scar', kicker:'Injury response', body:['After injury, astrocytes become reactive: they swell, multiply and can knit together into a scar.','The scar walls off damage and inflammation, but it can also block axons from growing back, one reason CNS injuries heal poorly.'], refs:['sofroniew']},
+  trepal:{title:'The poisoned Coca-Cola case', kicker:'Case file · Schwann cells (indirect connection)', body:['In 1988, George Trepal, a chemist in Florida, put thallium in bottles of Coca-Cola in his neighbors’ home after a long feud over noise. Peggy Carr became ill, fell into a coma and died months later; others survived.','Thallium is colorless, odorless and tasteless. It poisons cells, including nerve cells, and can damage peripheral nerves, causing pain, numbness and weakness.','The Schwann connection: think of a peripheral nerve as an insulated wire. The axon is the wire, myelin is the insulation, and Schwann cells make that insulation and help the nerve repair. In survivors, recovery could depend partly on Schwann cells.','Caution: this is an indirect connection. Thallium wasn’t shown to target myelin or Schwann cells specifically.'], refs:['trepal','jessen']},
+  sarin:{title:'The Tokyo subway sarin attack', kicker:'Case file · Oligodendrocytes (indirect connection)', body:['In 1995, the Aum Shinrikyo cult released sarin gas on crowded Tokyo subway trains.','Sarin blocks acetylcholinesterase, so acetylcholine builds up and overstimulates the nervous system; severe poisoning can stop breathing.','Years later, brain scans of some survivors showed reduced white matter in certain regions. White matter is axons insulated by myelin from oligodendrocytes.','Caution: the scans couldn’t tell whether oligodendrocytes, myelin, axons or a combination were affected. Surviving doesn’t mean the brain’s wiring was unharmed.'], refs:['yamasue']},
+  dai:{title:'Diffuse axonal injury', kicker:'Forensic side quest', body:['A person can suffer devastating brain injury with no obvious hole or bleed. Rapid acceleration and deceleration (car crashes, falls, assaults, violent rotation of the head) can stretch and shear axons throughout the white matter.','Gray matter is the cell bodies; white matter is the communication cables. Trauma can disconnect the network without destroying the nodes, a reminder of Phineas Gage: behavior can change because connections are cut.'], refs:['smith']},
+  hernandez:{title:'Repeated head injury and CTE', kicker:'Case file · Microglia', body:['Former NFL player Aaron Hernandez had years of football head impacts. After his death, examination of his brain found stage III chronic traumatic encephalopathy (CTE), which can currently only be confirmed after death.','Microglia respond to brain injury by clearing debris and releasing inflammatory signals. With repeated injuries, a protective response can become chronic, and prolonged inflammation may add to brain damage.','Caution: research links microglial inflammation to CTE, but it doesn’t establish this sequence in Hernandez specifically, or that it caused his criminal behavior.'], refs:['mckee']},
+  whitman:{title:'The UT tower shooting and the brain tumor', kicker:'Case file · Astrocytes', body:['In 1966, Charles Whitman killed his mother and wife, then shot people from the University of Texas tower. His autopsy found a brain tumor described as an astrocytoma, a glial tumor named for its astrocyte-like cells.','A growing tumor can damage or disrupt nearby brain tissue and the circuits running through it, possibly including circuits for emotional control.','Caution: this is the most direct glial connection in these cases, but the tumor’s actual role is uncertain. Its presence alone cannot explain the murders.'], refs:['whitman']},
+  tox:{title:'Drug in the blood, but in the brain?', kicker:'Case file · Astrocytes and the BBB', body:['A drug is found in someone’s blood. Does that mean it was impairing their brain when the crime happened? Not necessarily.','The blood–brain barrier keeps many substances out. Drugs reach the brain by diffusing across or by using transporters, and efflux pumps push some back out.','So timing, concentration, tolerance, metabolism, how well the drug crosses the BBB, and what it does once there all matter in forensic toxicology.'], refs:['abbott']},
+  drunk:{title:'“Is she drunk?”', kicker:'Case file · MS', body:['Police stop a driver with slurred speech, poor balance and clumsy coordination, and suspect DWI. She says she’s having a multiple sclerosis flare.','MS damages CNS myelin and can cause ataxia, weakness, dizziness, an abnormal gait, vision problems and speech changes: the same signs as intoxication.','Same behavior, very different biology. What would you need before concluding intoxication? Is the MS diagnosis independently established? Could both be true at once? Observation is not explanation.'], refs:['kandel']},
+  secondary:{title:'Injury doesn’t end when the blow ends', kicker:'Forensic side quest', body:['A blow lasts milliseconds. The biological response can go on for hours, days or weeks: inflammation, excitotoxicity, oxidative stress, swelling, glial activation and axon degeneration.','So what caused the final impairment: the blow, the inflammation, lack of oxygen, swelling, infection, delayed treatment, or a combination? Think like an investigator, not just “microglia = immune cells.”'], refs:['kandel']}
+};
+const QUIZ = [
+  {q:'Which cell makes myelin around the axons in your fingertips?', a:'schwann', why:'Fingertip nerves are in the PNS, where Schwann cells (swans on the Purple Sea) do the wrapping.'},
+  {q:'One cell wraps segments of 30 different axons in the spinal cord.', a:'oligo', why:'Oligo is an octopus: many arms, many axons, in the CNS.'},
+  {q:'After a small stroke, a cell moves toward the damage and swallows the debris.', a:'micro', why:'Microcleaner = microglia, the CNS’s immune cells.'},
+  {q:'Which cell’s end-feet wrap the brain’s capillaries?', a:'astro', why:'Astrocytes help maintain the blood–brain barrier.'},
+  {q:'Multiple sclerosis mainly attacks myelin made by…', a:'oligo', why:'MS → CNS → oligodendrocytes.'},
+  {q:'Guillain-Barré syndrome mainly attacks myelin made by…', a:'schwann', why:'GBS → PNS → Schwann cells.'},
+  {q:'Which cell removes extra glutamate to prevent excitotoxicity?', a:'astro', why:'Astrocytes mop up glutamate and potassium around synapses.'},
+  {q:'Which cells help prune unneeded synapses?', a:'micro', why:'Microglia remove selected synapses to refine circuits.'}
+];
+const QOPTS = [['schwann','Schwann'],['oligo','Oligodendrocyte'],['micro','Microglia'],['astro','Astrocyte']];
+
+/* ============ Scene: CNS (Central Park, left) | PNS (Purple Sea, right) ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let seed = 11; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.fog = new THREE.Fog(0x161026, 22, 40);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 120);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.5; controls.maxDistance = 30;
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x2a1c4a, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(-4, 9, 7); scene.add(sun);
+const rim = new THREE.DirectionalLight(0xc9b6ff, 0.4); rim.position.set(6, 2, -6); scene.add(rim);
+const std = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:lin(c), roughness:0.6}, o));
+const tube = (pts, r, mat, seg=40, rs=10) => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), seg, r, rs), mat);
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
+const GROUND_Y = -3.7;
+
+/* ---- ground: park (CNS) and purple sea (PNS) ---- */
+const park = new THREE.Mesh(new THREE.PlaneGeometry(22, 18), std('#3f8a55', {roughness:0.95}));
+park.rotation.x = -Math.PI/2; park.position.set(-11.2, GROUND_Y, 0); scene.add(park);
+const seaU = {uT:{value:0}};
+const seaMat = std('#5b2fb0', {roughness:0.85, emissive:lin('#2a0f63'), emissiveIntensity:0.5});
+seaMat.onBeforeCompile = sh => { Object.assign(sh.uniforms, seaU);
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uT;').replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed.z += 0.05*sin(position.x*1.7 + uT*1.2) + 0.04*sin(position.y*2.3 - uT);'); };
+seaMat.customProgramCacheKey = () => 'sea';
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(22, 18, 120, 100), seaMat); sea.rotation.x = -Math.PI/2; sea.position.set(11.2, GROUND_Y - 0.05, 0); scene.add(sea);
+const shore = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.35, 18), std('#d9c08a')); shore.position.set(0, GROUND_Y + 0.05, 0); scene.add(shore);
+const border = new THREE.Mesh(new THREE.PlaneGeometry(18, 8), new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.035, side:THREE.DoubleSide, depthWrite:false}));
+border.rotation.y = Math.PI/2; border.position.set(0, 0.2, 0); scene.add(border);
+// park trees (brain canopies) far back
+const canopyGeo = (() => { const g = new THREE.SphereGeometry(1, 28, 20), P = g.attributes.position, v = V();
+  for (let i=0;i<P.count;i++){ v.fromBufferAttribute(P,i); const w = 1 + 0.06*Math.sin(v.x*14 + Math.sin(v.y*8)*2)*Math.sin(v.y*12 + v.z*6); P.setXYZ(i, v.x*w*1.15, v.y*w*0.85, v.z*w*0.95); } g.computeVertexNormals(); return g; })();
+for (let i=0;i<9;i++){ const t = new THREE.Group(); t.position.set(-2.5 - rnd()*16, GROUND_Y, -5.5 - rnd()*5);
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 1.6, 8), std('#7a5a3a')); tr.position.y = 0.8; t.add(tr);
+  const c = new THREE.Mesh(canopyGeo, std('#4fa95a', {roughness:0.85})); c.scale.setScalar(0.8 + rnd()*0.4); c.position.y = 2.0; t.add(c); scene.add(t); }
+// swans on the purple sea
+const swans = [];
+function swan(){ const g = new THREE.Group(), w = std('#ffffff', {roughness:0.45});
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 20, 14), w); body.scale.set(1.5, 0.75, 0.9); g.add(body);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.4, 12), w); tail.rotation.z = 2.2; tail.position.set(-0.55, 0.15, 0); g.add(tail);
+  g.add(tube([V(0.38,0.1,0), V(0.52,0.45,0), V(0.4,0.8,0), V(0.52,1.0,0)], 0.07, w, 20, 8));
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 10), w); head.position.set(0.56, 1.02, 0); g.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.045, 0.18, 10), std('#ff8a2a')); beak.rotation.z = -Math.PI/2; beak.position.set(0.7, 1.0, 0); g.add(beak);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), std('#111')); eye.position.set(0.6, 1.05, 0.07); g.add(eye);
+  return g; }
+[[3.5, 2.6, 0.4],[6.5, 3.5, -0.3],[8.8, 1.8, 0.2],[5.2, -3.2, 2.6]].forEach(([x, z, r]) => { const s = swan(); s.position.set(x, GROUND_Y + 0.15, z); s.rotation.y = r; scene.add(s); swans.push(s); });
+
+/* ---- the neuron and its axon ---- */
+const neuronMat = std('#f0c9a8', {roughness:0.55});
+const SOMA = V(-8.2, 0.3, 0);
+const soma = new THREE.Mesh(new THREE.SphereGeometry(0.62, 32, 24), neuronMat); soma.scale.set(1, 0.9, 0.95); soma.position.copy(SOMA); scene.add(soma);
+const nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.24, 20, 16), std('#b58b74')); nucleus.position.copy(SOMA).add(V(-0.1, 0.05, 0.38)); scene.add(nucleus);
+const dendrites = [];
+for (let i=0;i<6;i++){ const a = 1.2 + i*0.75, d = V(Math.cos(a)*0.9, Math.sin(a)*0.9, (rnd()-0.5)*0.8).normalize();
+  const p0 = SOMA.clone().addScaledVector(d, 0.5), p1 = SOMA.clone().addScaledVector(d, 1.4).add(V(0, 0, (rnd()-0.5)*0.4)), p2 = SOMA.clone().addScaledVector(d, 2.1).add(V((rnd()-0.5)*0.4, (rnd()-0.5)*0.4, 0));
+  const t = tube([p0, p1, p2], 0.07, neuronMat, 20, 8); scene.add(t); dendrites.push(p2);
+  const t2 = tube([p1, p1.clone().add(V((rnd()-0.5)*0.9, (rnd()-0.5)*0.9, (rnd()-0.5)*0.9))], 0.04, neuronMat, 10, 6); scene.add(t2); }
+const AX0 = -7.55, AX1 = 10.5, AXR = 0.085;
+const axonMat = std('#f0c9a8', {roughness:0.55, emissive:lin('#ff7a59'), emissiveIntensity:0});
+const axon = new THREE.Mesh(new THREE.CylinderGeometry(AXR, AXR, AX1 - AX0, 16), axonMat); axon.rotation.z = Math.PI/2; axon.position.set((AX0 + AX1)/2, 0, 0); scene.add(axon);
+const term = new THREE.Group(); term.position.set(AX1, 0, 0); scene.add(term);
+for (let i=0;i<4;i++){ const a = -0.8 + i*0.55; const e = V(Math.cos(a)*0.7, Math.sin(a)*0.7, (i%2 ? 0.3 : -0.3)); term.add(tube([V(), e.clone().multiplyScalar(0.5), e], 0.045, neuronMat, 10, 6)); const k = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), neuronMat); k.position.copy(e); term.add(k); }
+
+/* ---- myelin segments ---- */
+const SEGS = []; // {x0, x1, side:'cns'|'pns', axis:{y,z}, group, layers:[], mat, owner}
+function myelinSeg(x0, x1, y, z, color, side, nucleusOn){
+  const g = new THREE.Group(); g.position.set((x0 + x1)/2, y, z); scene.add(g);
+  const L = x1 - x0, mat = std(color, {roughness:0.4, transparent:true, opacity:1, emissive:lin(color), emissiveIntensity:0.05});
+  const layers = [0.13, 0.17, 0.21, 0.24].map((r, i) => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(r, Math.max(0.05, L - 2*r), 6, 20), i === 3 ? mat : mat.clone()); m.rotation.z = Math.PI/2; m.material.transparent = true; g.add(m); return m; });
+  let nuc = null; if (nucleusOn){ nuc = new THREE.Mesh(new THREE.SphereGeometry(0.12, 14, 10), std('#b9a8e8')); nuc.scale.set(1.8, 0.7, 1); nuc.position.set(0, 0.25, 0); g.add(nuc); }
+  const s = {x0, x1, y, z, side, group:g, layers, mat, nuc, health:1, wrap:1, color}; SEGS.push(s); return s; }
+const CNS_SEGS = [], PNS_SEGS = [];
+for (let i=0;i<6;i++){ const x0 = -6.9 + i*1.07; CNS_SEGS.push(myelinSeg(x0, x0 + 0.95, 0, 0, '#ffd9e8', 'cns')); }
+for (let i=0;i<6;i++){ const x0 = 0.55 + i*1.5; PNS_SEGS.push(myelinSeg(x0, x0 + 1.36, 0, 0, '#ece8ff', 'pns', true)); }
+// two other CNS axons, myelinated by our oligodendrocyte + others
+const OTHER = [{y:1.15, z:-1.6}, {y:0.55, z:1.7}];
+const otherSegs = OTHER.map(a => { const ax = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 8.2, 12), neuronMat); ax.rotation.z = Math.PI/2; ax.position.set(-3.8, a.y, a.z); scene.add(ax);
+  const segs = []; for (let i=0;i<6;i++){ const x0 = -7.4 + i*1.15; segs.push(myelinSeg(x0, x0 + 1.0, a.y, a.z, '#ffd9e8', 'cns')); } return segs; });
+
+/* ---- oligodendrocyte (the octopus) ---- */
+const OLIGO = V(-3.9, 2.35, 0.2);
+const oligoMat = std('#ff9ec0', {roughness:0.5, emissive:lin('#ff5f9a'), emissiveIntensity:0.05});
+const oligo = new THREE.Group(); scene.add(oligo);
+const oBody = new THREE.Mesh(new THREE.SphereGeometry(0.34, 24, 18), oligoMat); oBody.position.copy(OLIGO); oligo.add(oBody);
+const OLIGO_TARGETS = [CNS_SEGS[1], CNS_SEGS[3], otherSegs[0][2], otherSegs[0][4], otherSegs[1][1], otherSegs[1][3]];
+const oArms = OLIGO_TARGETS.map((s, i) => { const end = V((s.x0 + s.x1)/2, s.y + 0.22, s.z), mid = OLIGO.clone().lerp(end, 0.5).add(V(0, 0.5, 0));
+  const arm = tube([OLIGO.clone(), mid, end], 0.045, oligoMat, 30, 8); oligo.add(arm); s.owner = 'oligo'; s.layers.forEach(l => l.material.color.set('#ffb3cf')); return arm; });
+
+/* ---- astrocyte (the star) + capillary (blood–brain barrier) ---- */
+const ASTRO = V(-5.6, -2.0, -0.4);
+const astroMat = std('#ffd166', {roughness:0.5, emissive:lin('#ffb020'), emissiveIntensity:0.08});
+const astro = new THREE.Group(); scene.add(astro);
+const aBody = new THREE.Mesh(new THREE.IcosahedronGeometry(0.33, 2), astroMat); aBody.position.copy(ASTRO); astro.add(aBody);
+const CAP_Y = -3.05, CAP_X = -5.3;
+const capMat = std('#e0525e', {roughness:0.4, transparent:true, opacity:0.55});
+const capillary = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 9, 28, 1, true), capMat); capillary.rotation.x = Math.PI/2; capillary.position.set(CAP_X, CAP_Y, 0); scene.add(capillary);
+const cells = Array.from({length:14}, (_, i) => { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.06, 16), std('#c8202e')); c.rotation.x = Math.PI/2 + 0.3; c.userData.z = -4.4 + i*0.66; c.position.set(CAP_X + (rnd()-0.5)*0.3, CAP_Y + (rnd()-0.5)*0.3, c.userData.z); scene.add(c); return c; });
+const endFeet = [];
+[[-0.6, 0.0], [0.4, 0.2], [1.3, -0.1], [-1.5, 0.1]].forEach(([dz, dx]) => { const end = V(CAP_X + dx, CAP_Y + 0.42, ASTRO.z + dz);
+  astro.add(tube([ASTRO.clone(), ASTRO.clone().lerp(end, 0.5).add(V(0, 0.1, 0)), end], 0.05, astroMat, 20, 8));
+  const foot = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 10), astroMat); foot.scale.set(1.3, 0.25, 1.3); foot.position.copy(end); astro.add(foot); endFeet.push(foot); });
+// synapse onto the neuron's lower dendrite, wrapped by astrocyte processes
+const SYN = V(-7.25, -1.35, 0.55);
+const preAxon = tube([V(-9.5, -3.0, 2.2), V(-8.4, -2.2, 1.4), SYN.clone().add(V(-0.18, -0.15, 0.05))], 0.05, std('#e9b896'), 20, 8); scene.add(preAxon);
+const bouton = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 14), std('#e9b896')); bouton.position.copy(SYN).add(V(-0.18, -0.15, 0.05)); scene.add(bouton);
+const postDen = tube([SOMA.clone().add(V(0.1, -0.5, 0.2)), SYN.clone().add(V(0.15, 0.15, 0))], 0.07, neuronMat, 12, 8); scene.add(postDen);
+[[0.5, 0.3], [-0.2, 0.5], [0.35, -0.3]].forEach(([dy, dz]) => { const end = SYN.clone().add(V(0.12, dy*0.4, dz*0.4));
+  astro.add(tube([ASTRO.clone(), ASTRO.clone().lerp(end, 0.5).add(V(0, 0, dz)), end], 0.04, astroMat, 20, 8)); });
+for (let i=0;i<4;i++){ const a = i*1.6 + 0.4, end = ASTRO.clone().add(V(Math.cos(a)*1.1, 0.5 + Math.sin(a)*0.6, Math.sin(a)*1.0)); astro.add(tube([ASTRO.clone(), ASTRO.clone().lerp(end, 0.5).add(V(0, 0.15, 0)), end], 0.035, astroMat, 14, 6)); }
+const GLU = Array.from({length:26}, () => { const s = sprite('#ffe66b', 0.12); s.visible = false; scene.add(s); return s; });
+
+/* ---- microglia (the microcleaner) ---- */
+const MICRO = V(-2.2, -1.75, 1.6);
+const microMat = std('#b58bff', {roughness:0.45, emissive:lin('#7a4dff'), emissiveIntensity:0.12});
+const micro = new THREE.Group(); micro.position.copy(MICRO); scene.add(micro);
+const mBody = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 14), microMat); micro.add(mBody);
+const mBranches = [];
+for (let i=0;i<7;i++){ const a = i*0.9, d = V(Math.cos(a), Math.sin(a*1.3)*0.6, Math.sin(a)).normalize();
+  const g = new THREE.Group(); g.quaternion.setFromUnitVectors(V(1,0,0), d); micro.add(g);
+  g.add(tube([V(0.15,0,0), V(0.5,0.05,0.03), V(0.85,-0.04,0)], 0.025, microMat, 12, 6));
+  g.add(tube([V(0.5,0.05,0.03), V(0.7,0.22,0.1)], 0.016, microMat, 8, 5)); g.add(tube([V(0.6,0,0), V(0.8,-0.2,-0.08)], 0.016, microMat, 8, 5));
+  g.userData.d = d; g.userData.ph = rnd()*6; mBranches.push(g); }
+// a damaged neighbor cell (the injury site) and a spare synapse to prune
+const HURT = V(-0.9, -1.2, 2.6);
+const hurt = new THREE.Mesh(new THREE.SphereGeometry(0.3, 18, 14), std('#d9b39a', {roughness:0.7})); hurt.position.copy(HURT); scene.add(hurt);
+const debris = Array.from({length:14}, () => { const d = new THREE.Mesh(new THREE.DodecahedronGeometry(0.05 + rnd()*0.04, 0), std('#8f7766')); d.visible = false; scene.add(d); return d; });
+const ATP = Array.from({length:40}, () => { const s = sprite('#9dff7a', 0.14); s.visible = false; scene.add(s); return s; });
+const SPINE = V(-3.0, -0.95, 0.95);
+const spine = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 10), std('#f0c9a8')); spine.position.copy(SPINE); scene.add(spine);
+const spineStalk = tube([SPINE.clone().add(V(-0.35, 0.25, -0.25)), SPINE], 0.03, neuronMat, 6, 6); scene.add(spineStalk);
+
+/* ---- action potential marker ---- */
+const ap = sprite('#ffea7a', 0.9); ap.visible = false; scene.add(ap);
+const apTrail = sprite('#ff9a4a', 0.5); apTrail.visible = false; scene.add(apTrail);
+
+/* ============ Split axon (for the cut-and-regrow demo) ============ */
+const CUT = 4.6;
+axon.visible = false;
+const axA = new THREE.Mesh(new THREE.CylinderGeometry(AXR, AXR, 1, 16), axonMat); axA.rotation.z = Math.PI/2; scene.add(axA);
+const axBMat = axonMat.clone(); const axB = new THREE.Mesh(new THREE.CylinderGeometry(AXR, AXR, 1, 16), axBMat); axB.rotation.z = Math.PI/2; scene.add(axB);
+function setAxB(len){ axB.scale.y = Math.max(0.001, len); axB.position.set(CUT + len/2, 0, 0); }
+axA.scale.y = CUT - AX0; axA.position.set((AX0 + CUT)/2, 0, 0); setAxB(AX1 - CUT);
+const cone = sprite('#9dff7a', 0.45); cone.visible = false; scene.add(cone);
+
+/* ============ Labels ============ */
+const state = { n:'glia', quiz:0, quizPick:null };
+function mkTag(html, world, show, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = html; labelsEl.appendChild(el); return {el, world, show}; }
+const fam = (...ids) => () => ids.includes(state.n);
+const TAGS = [
+  mkTag('CNS = <b>Central Park</b>', () => V(-4.2, -3.3, 4.2), fam('glia','myelin','other'), 'plabel big'),
+  mkTag('PNS = <b>Purple Sea</b>', () => V(4.6, -3.3, 4.2), fam('glia','myelin','schwann','other'), 'plabel big'),
+  mkTag('Neuron', () => SOMA.clone().add(V(0, 0.95, 0)), fam('glia','myelin')),
+  mkTag('Axon', () => V(0.05, 0.35, 0), fam('glia','myelin')),
+  mkTag('Node of Ranvier', () => V(CNS_SEGS[2].x1 + 0.06, -0.38, 0), fam('oligo','myelin'), 'plabel below'),
+  mkTag('Node of Ranvier', () => V(PNS_SEGS[1].x1 + 0.07, -0.38, 0), fam('schwann'), 'plabel below'),
+  mkTag('<b>O</b>ligodendrocyte (octopus)', () => OLIGO.clone().add(V(0, 0.6, 0)), fam('glia','oligo','myelin')),
+  mkTag('<b>S</b>chwann cell (swan): one cell, one segment', () => PNS_SEGS[2].group.position.clone().add(V(0, 0.6, 0)), fam('glia','schwann','myelin')),
+  mkTag('<b>M</b>icroglia (microcleaner)', () => micro.position.clone().add(V(0, 0.75, 0)), fam('glia','micro')),
+  mkTag('<b>A</b>strocyte (star)', () => ASTRO.clone().add(V(0, 0.75, 0)), fam('glia','astro')),
+  mkTag('Capillary: blood–brain barrier', () => V(CAP_X, CAP_Y - 0.6, 3.0), fam('astro')),
+  mkTag('Synapse', () => SYN.clone().add(V(0, 0.45, 0.2)), fam('astro')),
+  mkTag('End-feet on the vessel', () => endFeet[1].position.clone().add(V(0.5, 0.2, 0.4)), fam('astro')),
+  mkTag('Injured cell', () => HURT.clone().add(V(0, 0.5, 0)), () => state.n === 'micro' && MG.phase < 1),
+  mkTag('Spare synapse', () => SPINE.clone().add(V(0, 0.3, 0)), () => state.n === 'micro' && PR.t < 0 && spine.visible),
+  mkTag('Swans = <b>Schwann</b>', () => swans[0].position.clone().add(V(0.3, 1.4, 0)), fam('glia','schwann')),
+  mkTag('Other axons wrapped by the same octopus', () => V(-6.2, 1.55, -1.6), fam('oligo'))
+];
+const _v = V();
+function placeTags(){ const w = innerWidth, h = innerHeight;
+  TAGS.forEach(t => { const on = t.show(); if (!on){ t.el.style.opacity = 0; return; }
+    _v.copy(t.world()).project(camera); if (_v.z > 1){ t.el.style.opacity = 0; return; } t.el.style.opacity = 1;
+    t.el.style.transform = `translate(${(_v.x*0.5+0.5)*w}px, ${(-_v.y*0.5+0.5)*h}px) translate(-50%, ${t.el.classList.contains('below') ? '40%' : '-140%'})`; }); }
+
+/* ============ Views ============ */
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+const VIEWS = { glia:[V(-0.6,-0.9,0), 23.5, V(0.02,0.38,1)], other:[V(-0.6,-0.9,0), 23.5, V(0.02,0.38,1)], myelin:[V(1.4,-0.2,0), 13.5, V(0,0.3,1)],
+  schwann:[V(5.0,-0.4,0), 7.8, V(0.12,0.38,1)], oligo:[V(-4.0,0.8,0), 7.8, V(0.22,0.4,1)], micro:[V(-1.7,-1.4,2.0), 5.6, V(0.25,0.5,1)], astro:[V(-6.1,-2.0,0.2), 6.2, V(0.35,0.3,1)] };
+function fly(id){ const [T, d, dir] = VIEWS[id]; const P = T.clone().add(dir.clone().normalize().multiplyScalar(d*(isNarrow() ? 1.35 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:T.clone(), t0:performance.now(), dur:1200}; }
+controls.addEventListener('start', () => { tween = null; });
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.22), w, h); else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), Math.round(h*0.04), w, h);
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+/* ============ State & demos ============ */
+let T = 0, hudMsg = '', ROUTE = null;
+const AP = { on:false, x:0, wait:0, t:0, ref:0, done:-1 };
+const MG = { phase:-1, t:0 }, PR = { t:-1 }, GL = { t:-1, off:false, level:0 }, BB = { t:-1 }, RACE = { t:-1 }, WRAP = { t:-1 }, REG = { t:-1 };
+const mainSegs = () => [...CNS_SEGS, ...PNS_SEGS];
+const V_SLOW = 1.4, JUMP = 0.07;
+function apTime(){ // model time to cross the axon given current myelin health
+  let t = 0, x = AX0; const segs = mainSegs().filter(s => s.health > 0.5 && s.wrap > 0.9).sort((a, b) => a.x0 - b.x0);
+  for (const s of segs){ t += Math.max(0, s.x0 - x)/V_SLOW + JUMP; x = s.x1; } return t + (AX1 - x)/V_SLOW; }
+const HEALTHY_T = (() => { let t = 0, x = AX0; mainSegs().sort((a,b) => a.x0 - b.x0).forEach(s => { t += Math.max(0, s.x0 - x)/V_SLOW + JUMP; x = s.x1; }); return t + (AX1 - x)/V_SLOW; })();
+function fire(){ if (REG.t >= 0) return; AP.on = true; AP.x = AX0; AP.wait = 0; AP.t = 0; AP.done = -1; }
+function setRoute(steps, color){ ROUTE = {steps, color, k:0}; }
+function rk(v){ if (ROUTE) ROUTE.k = Math.max(ROUTE.k, v); }
+function setHealth(list, v){ list.forEach(s => s.target = v); }
+const ACT = {
+  fire: () => { fire(); hudMsg = '<b>Action potential:</b> watch it leap from node to node along the myelinated axon, first through the CNS (oligodendrocyte myelin), then the PNS (Schwann cell myelin).'; },
+  wrap: () => { WRAP.t = 0; PNS_SEGS.forEach(s => s.wrap = 0); setRoute(['Schwann cell finds one axon','Wraps around it again and again','Layers pack into myelin','One cell = one segment'], '#e9e4ff');
+    hudMsg = '<b>Like a jelly roll:</b> each Schwann cell wraps its membrane around one segment of one axon, layer after layer.'; },
+  regrow: () => { REG.t = 0; AP.on = false; setRoute(['Nerve is cut','Distal axon breaks down','Schwann cells line up (bands of Büngner)','Axon regrows ~1 mm/day','New myelin'], '#9dff7a');
+    hudMsg = '<b>Cut nerve:</b> the axon beyond the cut breaks down. Schwann cells clear the debris, line up as guide tunnels, and the axon regrows through them.'; },
+  gbs: () => { setHealth(PNS_SEGS.slice(1, 5), 0); setTimeout(fire, 900);
+    hudMsg = '<b>Guillain-Barré:</b> the immune system strips PNS myelin made by Schwann cells. The signal has to crawl through the bare stretch.'; },
+  ms: () => { setHealth([CNS_SEGS[2], CNS_SEGS[3], otherSegs[0][1], otherSegs[1][3]], 0); setTimeout(fire, 900);
+    hudMsg = '<b>Multiple sclerosis (“Myelin Slaughter”):</b> the immune system attacks CNS myelin and oligodendrocytes. Signals slow down or fail where myelin is lost.'; },
+  heal: () => { setHealth(SEGS, 1); hudMsg = '<b>Healthy myelin restored.</b> In real life, remyelination is often incomplete.'; setTimeout(fire, 700); },
+  arms: () => { OLIGO_GLOW.t = 2.5; hudMsg = '<b>Oligo is an octopus:</b> this one cell reaches out with six arms to wrap segments on three different axons. Real oligodendrocytes can wrap up to about 50.'; },
+  injure: () => { MG.phase = 0; MG.t = 0; setRoute(['Cell is injured','ATP leaks out (gradient)','Branches reach toward it','Microglia moves in','Engulfs the debris'], '#b58bff');
+    hudMsg = '<b>Chemotaxis:</b> the microglia doesn’t see the damage. It follows the ATP gradient leaking from the hurt cell, then swallows the debris.'; },
+  prune: () => { PR.t = 0; spine.visible = true; spine.scale.setScalar(1); spine.position.copy(SPINE); spineStalk.visible = true;
+    hudMsg = '<b>Synaptic pruning:</b> microglia remove extra synapses, helping refine brain circuits.'; },
+  glu: () => { GL.t = 0; GL.level = 1; GLU.forEach((s, i) => { s.visible = true; s.userData.p = SYN.clone().add(V((rnd()-0.5)*0.4, (rnd()-0.5)*0.4, (rnd()-0.5)*0.4)); s.userData.v = V((rnd()-0.5), (rnd()-0.5), (rnd()-0.5)).multiplyScalar(0.6); s.userData.k = 0; });
+    hudMsg = GL.off ? '<b>No astrocytes:</b> glutamate lingers, keeps hitting receptors, calcium floods in and the neuron is in danger (excitotoxicity).' : '<b>Cleanup:</b> astrocyte processes wrap the synapse and pull extra glutamate out before it can overexcite the neuron.'; },
+  astroOff: () => { GL.off = !GL.off; hudMsg = GL.off ? '<b>Astrocytes switched off.</b> Now spill glutamate and see what happens.' : '<b>Astrocytes back on.</b>'; if (GL.t >= 0) ACT.glu(); },
+  bbb: () => { BB.t = 0; hudMsg = '<b>Blood–brain barrier:</b> small fat-soluble molecules slip through, glucose rides a transporter, and big molecules are kept out.'; },
+  race: () => { RACE.t = 0; fire(); hudMsg = '<b>Dominoes vs. skipping stone</b>, slowed down 100×: by the time the myelinated signal arrives, the unmyelinated one has barely started.'; }
+};
+const OLIGO_GLOW = { t:0 };
+const TOGGLES = { astroOff:() => GL.off };
+function refreshTries(){ document.querySelectorAll('.try[data-act]').forEach(b => { const f = TOGGLES[b.dataset.act]; if (f) b.setAttribute('aria-pressed', String(!!f())); }); }
+function resetDemos(){ ROUTE = null; hudMsg = ''; MG.phase = -1; PR.t = -1; GL.t = -1; BB.t = -1; RACE.t = -1; WRAP.t = -1;
+  micro.position.copy(MICRO); micro.scale.setScalar(1); hurt.visible = true; hurt.material.color.set('#d9b39a'); debris.forEach(d => d.visible = false); ATP.forEach(a => a.visible = false);
+  spine.visible = true; spine.scale.setScalar(1); spine.position.copy(SPINE); spineStalk.visible = true; GLU.forEach(s => s.visible = false); BBM.forEach(m => m.visible = false);
+  PNS_SEGS.forEach(s => s.wrap = 1); }
+function selectNode(id){ state.n = id; resetDemos(); fly(id); renderPanel(); panel.scrollTop = 0;
+  if (id === 'glia' || id === 'myelin') setTimeout(fire, 1300); }
+
+/* BBB molecules */
+const BBM = [['#7ad7ff', 0.2, 'pass'], ['#5fe0a3', 0.24, 'transport'], ['#ff6fa5', 0.5, 'block']].map(([c, s, kind], i) => { const m = sprite(c, s); m.visible = false; m.userData = {kind, z:-1.2 + i*1.2}; scene.add(m); return m; });
+
+/* ============ HUD ============ */
+const hud = $('#hudCanvas'), hx = hud.getContext('2d'), HW = hud.width, HH = hud.height, hudTitle = $('#hudTitle'), hudText = $('#hudText');
+function chips(){ const st = ROUTE.steps, n = st.length, k = ROUTE.k, x0 = 70, x1 = HW - 70, y = 92;
+  hx.strokeStyle = '#283044'; hx.lineWidth = 6; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x1, y); hx.stroke();
+  hx.strokeStyle = ROUTE.color; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x0 + (x1 - x0)*k, y); hx.stroke();
+  st.forEach((s, i) => { const x = x0 + (x1 - x0)*i/(n-1), on = k >= i/(n-1) - 0.001;
+    hx.fillStyle = on ? ROUTE.color : '#1a2030'; hx.strokeStyle = on ? ROUTE.color : '#3a4258'; hx.lineWidth = 3; hx.beginPath(); hx.arc(x, y, 14, 0, 7); hx.fill(); hx.stroke();
+    hx.fillStyle = on ? '#eceef4' : '#6e7689'; hx.font = '700 17px "Atkinson Hyperlegible", system-ui'; hx.textAlign = 'center';
+    const words = s.split(' '), lines = []; let cur = ''; words.forEach(w => { if ((cur + ' ' + w).trim().length > 15){ lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }); lines.push(cur.trim());
+    lines.forEach((l, j) => hx.fillText(l, x, y + 44 + j*21)); }); hx.textAlign = 'left'; }
+function drawAxonBar(){ // the axon as a bar: myelin segments, nodes, AP position, timing
+  const x0 = 60, x1 = HW - 40, y = 80, sx = x => x0 + (x - AX0)/(AX1 - AX0)*(x1 - x0);
+  hx.fillStyle = '#c99a7c'; hx.fillRect(x0, y - 3, x1 - x0, 6);
+  mainSegs().forEach(s => { const a = clamp(s.health, 0, 1)*s.wrap; hx.fillStyle = s.side === 'cns' ? `rgba(255,179,207,${0.15 + 0.85*a})` : `rgba(233,228,255,${0.15 + 0.85*a})`; hx.beginPath(); hx.roundRect(sx(s.x0), y - 14, sx(s.x1) - sx(s.x0), 28, 10); hx.fill(); });
+  hx.strokeStyle = '#ffffff55'; hx.setLineDash([5,5]); hx.beginPath(); hx.moveTo(sx(0), y - 34); hx.lineTo(sx(0), y + 34); hx.stroke(); hx.setLineDash([]);
+  hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; hx.fillStyle = '#ffb3cf'; hx.fillText('CNS: oligodendrocyte myelin', x0, y - 30); hx.fillStyle = '#d9d2ff'; hx.textAlign = 'right'; hx.fillText('PNS: Schwann cell myelin', x1, y - 30); hx.textAlign = 'left';
+  if (AP.on || AP.done >= 0){ const px = sx(AP.on ? AP.x : AX1); hx.fillStyle = '#ffea7a'; hx.beginPath(); hx.arc(px, y, 11, 0, 7); hx.fill(); }
+  const ratio = apTime()/HEALTHY_T; hx.font = '600 19px "Atkinson Hyperlegible", system-ui'; hx.fillStyle = '#eceef4';
+  hx.fillText(ratio > 1.05 ? `Signal takes ${ratio.toFixed(1)}× longer than a healthy axon` : 'Healthy myelin: the signal leaps node to node', x0, y + 60);
+  hx.fillStyle = '#a3abbc'; hx.font = '500 16px "Atkinson Hyperlegible", system-ui'; hx.fillText(ratio > 1.05 ? 'Bare stretches force slow, continuous conduction (dominoes).' : 'Saltatory conduction, from the Latin saltare, “to dance”.', x0, y + 86);
+}
+function drawRace(){ const x0 = 70, x1 = HW - 50, L = x1 - x0, t = RACE.t; // slowed 100x: myelinated 80 m/s → 1.25 s; unmyelinated 1 m/s → 100 s
+  const fastK = clamp(t/1.25, 0, 1), slowK = clamp(t/100, 0, 1);
+  hx.font = '700 17px "Atkinson Hyperlegible", system-ui'; hx.fillStyle = '#eceef4'; hx.fillText('Unmyelinated (dominoes) · ~1 m/s', x0, 40); hx.fillText('Myelinated (skipping stone) · ~80 m/s', x0, 140);
+  for (let i=0;i<60;i++){ const x = x0 + i*L/60, fallen = i/60 < slowK; hx.save(); hx.translate(x, 92); hx.rotate(fallen ? 1.2 : 0); hx.fillStyle = fallen ? '#ffb547' : '#4a5470'; hx.fillRect(-3, -26, 6, 26); hx.restore(); }
+  hx.strokeStyle = '#7ad7ff55'; hx.lineWidth = 3; hx.beginPath(); hx.moveTo(x0, 200); hx.lineTo(x1, 200); hx.stroke();
+  const hops = 12; for (let i=0;i<hops;i++){ const xa = x0 + i*L/hops; hx.fillStyle = '#7ad7ff'; hx.beginPath(); hx.arc(xa, 200, 4, 0, 7); hx.fill(); }
+  const hp = fastK*hops, hi = Math.min(hops - 1, Math.floor(hp)), hf = hp - hi, sxp = x0 + (hi + hf)*L/hops, syp = 200 - Math.sin(hf*Math.PI)*34*(fastK < 1 ? 1 : 0);
+  hx.fillStyle = '#eceef4'; hx.beginPath(); hx.ellipse(sxp, syp, 10, 6, 0, 0, 7); hx.fill();
+  hx.fillStyle = '#a3abbc'; hx.font = '600 16px "IBM Plex Mono", monospace'; hx.textAlign = 'right';
+  hx.fillText(`${(Math.min(t, 100)*10).toFixed(0)} ms real time`, x1, 40); hx.fillText(fastK >= 1 ? 'Arrived: ~12 ms ✓' : `${(t*10).toFixed(0)} ms`, x1, 140); hx.textAlign = 'left'; }
+function drawGlu(){ const x0 = 60, x1 = HW - 40, y0 = 30, y1 = 150; hx.strokeStyle = '#283044'; hx.lineWidth = 2; hx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+  hx.fillStyle = '#ff6b6b33'; hx.fillRect(x0, y0, x1 - x0, (y1 - y0)*0.35); hx.fillStyle = '#ff9a9a'; hx.font = '600 15px "Atkinson Hyperlegible", system-ui'; hx.fillText('danger zone: excitotoxicity', x0 + 8, y0 + 20);
+  hx.strokeStyle = '#ffe66b'; hx.lineWidth = 4; hx.beginPath(); GL.hist.forEach((v, i) => { const x = x0 + i*(x1 - x0)/(GL.hist.length - 1), y = y1 - v*(y1 - y0)*0.95; i ? hx.lineTo(x, y) : hx.moveTo(x, y); }); hx.stroke();
+  hx.fillStyle = '#eceef4'; hx.font = '700 18px "Atkinson Hyperlegible", system-ui'; hx.fillText(`Glutamate around the synapse: ${GL.off ? 'stays high' : GL.level < 0.2 ? 'cleared' : 'clearing…'}`, x0, y1 + 34);
+  hx.fillStyle = '#a3abbc'; hx.font = '500 16px "Atkinson Hyperlegible", system-ui'; hx.fillText(GL.off ? 'Astrocytes off: Ca²⁺ floods the neuron and it starts to die.' : 'Astrocytes on: transporters pull glutamate in within milliseconds.', x0, y1 + 58); }
+function drawBBB(){ const rows = [['Alcohol, caffeine, nicotine','small & fat-soluble: slips through','#7ad7ff','pass'],['Glucose','carried by a transporter','#5fe0a3','transport'],['Large proteins, most microbes','blocked by tight junctions','#ff6fa5','block']];
+  rows.forEach(([a, b, c, k], i) => { const y = 50 + i*62, done = BB.t > 3.4; hx.fillStyle = c; hx.beginPath(); hx.arc(80, y, 12, 0, 7); hx.fill();
+    hx.fillStyle = '#eceef4'; hx.font = '700 19px "Atkinson Hyperlegible", system-ui'; hx.fillText(a, 104, y - 2); hx.fillStyle = '#a3abbc'; hx.font = '500 16px "Atkinson Hyperlegible", system-ui'; hx.fillText(b, 104, y + 20);
+    if (done){ hx.font = '800 26px "Atkinson Hyperlegible", system-ui'; hx.fillStyle = k === 'block' ? '#ff6b6b' : '#5fe0a3'; hx.fillText(k === 'block' ? '✗ stays in blood' : '✓ enters brain', HW - 260, y + 8); } }); }
+function drawHud(dt){
+  const n = state.n; let mode = null;
+  if (RACE.t >= 0) mode = 'race'; else if (GL.t >= 0) mode = 'glu'; else if (BB.t >= 0) mode = 'bbb'; else if (ROUTE) mode = 'chips'; else if (['glia','schwann','oligo','myelin'].includes(n)) mode = 'bar';
+  hud.hidden = !mode; hx.clearRect(0, 0, HW, HH);
+  if (mode === 'race'){ drawRace(); hudTitle.textContent = 'Race: dominoes vs. skipping stone (slowed 100×)'; }
+  else if (mode === 'glu'){ drawGlu(); hudTitle.textContent = 'Glutamate cleanup'; }
+  else if (mode === 'bbb'){ drawBBB(); hudTitle.textContent = 'Who gets into the brain?'; }
+  else if (mode === 'chips'){ chips(); hudTitle.textContent = 'Step by step'; }
+  else if (mode === 'bar'){ drawAxonBar(); hudTitle.textContent = 'Signal along the axon'; }
+  else hudTitle.textContent = NODE[n].title;
+  const msg = hudMsg || (n === 'glia' ? 'Tap a glial cell in the scene, or pick one from SOMA on the right.' : NODE[n].lead);
+  if (hudText.innerHTML !== msg) hudText.innerHTML = msg;
+}
+
+/* ============ Update ============ */
+GL.hist = new Array(120).fill(0);
+function updScene(dt){
+  seaU.uT.value = T;
+  swans.forEach((s, i) => { s.position.y = GROUND_Y + 0.15 + 0.04*Math.sin(T*1.3 + i); s.rotation.y += dt*0.05*(i%2 ? 1 : -1); });
+  cells.forEach(c => { c.userData.z += dt*0.9; if (c.userData.z > 4.4) c.userData.z = -4.4; c.position.z = c.userData.z; });
+  // myelin health / wrap visuals
+  SEGS.forEach(s => { if (s.target != null) s.health += clamp(s.target - s.health, -dt*1.2, dt*1.2);
+    const h = clamp(s.health, 0, 1);
+    s.layers.forEach((l, i) => { const vis = s.wrap > i/4 + 0.02; l.visible = vis; l.material.opacity = 0.12 + 0.88*h*(i === 3 ? 1 : 0.6); l.material.color.lerp(lin(h < 0.5 ? '#8a7d86' : (s.owner === 'oligo' ? '#ffb3cf' : s.color)), Math.min(1, dt*3)); });
+    if (s.nuc) s.nuc.visible = s.wrap > 0.6; });
+  if (WRAP.t >= 0){ WRAP.t += dt; PNS_SEGS.forEach((s, i) => { s.wrap = clamp((WRAP.t - i*0.35)/1.6, 0, 1); }); rk(clamp(WRAP.t/3.6, 0, 1)); if (WRAP.t > 4.2){ WRAP.t = -1; rk(1); } }
+  // oligo arm glow
+  OLIGO_GLOW.t = Math.max(0, OLIGO_GLOW.t - dt); oligoMat.emissiveIntensity = 0.05 + (OLIGO_GLOW.t > 0 ? 0.5 + 0.3*Math.sin(T*8) : (state.n === 'oligo' ? 0.18 : 0));
+  OLIGO_TARGETS.forEach(s => s.layers[3].material.emissiveIntensity = OLIGO_GLOW.t > 0 ? 0.5 : 0.05);
+  PNS_SEGS.forEach(s => s.layers[3].material.emissiveIntensity = state.n === 'schwann' ? 0.15 + 0.1*Math.sin(T*3) : 0.05);
+  // action potential
+  if (AP.on){ AP.t += dt; if (AP.wait > 0) AP.wait -= dt; else {
+      const seg = mainSegs().find(s => s.health > 0.5 && s.wrap > 0.9 && AP.x >= s.x0 - 0.02 && AP.x < s.x1);
+      if (seg){ AP.x = seg.x1; AP.wait = JUMP; } else AP.x += V_SLOW*dt*(RACE.t >= 0 ? 1 : 1); }
+    if (AP.x >= AX1){ AP.on = false; AP.done = T; }
+    ap.visible = true; ap.position.set(AP.x, 0, 0); ap.scale.setScalar(0.7 + 0.25*Math.sin(T*30)); apTrail.visible = true; apTrail.position.set(AP.x - 0.25, 0, 0); }
+  else { ap.visible = false; apTrail.visible = false; }
+  axonMat.emissiveIntensity = AP.on ? 0.15 : 0;
+  // cut & regrow
+  if (REG.t >= 0){ REG.t += dt; const t = REG.t, distal = PNS_SEGS.filter(s => s.x0 > CUT - 0.5);
+    if (t < 2){ axBMat.transparent = true; axBMat.opacity = 1 - t/2; setAxB(AX1 - CUT); distal.forEach(s => s.target = 0); rk(0.25); }
+    else if (t < 4){ axB.visible = false; distal.forEach(s => { s.group.scale.set(1, 0.6, 0.6); }); rk(0.5); }
+    else if (t < 9){ axB.visible = true; axBMat.opacity = 1; const len = (AX1 - CUT)*clamp((t - 4)/5, 0, 1); setAxB(len); cone.visible = true; cone.position.set(CUT + len, 0, 0); rk(0.75); }
+    else if (t < 11){ cone.visible = false; distal.forEach(s => { s.group.scale.set(1, 1, 1); s.target = 1; }); rk(1); }
+    else { REG.t = -1; axBMat.transparent = false; } }
+  // microglia: surveillance + injury response
+  mBranches.forEach((g, i) => { let s = 1 + 0.12*Math.sin(T*1.6 + g.userData.ph);
+    if (MG.phase >= 0 && MG.phase < 3){ const toward = HURT.clone().sub(micro.position).normalize().dot(g.userData.d); s = toward > 0.3 ? 1 + 1.2*clamp(MG.t/2, 0, 1)*toward : 0.6; }
+    if (PR.t >= 0 && i === 2) s = 1 + 0.8*clamp(PR.t/1.2, 0, 1);
+    g.scale.set(s, 1, 1); });
+  if (MG.phase >= 0){ MG.t += dt; const t = MG.t;
+    if (t < 1.2){ hurt.material.color.lerp(lin('#5a4a40'), dt*2); rk(0.0); }
+    if (t > 1.2 && hurt.visible){ hurt.visible = false; debris.forEach((d, i) => { d.visible = true; d.position.copy(HURT).add(V((rnd()-0.5)*0.7, (rnd()-0.5)*0.5, (rnd()-0.5)*0.7)); d.userData.home = d.position.clone(); }); MG.phase = 1; rk(0.25); }
+    ATP.forEach((a, i) => { const k = ((t*0.6 + i/ATP.length) % 1); const on = t > 1.2 && t < 7; a.visible = on; if (on){ const dir = V(Math.sin(i*2.3), Math.sin(i*1.7)*0.5, Math.cos(i*2.3)).normalize(); a.position.copy(HURT).addScaledVector(dir, 0.2 + k*1.8); a.material.opacity = 1 - k; } });
+    if (t > 2.4) rk(0.5);
+    if (t > 3.6 && t < 6.5){ micro.position.lerpVectors(MICRO, HURT.clone().add(V(-0.25, 0, -0.2)), clamp((t - 3.6)/2.4, 0, 1)); micro.scale.setScalar(1 + 0.4*clamp((t - 3.6)/2.4, 0, 1)); rk(0.75); }
+    if (t > 6.2){ debris.forEach((d, i) => { const k = clamp((t - 6.2 - i*0.08)/1.2, 0, 1); d.position.lerpVectors(d.userData.home, micro.position, k); d.scale.setScalar(1 - k*0.9); d.visible = k < 1; }); rk(1); }
+    if (t > 9){ MG.phase = 3; } }
+  if (PR.t >= 0){ PR.t += dt; if (PR.t > 1.2){ const k = clamp((PR.t - 1.2)/1.5, 0, 1); spine.position.lerpVectors(SPINE, micro.position, k); spine.scale.setScalar(1 - 0.85*k); spineStalk.visible = k < 0.4; if (k >= 1){ spine.visible = false; PR.t = -1; } } }
+  // glutamate
+  if (GL.t >= 0){ GL.t += dt; let left = 0;
+    GLU.forEach(s => { const u = s.userData; if (!s.visible) return;
+      if (GL.off){ u.p.addScaledVector(u.v, dt); if (u.p.distanceTo(SYN) > 0.55) u.v.multiplyScalar(-1); left++; }
+      else { u.k = Math.min(1, u.k + dt*0.8); u.p.lerp(ASTRO, dt*0.9); if (u.k >= 1) s.visible = false; else left++; }
+      s.position.copy(u.p); s.material.opacity = GL.off ? 1 : 1 - u.k*0.7; });
+    GL.level = GL.off ? 1 : left/GLU.length; GL.hist.push(GL.level); GL.hist.shift();
+    soma.material.emissive = soma.material.emissive || lin('#000'); neuronMat.emissive.set(GL.off && GL.t > 1.5 ? '#ff2020' : '#000000'); neuronMat.emissiveIntensity = GL.off ? 0.25 + 0.15*Math.sin(T*6) : 0;
+    if (!GL.off && left === 0 && GL.t > 3){ GL.t = -1; } }
+  else { neuronMat.emissiveIntensity = 0; }
+  astroMat.opacity = GL.off ? 0.25 : 1; astroMat.transparent = GL.off; astroMat.emissiveIntensity = state.n === 'astro' && !GL.off ? 0.18 + 0.08*Math.sin(T*3) : 0.08;
+  // BBB molecules
+  if (BB.t >= 0){ BB.t += dt; BBM.forEach((m, i) => { const t = clamp(BB.t - i*0.3, 0, 3), u = m.userData; m.visible = true;
+      const start = V(CAP_X, CAP_Y, u.z), wall = V(CAP_X, CAP_Y + 0.45, u.z), out = V(CAP_X - 0.2, CAP_Y + 1.5, u.z);
+      if (u.kind === 'pass') m.position.lerpVectors(start, out, clamp(t/1.6, 0, 1));
+      else if (u.kind === 'transport'){ m.position.copy(t < 0.8 ? start.clone().lerp(wall, t/0.8) : t < 1.6 ? wall : wall.clone().lerp(out, clamp((t - 1.6)/1.0, 0, 1))); }
+      else { const k = t < 0.8 ? t/0.8 : Math.max(0, 1 - (t - 0.8)/0.8); m.position.lerpVectors(start, wall, k*0.85); } });
+    if (BB.t > 8){ BB.t = -1; BBM.forEach(m => m.visible = false); } }
+  micro.rotation.y += dt*0.1;
+}
+
+/* ============ Picking ============ */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+function pickAt(e){ const r = renderer.domElement.getBoundingClientRect(); mouse.set(((e.clientX - r.left)/r.width)*2 - 1, -((e.clientY - r.top)/r.height)*2 + 1);
+  camera.updateMatrixWorld(); ray.setFromCamera(mouse, camera);
+  const groups = [[oligo,'oligo'], [astro,'astro'], [micro,'micro'], [capillary,'astro'], [hurt,'micro'], ...swans.map(s => [s,'schwann']), ...PNS_SEGS.map(s => [s.group,'schwann']), ...SEGS.filter(s => s.side === 'cns').map(s => [s.group,'oligo']), [soma,'myelin'], [axA,'myelin'], [axB,'myelin']];
+  const hit = ray.intersectObjects(groups.map(g => g[0]), true)[0]; if (!hit) return null;
+  let o = hit.object; while (o){ const g = groups.find(x => x[0] === o); if (g) return g[1]; o = o.parent; } return null; }
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const id = pickAt(e); if (id && id !== state.n) selectNode(id); });
+let hoverT = 0; renderer.domElement.addEventListener('pointermove', e => { if (e.buttons || performance.now() - hoverT < 80) return; hoverT = performance.now(); renderer.domElement.classList.toggle('hovering', !!pickAt(e)); });
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>').replace(/\[\[(\w+)\|([^\]]+)\]\]/g, (m, k, t) => `<button class="term" data-card="${k}">${t}</button>`);
+const fig = ([src, cap], narrow) => `<figure class="figure${narrow ? ' narrow' : ''}"><img src="${src}" alt="${esc(cap)}" data-zoom><figcaption>${esc(cap)}</figcaption></figure>`;
+function renderPanel(){
+  const n = NODE[state.n]; panel.style.setProperty('--c', n.color);
+  if (n.id === 'glia'){
+    const q = QUIZ[state.quiz % QUIZ.length];
+    panel.innerHTML = `
+      <div><div class="eyebrow">Unit 4 · Glial cells</div><h2>The glue that does a lot more</h2></div>
+      <div class="mem-line">${esc(n.mn)}</div>
+      <p class="lead">${fmt(n.lead)}</p>
+      <div class="tries"><button class="try" data-act="fire">▶ Fire the neuron</button></div>
+      <div class="soma">${['schwann','oligo','micro','astro'].map(id => { const k = NODE[id]; return `<button class="soma-row" data-n="${id}" style="--c:${k.color}"><span class="L">${k.letter}</span><span><b>${esc(k.title)}</b><span class="where">${k.where}</span><span class="mem">${esc(k.mn)}</span></span></button>`; }).join('')}</div>
+      <div class="mimgrid">${['schwann','oligo','micro','astro'].map(id => `<button class="mim" data-n="${id}"><img src="${NODE[id].img[0]}" alt="${esc(NODE[id].img[1])}"><span>${esc(NODE[id].short)}</span></button>`).join('')}</div>
+      <ul class="blist">${n.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul>
+      <div class="kids"><button class="mbtn" data-n="myelin" style="--c:${NODE.myelin.color}"><span class="mn"></span><span><b>${esc(NODE.myelin.title)}</b><span>${esc(NODE.myelin.mn)}</span></span></button>
+        <button class="mbtn" data-n="other" style="--c:${NODE.other.color}"><span class="mn"></span><span><b>${esc(NODE.other.title)}</b><span>Ependymal, radial, satellite and enteric glia</span></span></button></div>
+      <section class="quiz" id="quiz" aria-label="Which glial cell?">
+        <div class="eyebrow">Which glial cell? · ${state.quiz % QUIZ.length + 1} of ${QUIZ.length}</div>
+        <p class="q">${esc(q.q)}</p>
+        <div class="qopts">${QOPTS.map(([k, l]) => `<button class="qopt" data-a="${k}" ${state.quizPick ? 'disabled' : ''} aria-pressed="${state.quizPick === k}">${esc(l)}</button>`).join('')}</div>
+        ${state.quizPick ? `<p class="qfb ${state.quizPick === q.a ? 'ok' : 'bad'}">${state.quizPick === q.a ? 'Right.' : `Not quite: it’s ${esc(NODE[q.a].title)}.`} ${esc(q.why)}</p><button class="btn small primary" id="qnext">Next question →</button>` : ''}
+      </section>
+      <div class="cases"><button class="case" data-card="secondary"><span class="eyebrow">Forensic side quest</span><span>Injury doesn’t end when the blow ends</span><span class="case-go">Open →</span></button></div>`;
+  } else {
+    const i = ORDER.indexOf(n.id), prev = NODE[ORDER[i-1]], next = NODE[ORDER[i+1]];
+    panel.innerHTML = `
+      <button class="back" id="toMap">← All glia</button>
+      <div class="topic-head"><div class="eyebrow">${n.letter ? `SOMA · ${n.letter} · ${n.where}` : 'Glial cells'}</div><h2>${esc(n.title)}</h2></div>
+      <div class="mem-line">${esc(n.mn)}</div>
+      <p class="lead">${fmt(n.lead)}</p>
+      ${n.img ? fig(n.img, true) : ''}
+      ${n.demos ? `<div class="tries">${n.demos.map(([l, a]) => `<button class="try" data-act="${a}">▶ ${esc(l)}</button>`).join('')}</div>` : ''}
+      <ul class="blist">${n.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul>
+      ${(n.extra || []).map(e => fig(e)).join('')}
+      ${n.cases ? `<div class="cases">${n.cases.map(([k, t]) => `<button class="case" data-card="${k}"><span class="eyebrow">${esc(CARDS[k].kicker.split(' · ')[0])}</span><span>${esc(t)}</span><span class="case-go">Open →</span></button>`).join('')}</div>` : ''}
+      <div class="pager"><button class="btn" id="prevN">← ${esc(prev.short)}</button><button class="btn primary" id="nextN">${next ? esc(next.short) + ' →' : 'All glia'}</button></div>`;
+    $('#toMap').onclick = () => selectNode('glia'); $('#prevN').onclick = () => selectNode(prev.id); $('#nextN').onclick = () => selectNode(next ? next.id : 'glia');
+  }
+  panel.querySelectorAll('[data-n]').forEach(b => b.onclick = () => selectNode(b.dataset.n));
+  panel.querySelectorAll('.try').forEach(b => b.onclick = () => { ACT[b.dataset.act](); refreshTries(); });
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quizPick = b.dataset.a; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); });
+  const qn = $('#qnext'); if (qn) qn.onclick = () => { state.quiz++; state.quizPick = null; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); };
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  bindTerms(panel); refreshTries();
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card'), lb = $('#lightbox'); let lastFocus = null;
+lb.onclick = () => { lb.hidden = true; };
+function openCard(key){
+  const c = CARDS[key]; if (!c) return; lastFocus = document.activeElement;
+  const sheet = cardEl.querySelector('.card-sheet'); sheet.style.setProperty('--c', NODE[state.n].color);
+  sheet.innerHTML = `<div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div><button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${c.body.map(p => `<p>${esc(p)}</p>`).join('')}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}</ol></details></div>`;
+  cardEl.hidden = false; sheet.scrollTop = 0; sheet.querySelector('.close').onclick = closeCard; sheet.querySelector('.close').focus(); }
+function closeCard(){ cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term,[data-card]').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (!cardEl.hidden) closeCard(); else if (state.n !== 'glia') selectNode('glia'); } });
+
+/* ============ Loop ============ */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt; if (RACE.t >= 0){ RACE.t += dt; if (RACE.t > 9) RACE.t = -1; }
+  if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+    camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
+  controls.update(); updScene(dt); drawHud(dt); renderer.render(scene, camera); placeTags();
+  requestAnimationFrame(frame); }
+resize(); renderPanel();
+{ const [t0, d0, dir0] = VIEWS.glia; camera.position.copy(t0.clone().add(dir0.clone().normalize().multiplyScalar(d0*(isNarrow() ? 1.35 : 1)))); controls.target.copy(t0); }
+$('#loading').remove(); requestAnimationFrame(frame); setTimeout(fire, 1500);
+
+</script>
+</body></html>

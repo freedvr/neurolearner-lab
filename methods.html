@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Methods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: the 3D brain is the test bench; each method attaches its hardware to it. Live readout bottom-left, study notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Loading the brain…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Methods</h1>
+  <div class="brand-sub">How we study the brain</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle">Methods</div>
+  <canvas id="hudCanvas" width="900" height="250" aria-label="Live signal from the selected method"></canvas>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+
+/* ============ Methods (from Professor Freed's Methods deck) ============
+   rw: 'read' records activity, 'write' changes it, 'both', 'history'.  inv: invasiveness 0–3.
+   t / s: log10 of temporal resolution (seconds) and spatial resolution (mm) for the chart. */
+const METHODS = [
+  { id:'lesion', n:'0', title:'Brain damage & autopsy', short:'Damage', rw:'history', inv:0, color:'#c9a27a', t:5.5, s:1.2,
+    tag:'Where it all started',
+    analogy:'Figure out what a part does by seeing what goes missing when it breaks.',
+    demos:[['Show Tan’s damage (Broca’s area)','tan'],['Show Gage’s damage (iron rod)','gage'],['Remove a hemisphere','hemi']],
+    points:[
+      'Before scanners, we learned how the brain works from damage: what changed when part of it was hurt.',
+      '[[gage|Phineas Gage]] (1848) survived an iron rod through his frontal lobes; reported personality changes linked those regions to judgment and behavioral control.',
+      'Autopsies connected damage to symptoms during life. Paul Broca (1861) studied [[tan|patient “Tan,”]] who understood speech but could only say “tan,” linking the left frontal lobe to speech production.',
+      'Experimental lesions: researchers deliberately damaged or removed brain areas in animals, then watched what changed in movement, sensation or behavior.',
+      'Electrical stimulation: Fritsch and Hitzig (1870) stimulated a dog’s cortex and caused movements on the opposite side of the body.',
+      'Microscopy and staining: Golgi’s stain made single nerve cells visible, and Ramón y Cajal argued that neurons are separate cells.',
+      'Early electrical recordings: Hans Berger recorded the first human EEG in 1924.',
+      'An early wrong turn: [[phrenology|phrenology]] claimed skull bumps revealed personality. Wrong, but it got people asking whether different regions do different jobs.'],
+    cases:[['hemispherectomy','Some children can function with one hemisphere']] },
+  { id:'tms', n:'1', title:'TMS', long:'Transcranial magnetic stimulation', short:'TMS', rw:'write', inv:0, color:'#ffb547', t:-1, s:1.1,
+    tag:'Stimulates · non-invasive',
+    analogy:'A magnet outside your head makes a tiny electric current inside it.',
+    demos:[['Single pulse over motor cortex','tmsMotor'],['rTMS over left DLPFC (depression)','tmsDlpfc'],['Pulse the cerebellum (case study)','tmsCereb']],
+    points:[
+      'A coil held against the scalp sends brief magnetic pulses. A changing magnetic field induces an electric current in the cortex underneath.',
+      'The chain: changing magnetic field → induced current in brain tissue → membrane voltage changes → voltage-gated Na⁺ channels open → neurons fire. (Same physics, reversed, as an electric car motor: current → magnetic field → spinning.)',
+      'TMS manipulates brain activity; it does not record it.',
+      'Single-pulse TMS maps function: one pulse over the hand area makes your opposite hand twitch. Repetitive TMS (rTMS) delivers trains of pulses with longer-lasting effects.',
+      'Research: briefly disrupt an area and see what behavior breaks. Clinical: rTMS over the left dorsolateral prefrontal cortex treats depression; it’s also used for anxiety and chronic pain.',
+      'Generally safe with trained staff. Common side effects are scalp discomfort and mild headaches; rarely it can trigger a seizure, especially in people predisposed to them.'],
+    cases:[['obe','Out-of-body feelings after cerebellar TMS']] },
+  { id:'eeg', n:'2', title:'EEG', long:'Electroencephalography', short:'EEG', rw:'read', inv:0, color:'#7ad7ff', t:-2.5, s:1.4,
+    tag:'Records · non-invasive',
+    analogy:'Microphones outside the stadium: you hear the crowd, not any one person.',
+    demos:[['Deep sleep','eegDelta'],['Drowsy','eegTheta'],['Relaxed, eyes closed','eegAlpha'],['Alert','eegBeta'],['Focused','eegGamma']],
+    points:[
+      '16 to 256 electrodes sit on the scalp in the standard [[1020|10–20 system]]. Letters name the region (Fp, F, C, P, T, O); odd numbers are left, even are right, and “z” is the midline.',
+      'EEG does not record single neurons or action potentials. It records the summed, synchronized graded potentials ([[psp|EPSPs and IPSPs]]) of thousands to millions of pyramidal neurons, mostly in cortical layers III and V.',
+      'Why pyramidal neurons? They’re long, straight and lined up perpendicular to the scalp, so their [[dipole|dipoles]] stack like batteries. Randomly oriented neurons cancel out.',
+      'Signals are tiny: about 10–100 microvolts at the scalp, around 1,000 times smaller than the millivolts inside a neuron.',
+      'High temporal resolution (milliseconds), poor spatial resolution. Non-invasive, cheap and portable.',
+      'Hertz = cycles per second. Alpha ≈ 10 Hz means the voltage pattern rises and falls about 10 times every second.'],
+    mn:{title:'Brain waves: D-T-A-B-G', rows:[['δ','Delta 0.5–4 Hz','D = Deep sleep'],['θ','Theta 4–8 Hz','T = Twilight (drowsy)'],['α','Alpha 8–13 Hz','A = At ease (relaxed, eyes closed)'],['β','Beta 13–30 Hz','B = Busy brain (alert)'],['γ','Gamma 30+ Hz','G = Gathering information (focused)']]},
+    cases:[['hyperscan','Couples’ brains sync up'],['alpha','Alpha waves and focus']] },
+  { id:'ecog', n:'3', title:'ECoG & microelectrode arrays', short:'ECoG', rw:'both', inv:3, color:'#5fe0a3', t:-3, s:0.3,
+    tag:'Records (and can stimulate) · invasive',
+    analogy:'ECoG = microphones on the stadium roof. A microelectrode array = a microphone next to each fan.',
+    demos:[['Record with the ECoG grid','ecogRec'],['Record spikes with a Utah array','utah'],['Stimulate: map before surgery','penfield']],
+    points:[
+      'ECoG (electrocorticography) places a grid or strip of electrodes directly on the cortex, under the skull. That requires a craniotomy.',
+      'It records local field potentials: summed synaptic activity and rhythms from millions of neurons per electrode. Much better spatial resolution and signal than EEG, with the same millisecond timing.',
+      'Microelectrode arrays like the Utah array have about 100 tiny needles that go 1–1.5 mm into cortex and record action potentials from single neurons or small groups.',
+      'They answer different questions. ECoG: which region is active, and what rhythm dominates? Arrays: which neuron fired, and what does it encode?',
+      'The same electrodes can sometimes stimulate. Now the microphone has become a loudspeaker, sending something back in.',
+      'Awake surgery is possible because brain tissue has no ordinary pain receptors, so the patient can help surgeons map language and movement: if stimulation stops your speech, “DON’T CUT HERE.”'],
+    cases:[['penfield','Touch the brain and a memory appears'],['painbutton','There’s no simple “pain button”'],['handwriting','Typing by imagining handwriting']] },
+  { id:'dbs', n:'4', title:'DBS', long:'Deep brain stimulation', short:'DBS', rw:'write', inv:3, color:'#ff8f6b', t:-2.2, s:0.4,
+    tag:'Stimulates · invasive, implanted',
+    analogy:'A pacemaker for the brain.',
+    demos:[['Parkinson’s: stimulate the STN','dbsPD'],['Essential tremor: stimulate the Vim','dbsET'],['Turn stimulation off','dbsOff']],
+    points:[
+      'Electrodes are implanted deep in the brain, in targets like the thalamus, subthalamic nucleus or globus pallidus, and wired to a pulse generator under the skin of the chest.',
+      'It treats Parkinson’s disease, essential tremor and dystonia. A clinician adjusts the intensity and frequency from outside.',
+      'Unlike lesion surgery, DBS is reversible: turn it off, or remove the device. It manages symptoms; it doesn’t cure the disease.',
+      'Therapeutic modulation, not mind reading. Compare ECoG, which records from the surface to monitor and map.',
+      'Why does it work? Leading ideas: it jams the abnormal synchronized signals, replaces chaotic rhythms with a steady high-frequency pace, quiets overactive neurons (like a removable lesion), or drives output fibers to override glitching cells.'],
+    pairs:[['Parkinson’s','Target: STN or GPi. Stops resting tremor, plus stiffness and slowness. Often lets patients cut dopamine medication about in half.'],['Essential tremor','Target: Vim of the thalamus. Stops action tremor (when moving or holding a position). Treats only the shaking.']],
+    cases:[] },
+  { id:'fmri', n:'5', title:'fMRI', long:'Functional magnetic resonance imaging', short:'fMRI', rw:'read', inv:0, color:'#ff6fa5', t:0.3, s:0.4,
+    tag:'Records (blood flow) · non-invasive',
+    analogy:'A marching band: protons are marchers, deoxygenated blood is potholes. Fewer potholes, more in step, stronger signal.',
+    demos:[['Tap your right fingers','fmriMotor'],['Look at faces','fmriFaces'],['Look at houses','fmriHouses'],['Analyze without correcting for multiple comparisons','salmon']],
+    points:[
+      'MRI tracks hydrogen protons, mostly in water. A strong magnet lines them up; a radio pulse knocks them over; as they relax back they give off a signal. [[t1t2|T1 vs. T2]] images weight that relaxation differently.',
+      'Active areas get a rush of fresh, oxygen-rich blood, more than they use. Deoxygenated hemoglobin is slightly magnetic and makes the field “lumpy”; flushing it out makes the field smoother, so the signal gets stronger. That’s the [[bold|BOLD signal]].',
+      'fMRI measures blood oxygenation, not neural firing directly. The BOLD response peaks about 4–6 seconds after the activity and is back to baseline by 10–12 seconds.',
+      'It takes a whole-brain picture every 1–3 seconds. Each [[voxel|voxel]] (a 3D pixel, about 2–3 mm wide) contains hundreds of thousands to millions of neurons.',
+      'High spatial resolution, poor temporal resolution. Non-invasive, no radiation, but loud, cramped and very sensitive to head movement.',
+      'Signal changes are tiny: about 1–5%. That’s why fMRI needs lots of averaging and careful statistics. Try the last button to see what happens without them.',
+      'Most scanners run at 1.5–3 tesla: about 30,000–60,000 times Earth’s magnetic field and roughly 1,500–3,000 times a fridge magnet.'],
+    cases:[['salmon','The dead salmon'],['fmriproblems','Why fMRI results can mislead']] },
+  { id:'pet', n:'6', title:'PET', long:'Positron emission tomography', short:'PET', rw:'read', inv:1, color:'#ffd166', t:2, s:0.7,
+    tag:'Records (metabolism) · injected tracer',
+    analogy:'Follow the sugar: the busiest regions grab the most radioactive glucose.',
+    demos:[['Inject FDG','petInject'],['Subtraction: faces − blank wall','petSub']],
+    points:[
+      'A radioactive tracer is injected, usually FDG (fluorodeoxyglucose), a glucose look-alike tagged with fluorine-18. It gets taken up like glucose but can’t be fully broken down, so it builds up where cells are busiest.',
+      'After a 30–60 minute uptake period, you lie in a ring of detectors.',
+      'The tracer emits a [[positron|positron]], the electron’s antimatter partner. It meets an electron and both annihilate into two gamma photons flying in opposite directions. Detecting both at once pinpoints where it happened.',
+      'Tumors often burn glucose fast even with oxygen around (the Warburg effect), so they show up as hot spots.',
+      'Subtraction analysis: scan during a control condition (gazing at a blank wall) and during a task (gazing at faces), then subtract to isolate the task-related regions.'],
+    cases:[['murderers','The “41 murderers” study'],['schizo','Hypofrontality in schizophrenia']] },
+  { id:'opto', n:'7', title:'Optogenetics', short:'Opto', rw:'write', inv:3, color:'#4cc9f0', t:-2.7, s:-1.6,
+    tag:'Stimulates or silences · genetic + implanted light',
+    analogy:'The virus is the delivery truck. The promoter is the lock. Only the right cell has the key.',
+    demos:[['Blue light on channelrhodopsin','optoBlue'],['Yellow light on halorhodopsin','optoYellow'],['Run the false-memory experiment','falseMem']],
+    points:[
+      'Opto = light, genetics = genes. Scientists borrow light-sensitive proteins (opsins) from algae and other microbes and put them into specific neurons, usually in mice.',
+      'Channelrhodopsin (ChR2) is a light-gated cation channel: blue light (about 480 nm) opens it, Na⁺ rushes in, and the neuron fires, time-locked to each flash.',
+      'Halorhodopsin (NpHR) is a light-driven chloride pump: yellow light drives Cl⁻ in and silences the neuron.',
+      'The massive advantage is [[promoter|cell-type specificity]]. The virus infects many neurons, but only cells with the right promoter (or Cre enzyme) switch the gene on. That avoids electrical stimulation’s problem of activating everything near the electrode.',
+      'Two ways in: viral delivery (precise, works in adults) or transgenic breeding (stable, consistent). “Viruses give you precision, breeding gives you permanence.”',
+      'Limits: it needs surgery for optic fibers, light doesn’t go deep into tissue, and foreign proteins can trigger an immune response. Newer [[wireless|wireless implants]] free the animal to move.'],
+    cases:[['falsememory','Creating a false fear memory'],['wireless','Wireless optogenetics']] },
+  { id:'dti', n:'+', title:'DTI', long:'Diffusion tensor imaging', short:'DTI', rw:'read', inv:0, color:'#a58bff', t:3, s:0.3, more:true,
+    tag:'Maps wiring · non-invasive',
+    analogy:'Water in a cup spreads everywhere; water in a bundle of straws flows along the straws. DTI figures out which way the straws point.',
+    demos:[['Show the white-matter tracts','dtiShow']],
+    points:[
+      'An MRI technique that maps white-matter pathways by measuring how water diffuses.',
+      'In gray matter, water wiggles in every direction. Inside axon bundles, it moves mostly along the fibers, not across them.',
+      'Anisotropy (“ann-ice-oh-TROPH-ee”): having different properties in different directions, like wood that’s stronger along the grain. Fractional anisotropy (FA) runs from 0 (equal in all directions) to 1 (one direction). High FA means strong, coherent white matter.',
+      'A tensor is the 3D math model of that direction at each point. Tracts are usually color-coded: red = left–right, green = front–back, blue = up–down.',
+      'You don’t see axons directly; you infer them from water motion. Used to study connectivity and changes in MS, stroke and brain injury.'],
+    cases:[] },
+  { id:'calcium', n:'+', title:'Calcium imaging', short:'Ca²⁺', rw:'read', inv:3, color:'#7dffa1', t:-1, s:-2, more:true,
+    tag:'Records (light) · genetic + optical',
+    analogy:'Turn neural activity into light you can film.',
+    demos:[['Watch neurons flash','caFlash']],
+    points:[
+      'Action potentials open voltage-gated Ca²⁺ channels, so Ca²⁺ briefly enters. Instead of recording voltage with electrodes, we film that calcium as fluorescence.',
+      'Calcium-sensitive dyes (like Fura-2) soak into neurons: strong signal, but toxic over time and hard to use in a behaving brain.',
+      'GCaMP is a genetically encoded indicator, made from GFP plus calmodulin, that glows brighter when Ca²⁺ binds. Like opsins, it can be targeted to specific cell types.',
+      'The big advantage: you can see many neurons at once, know exactly where they are, and target specific cell types, which electrodes alone can’t do.',
+      'The limit: Ca²⁺ is a proxy for voltage. The signal is slower than spikes and lingers after firing.',
+      '[[twophoton|Two-photon imaging]] lets you image hundreds of microns deep with single-cell resolution.'],
+    cases:[['zebrafish','Watching a zebrafish decide to hunt']] }
+];
+const OTHER = [
+  ['DTI','Diffusion tensor imaging: an MRI technique that follows water diffusing along axon bundles to map the brain’s white-matter highways.','read','dti'],
+  ['Calcium imaging','Neurons glow when Ca²⁺ rushes in after they fire, so you can watch hundreds of identified cells at once (mostly in animals).','read','calcium'],
+  ['MEG','Magnetoencephalography: records the tiny magnetic fields made by the same currents EEG picks up, with better localization. Needs a shielded room.','read'],
+  ['fNIRS','Functional near-infrared spectroscopy: shines near-infrared light through the scalp to track blood oxygen in the outer cortex. Portable, like a wearable cousin of fMRI.','read'],
+  ['tDCS','Transcranial direct current stimulation: a weak, steady current through scalp electrodes nudges neurons slightly toward or away from firing.','write'],
+  ['ECG / EKG','Records the heart’s electrical activity. Heart rate variability is a window into stress, emotion and the autonomic nervous system; also used in biofeedback.','read'],
+  ['Eye tracking','Where and how long you look: a window into visual attention and decision-making.','read'],
+  ['GSR','Galvanic skin response: tiny changes in skin conductance from sweat, a marker of arousal.','read'],
+  ['Cortisol','Stress hormone measured in saliva (minutes to hours) or hair (months).','read'],
+  ['Brainbow','Genetic labeling that colors individual neurons in about 100 different hues so you can trace their branches.','read']
+];
+const QUIZ = [
+  {q:'You want to know exactly when (to the millisecond) the brain responds to a surprising sound, in healthy volunteers.', a:'eeg', why:'EEG has millisecond timing and is non-invasive. fMRI would be seconds too slow.'},
+  {q:'You want to know which small region deep in the brain is more active when people look at faces.', a:'fmri', why:'fMRI gives millimeter-level maps of the whole brain, including deep structures, without surgery.'},
+  {q:'You want to test whether a region is necessary for a task, in healthy people, by briefly disrupting it.', a:'tms', why:'TMS stimulates (writes), so it can show cause and effect, and it’s non-invasive.'},
+  {q:'In mice, you want to know whether turning on only dopamine neurons makes the mouse repeat a behavior.', a:'opto', why:'Optogenetics can switch on one genetically defined cell type with millisecond control.'},
+  {q:'A patient with Parkinson’s has a tremor that medication no longer controls.', a:'dbs', why:'DBS is a treatment: implanted electrodes in the STN or GPi can reduce tremor, stiffness and slowness.'},
+  {q:'You want to see which regions burn the most glucose in a patient with a suspected tumor.', a:'pet', why:'FDG-PET measures glucose metabolism, and tumors often show up as hot spots.'},
+  {q:'A paralyzed participant wants to type by imagining writing letters.', a:'ecog', why:'Implanted microelectrode arrays record individual neurons in the hand area, precise enough to decode each letter.'},
+  {q:'You want to map the white-matter highway between Broca’s and Wernicke’s areas.', a:'dti', why:'DTI tracks water diffusion along axon bundles to reconstruct the tracts.'}
+];
+
+const REFS = {
+  harlow:'Harlow, J. M. (1868). Recovery from the passage of an iron bar through the head. Publications of the Massachusetts Medical Society, 2, 327–347.',
+  damasio:'Damasio, H., Grabowski, T., Frank, R., Galaburda, A. M., & Damasio, A. R. (1994). The return of Phineas Gage. Science, 264(5162), 1102–1105.',
+  broca:'Broca, P. (1861). Remarques sur le siège de la faculté du langage articulé. Bulletin de la Société Anatomique de Paris, 6, 330–357.',
+  dronkers:'Dronkers, N. F., Plaisant, O., Iba-Zizen, M. T., & Cabanis, E. A. (2007). Paul Broca’s historic cases. Brain, 130(5), 1432–1441.',
+  fritsch:'Fritsch, G., & Hitzig, E. (1870). Über die elektrische Erregbarkeit des Grosshirns. Archiv für Anatomie, Physiologie und wissenschaftliche Medicin, 37, 300–332.',
+  berger:'Berger, H. (1929). Über das Elektrenkephalogramm des Menschen. Archiv für Psychiatrie und Nervenkrankheiten, 87, 527–570.',
+  granovetter:'Granovetter, M. C., Robert, S., Ettensohn, L., & Behrmann, M. (2022). With childhood hemispherectomy, one hemisphere can support—but is suboptimal for—word and face recognition. PNAS, 119(44).',
+  barker:'Barker, A. T., Jalinous, R., & Freeston, I. L. (1985). Non-invasive magnetic stimulation of human motor cortex. The Lancet, 325(8437), 1106–1107.',
+  oreardon:'O’Reardon, J. P., et al. (2007). Efficacy and safety of transcranial magnetic stimulation in the acute treatment of major depression. Biological Psychiatry, 62(11), 1208–1216.',
+  schutter:'Schutter, D. J. L. G., Kammers, M. P. M., Enter, D., & van Honk, J. (2006). A case of illusory own-body perceptions after transcranial magnetic stimulation of the cerebellum. The Cerebellum, 5(3), 238–240.',
+  jasper:'Jasper, H. H. (1958). The ten-twenty electrode system of the International Federation. Electroencephalography and Clinical Neurophysiology, 10, 371–375.',
+  nunez:'Nunez, P. L., & Srinivasan, R. (2006). Electric fields of the brain: The neurophysics of EEG (2nd ed.). Oxford University Press.',
+  kinreich:'Kinreich, S., Djalovski, A., Kraus, L., Louzoun, Y., & Feldman, R. (2017). Brain-to-brain synchrony during naturalistic social interactions. Scientific Reports, 7, 17060.',
+  klimesch:'Klimesch, W., Sauseng, P., & Hanslmayr, S. (2007). EEG alpha oscillations: The inhibition–timing hypothesis. Brain Research Reviews, 53(1), 63–88.',
+  penfield63:'Penfield, W., & Perot, P. (1963). The brain’s record of auditory and visual experience. Brain, 86(4), 595–696.',
+  mazzola:'Mazzola, L., Isnard, J., Peyron, R., & Mauguière, F. (2012). Stimulation of the human cortex and the experience of pain: Wilder Penfield’s observations revisited. Brain, 135(2), 631–640.',
+  willett:'Willett, F. R., Avansino, D. T., Hochberg, L. R., Henderson, J. M., & Shenoy, K. V. (2021). High-performance brain-to-text communication via handwriting. Nature, 593(7858), 249–254.',
+  maynard:'Maynard, E. M., Nordhausen, C. T., & Normann, R. A. (1997). The Utah intracortical electrode array. Electroencephalography and Clinical Neurophysiology, 102(3), 228–239.',
+  benabid:'Benabid, A. L., et al. (1991). Long-term suppression of tremor by chronic stimulation of the ventral intermediate thalamic nucleus. The Lancet, 337(8738), 403–406.',
+  limousin:'Limousin, P., et al. (1998). Electrical stimulation of the subthalamic nucleus in advanced Parkinson’s disease. New England Journal of Medicine, 339(16), 1105–1111.',
+  ogawa:'Ogawa, S., Lee, T. M., Kay, A. R., & Tank, D. W. (1990). Brain magnetic resonance imaging with contrast dependent on blood oxygenation. PNAS, 87(24), 9868–9872.',
+  logothetis:'Logothetis, N. K. (2008). What we can do and what we cannot do with fMRI. Nature, 453(7197), 869–878.',
+  bennett:'Bennett, C. M., Baird, A. A., Miller, M. B., & Wolford, G. L. (2010). Neural correlates of interspecies perspective taking in the post-mortem Atlantic salmon. Journal of Serendipitous and Unexpected Results, 1(1), 1–5.',
+  eklund:'Eklund, A., Nichols, T. E., & Knutsson, H. (2016). Cluster failure: Why fMRI inferences for spatial extent have inflated false-positive rates. PNAS, 113(28), 7900–7905.',
+  button:'Button, K. S., et al. (2013). Power failure: Why small sample size undermines the reliability of neuroscience. Nature Reviews Neuroscience, 14(5), 365–376.',
+  kriegeskorte:'Kriegeskorte, N., Simmons, W. K., Bellgowan, P. S. F., & Baker, C. I. (2009). Circular analysis in systems neuroscience: The dangers of double dipping. Nature Neuroscience, 12(5), 535–540.',
+  epstein:'Epstein, R., & Kanwisher, N. (1998). A cortical representation of the local visual environment. Nature, 392(6676), 598–601.',
+  kanwisher:'Kanwisher, N., McDermott, J., & Chun, M. M. (1997). The fusiform face area. Journal of Neuroscience, 17(11), 4302–4311.',
+  petersen:'Petersen, S. E., Fox, P. T., Posner, M. I., Mintun, M., & Raichle, M. E. (1988). Positron emission tomographic studies of the cortical anatomy of single-word processing. Nature, 331(6157), 585–589.',
+  raine:'Raine, A., Buchsbaum, M., & LaCasse, L. (1997). Brain abnormalities in murderers indicated by positron emission tomography. Biological Psychiatry, 42(6), 495–508.',
+  townsend:'Townsend, L., Pillinger, T., Selvaggi, P., Veronese, M., Turkheimer, F., & Howes, O. (2023). Brain glucose metabolism in schizophrenia: A systematic review and meta-analysis of 18FDG-PET studies in schizophrenia. Psychological Medicine, 53(11), 4880–4897.',
+  boyden:'Boyden, E. S., Zhang, F., Bamberg, E., Nagel, G., & Deisseroth, K. (2005). Millisecond-timescale, genetically targeted optical control of neural activity. Nature Neuroscience, 8(9), 1263–1268.',
+  zhang:'Zhang, F., et al. (2007). Multimodal fast optical interrogation of neural circuitry. Nature, 446(7136), 633–639.',
+  ramirez:'Ramirez, S., Liu, X., Lin, P.-A., Suh, J., Pignatelli, M., Redondo, R. L., Ryan, T. J., & Tonegawa, S. (2013). Creating a false memory in the hippocampus. Science, 341(6144), 387–391.',
+  montgomery:'Montgomery, K. L., et al. (2015). Wirelessly powered, fully internal optogenetics for brain, spinal and peripheral circuits in mice. Nature Methods, 12(10), 969–974.',
+  basser:'Basser, P. J., Mattiello, J., & LeBihan, D. (1994). MR diffusion tensor spectroscopy and imaging. Biophysical Journal, 66(1), 259–267.',
+  chen:'Chen, T.-W., et al. (2013). Ultrasensitive fluorescent proteins for imaging neuronal activity. Nature, 499(7458), 295–300.',
+  denk:'Denk, W., Strickler, J. H., & Webb, W. W. (1990). Two-photon laser scanning fluorescence microscopy. Science, 248(4951), 73–76.',
+  muto:'Muto, A., Ohkura, M., Abe, G., Nakai, J., & Kawakami, K. (2013). Real-time visualization of neuronal activity during perception. Current Biology, 23(4), 307–311.',
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (Eds.). (2021). Principles of neural science (6th ed.). McGraw Hill.',
+  vanwhy:'van Wyhe, J. (2004). Phrenology and the origins of Victorian scientific naturalism. Ashgate.'
+};
+const FIGS = { phren: "<svg viewBox=\"40 14 310 286\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" aria-label=\"Drawing of a phrenology head: the skull divided into patches, each labeled with a supposed trait such as Hope, Firmness and Benevolence\"><defs><clipPath id=\"phC\"><path d=\"M150 292 C150 262 132 246 108 226 C76 200 62 168 64 132 C68 70 124 30 196 30 C262 30 304 74 306 128 C307 146 304 158 306 170 C312 182 324 194 330 204 C333 210 326 214 316 214 C314 222 318 228 314 232 C318 238 316 244 310 246 C312 258 306 268 290 268 C276 268 262 270 254 278 L252 292 Z\"/></clipPath></defs><rect x=\"40\" y=\"14\" width=\"310\" height=\"286\" fill=\"#1b1712\"/><path d=\"M150 292 C150 262 132 246 108 226 C76 200 62 168 64 132 C68 70 124 30 196 30 C262 30 304 74 306 128 C307 146 304 158 306 170 C312 182 324 194 330 204 C333 210 326 214 316 214 C314 222 318 228 314 232 C318 238 316 244 310 246 C312 258 306 268 290 268 C276 268 262 270 254 278 L252 292 Z\" fill=\"#e3d2ad\"/><g clip-path=\"url(#phC)\"><g stroke=\"#5b4a33\" stroke-width=\"1.2\"><path d=\"M109.1 155.9 L22.6 131.1 A170 170 0 0 1 49.0 77.4 L121.5 130.7 A80 80 0 0 0 109.1 155.9 Z\" fill=\"#f2e6c9\"/><path d=\"M121.5 130.7 L49.0 77.4 A170 170 0 0 1 92.3 36.1 L141.9 111.2 A80 80 0 0 0 121.5 130.7 Z\" fill=\"#e6d3aa\"/><path d=\"M141.9 111.2 L92.3 36.1 A170 170 0 0 1 147.3 12.5 L167.8 100.1 A80 80 0 0 0 141.9 111.2 Z\" fill=\"#f2e6c9\"/><path d=\"M167.8 100.1 L147.3 12.5 A170 170 0 0 1 207.1 9.3 L195.9 98.6 A80 80 0 0 0 167.8 100.1 Z\" fill=\"#e6d3aa\"/><path d=\"M195.9 98.6 L207.1 9.3 A170 170 0 0 1 264.3 27.1 L222.9 107.0 A80 80 0 0 0 195.9 98.6 Z\" fill=\"#f2e6c9\"/><path d=\"M222.9 107.0 L264.3 27.1 A170 170 0 0 1 311.8 63.6 L245.2 124.2 A80 80 0 0 0 222.9 107.0 Z\" fill=\"#e6d3aa\"/><path d=\"M245.2 124.2 L311.8 63.6 A170 170 0 0 1 343.6 114.3 L260.2 148.0 A80 80 0 0 0 245.2 124.2 Z\" fill=\"#f2e6c9\"/><path d=\"M155.2 169.2 L109.1 155.9 A80 80 0 0 1 128.8 122.0 L163.1 155.6 A32 32 0 0 0 155.2 169.2 Z\" fill=\"#e6d3aa\"/><path d=\"M163.1 155.6 L128.8 122.0 A80 80 0 0 1 162.3 101.6 L176.5 147.4 A32 32 0 0 0 163.1 155.6 Z\" fill=\"#f2e6c9\"/><path d=\"M176.5 147.4 L162.3 101.6 A80 80 0 0 1 201.5 99.5 L192.2 146.6 A32 32 0 0 0 176.5 147.4 Z\" fill=\"#e6d3aa\"/><path d=\"M192.2 146.6 L201.5 99.5 A80 80 0 0 1 237.0 116.4 L206.4 153.3 A32 32 0 0 0 192.2 146.6 Z\" fill=\"#f2e6c9\"/><path d=\"M206.4 153.3 L237.0 116.4 A80 80 0 0 1 260.2 148.0 L215.7 166.0 A32 32 0 0 0 206.4 153.3 Z\" fill=\"#e6d3aa\"/></g></g><path d=\"M150 292 C150 262 132 246 108 226 C76 200 62 168 64 132 C68 70 124 30 196 30 C262 30 304 74 306 128 C307 146 304 158 306 170 C312 182 324 194 330 204 C333 210 326 214 316 214 C314 222 318 228 314 232 C318 238 316 244 310 246 C312 258 306 268 290 268 C276 268 262 270 254 278 L252 292 Z\" fill=\"none\" stroke=\"#3b2f20\" stroke-width=\"2.5\"/><path d=\"M286 156 C292 150 300 152 302 158\" fill=\"none\" stroke=\"#3b2f20\" stroke-width=\"2\"/><ellipse cx=\"292\" cy=\"166\" rx=\"6\" ry=\"3.2\" fill=\"#3b2f20\"/><path d=\"M190 192 C176 188 168 206 176 220 C182 230 196 228 196 216\" fill=\"#d8c49c\" stroke=\"#3b2f20\" stroke-width=\"2\"/><g font-family=\"Georgia, 'Times New Roman', serif\" font-size=\"9.5\" fill=\"#3d3020\" font-style=\"italic\"><text x=\"90.1\" y=\"123.1\" text-anchor=\"middle\"><tspan x=\"90.1\" dy=\"0\">Family</tspan></text><text x=\"101.9\" y=\"87.6\" text-anchor=\"middle\"><tspan x=\"101.9\" dy=\"0\">Self-</tspan><tspan x=\"101.9\" dy=\"10\">esteem</tspan></text><text x=\"137.8\" y=\"68.9\" text-anchor=\"middle\"><tspan x=\"137.8\" dy=\"0\">Firmness</tspan></text><text x=\"179.6\" y=\"59.2\" text-anchor=\"middle\"><tspan x=\"179.6\" dy=\"0\">Veneration</tspan></text><text x=\"222.3\" y=\"59.5\" text-anchor=\"middle\"><tspan x=\"222.3\" dy=\"0\">Benev-</tspan><tspan x=\"222.3\" dy=\"10\">olence</tspan></text><text x=\"260.4\" y=\"84.3\" text-anchor=\"middle\"><tspan x=\"260.4\" dy=\"0\">Imitation</tspan></text><text x=\"289.3\" y=\"116.1\" text-anchor=\"middle\"><tspan x=\"289.3\" dy=\"0\">Mirth</tspan></text><text x=\"135.9\" y=\"151.8\" text-anchor=\"middle\"><tspan x=\"135.9\" dy=\"0\">Courage</tspan></text><text x=\"155.8\" y=\"131.5\" text-anchor=\"middle\"><tspan x=\"155.8\" dy=\"0\">Caution</tspan></text><text x=\"183.0\" y=\"123.1\" text-anchor=\"middle\"><tspan x=\"183.0\" dy=\"0\">Hope</tspan></text><text x=\"210.9\" y=\"128.6\" text-anchor=\"middle\"><tspan x=\"210.9\" dy=\"0\">Wonder</tspan></text><text x=\"232.8\" y=\"146.7\" text-anchor=\"middle\"><tspan x=\"232.8\" dy=\"0\">Reason</tspan></text></g></svg>" };
+const CARDS = {
+  gage:{title:'Phineas Gage', kicker:'Brain damage', body:['In 1848 an iron rod shot through railroad foreman Phineas Gage’s head, destroying much of his left frontal lobe. He survived, but his doctor reported he became impulsive and unreliable: “no longer Gage.”','His case suggested the frontal lobes help with judgment and self-control, long before anyone could scan a brain. (See the Frontal Lobe scene in Neuroanatomy.)'], refs:['harlow','damasio']},
+  tan:{title:'Patient “Tan”', kicker:'Autopsy', body:['Louis Victor Leborgne understood speech but could only say “tan.” After he died in 1861, Paul Broca found damage in the left frontal lobe.','It was the first widely accepted evidence that a specific ability lives in a specific place. MRI of his preserved brain in 2007 showed the damage reached deeper than Broca could see.'], refs:['broca','dronkers']},
+  phrenology:{title:'Phrenology', kicker:'An early wrong turn', fig:'phren', cap:'A phrenology head in the style of 1800s busts: each patch of skull was supposed to hold one trait. None of it held up.', body:['In the early 1800s, Franz Joseph Gall and followers claimed that bumps on the skull revealed traits like kindness or cunning.','The method was invalid: skull shape doesn’t track the brain beneath, and the “faculties” were made up. But the core question, whether different brain regions do different jobs, turned out to be a good one.'], refs:['vanwhy']},
+  hemispherectomy:{title:'Living with one hemisphere', kicker:'Neuroplasticity', body:['For severe epilepsy, some children have much of one cerebral hemisphere removed or disconnected (hemispherectomy or hemispherotomy).','The remaining hemisphere can take over an astonishing amount. In one study, childhood hemispherectomy patients recognized words and faces with over 80% accuracy, whichever hemisphere remained, though still below controls.','Lose half your cortex as a child ≠ lose half your mind. Outcomes vary a lot, though.'], refs:['granovetter']},
+  obe:{title:'Out-of-body feelings after cerebellar TMS', kicker:'Case study', body:['Out-of-body experiences are usually linked to temporo-parietal regions that combine the senses into a sense of “where my body is.”','In a single-case study, a healthy young woman received TMS over the cerebellum. Afterward she reported illusory own-body perceptions, like floating or being displaced. Fake (placebo) cerebellar TMS and TMS over the occipital lobe didn’t do this.','EEG showed changes over somatosensory cortex. The takeaway: the cerebellum isn’t just “motor”; it may help keep your sense of body-in-space stable. It’s one person, so treat it as a lead, not proof.'], refs:['schutter']},
+  '1020':{title:'The 10–20 system', kicker:'EEG', body:['A standard way to place electrodes so recordings can be compared across people and studies. Electrodes sit at 10% or 20% of the distance between four landmarks: the nasion (top of the nose), the inion (bump on the back of the skull), and the points in front of each ear.','Letters: Fp = frontopolar, F = frontal, C = central (motor and somatosensory strip), P = parietal, T = temporal, O = occipital. Odd numbers = left, even = right, z = midline (“zero”).','Anchor points: Fp1/Fp2 prefrontal, F3/F4 frontal, C3/C4 motor (hand area nearby), P3/P4 parietal, O1/O2 visual, and Cz right on top, a common reference. Hover the electrodes on the 3D head to see them.'], refs:['jasper']},
+  psp:{title:'EPSPs and IPSPs', kicker:'Graded potentials', body:['Graded potentials are small, local changes in membrane voltage in the dendrites and cell body. Their size depends on the input, and they fade with distance.','EPSP (excitatory): usually from glutamate. Na⁺ flows in, moving the cell toward threshold (−55 mV). IPSP (inhibitory): usually from GABA. Cl⁻ flows in (or K⁺ out), moving it away from threshold.','These graded potentials, summed across huge numbers of aligned neurons, are what EEG picks up, not action potentials. (Try the Na⁺ and Cl⁻ channels in the Neuron Lab.)'], refs:['kandel']},
+  dipole:{title:'Dipoles: why EEG can see anything', kicker:'EEG', body:['A dipole is just a + end and a − end, like an AA battery. When synapses on a pyramidal neuron’s dendrite open, current flows in at one spot (a sink) and out somewhere else (a source): a tiny battery.','One neuron is invisible from the scalp. But pyramidal neurons are long, straight and lined up perpendicular to the surface, so when thousands activate together their dipoles stack and the field leaks through brain, skull and scalp. Randomly oriented neurons cancel out.','Stadium analogy: everyone stands and leans forward at once, and from far away you see the wave. EEG is that distant view.'], refs:['nunez']},
+  hyperscan:{title:'Couples’ brains sync up', kicker:'Hyperscanning EEG', body:['Hyperscanning records EEG from two or more people at once.','Researchers recorded 104 adults during natural face-to-face conversation, comparing romantic couples with strangers. Couples showed brain-to-brain synchrony in gamma rhythms over temporal-parietal regions; strangers didn’t.'], refs:['kinreich']},
+  alpha:{title:'Alpha waves and focus', kicker:'EEG study', body:['Klimesch and colleagues proposed the inhibition–timing hypothesis: alpha rhythms aren’t just “idling.” They control when and where the cortex is allowed to process information.','More synchronized alpha appears to reflect actively holding back distractions so you can focus on your thoughts or actions; when alpha becomes disorganized, that control loosens.'], refs:['klimesch']},
+  penfield:{title:'Touch the brain and a memory appears', kicker:'Electrical stimulation', body:['Imagine you’re awake during brain surgery. The surgeon touches your cortex with an electrode, and suddenly you hear music or see a scene from your past. Stimulation stops, the experience stops.','Wilder Penfield saw this in some patients, especially with temporal-lobe stimulation. Did he find where memories are stored? Not exactly: there’s still debate about whether these were real memories or the brain constructing something.','The lasting legacy is mapping: surgeons stimulate while you count, talk or move your hand, and if a spot interferes, they don’t cut there.'], refs:['penfield63']},
+  painbutton:{title:'There’s no simple “pain button”', kicker:'Electrical stimulation', body:['Students often expect: motor cortex → move a hand, visual cortex → see light, “pain cortex” → feel pain. Penfield struggled to find any pain center.','A later study analyzed 4,160 stimulations in 164 patients: pain came from only about 1.4% of them, mostly around the posterior insula and parietal operculum. Pain is built by a network, not one spot.'], refs:['mazzola']},
+  handwriting:{title:'Typing by imagining handwriting', kicker:'Brain–computer interface', body:['A man paralyzed from the neck down had two microelectrode arrays placed in the hand area of his motor cortex (the “hand knob,” about the size of a small aspirin). He imagined writing letters by hand, over and over, building a library of neural activity for each letter.','A recurrent neural network learned to translate those patterns into text in real time: 94.1% raw accuracy, over 99% with autocorrect, at about 90 characters per minute.','The problem: neural patterns drift because the arrays shift slightly in a living, pulsing brain, so accuracy drops over days and the system needs retraining. Professor Freed’s team trained CNN and RNN models on some of this data and kept accuracy around 95% after 9 days with no retraining (on single letters).'], refs:['willett','maynard']},
+  bold:{title:'The BOLD signal, step by step', kicker:'fMRI', body:['1. MRI wants a uniform magnetic field so hydrogen protons spin in step. 2. Deoxygenated hemoglobin is paramagnetic: it makes the field lumpy. 3. Lumpy field → protons fall out of phase → weaker signal.','4. Active neurons trigger an oversupply of oxygen-rich blood, flushing out deoxyhemoglobin. 5. Smoother field → protons stay in phase longer → stronger signal.','That signal change, delayed by seconds, is BOLD (blood-oxygen-level-dependent). It reflects blood, not firing directly.'], refs:['ogawa','logothetis']},
+  t1t2:{title:'T1 vs. T2', kicker:'MRI', body:['After the radio pulse, protons relax in two ways. T1 = relaxing back with the magnet (“how fast does a spinning top stand back up?”). T2 = losing sync with each other (“how long do the tops stay in step?”).','T1-weighted images are best for anatomy: fat and white matter look bright, water and fluid (CSF) look dark.','T2-weighted images are best for pathology like swelling, inflammation and tumors. The memory trick: T2 = H₂O. Water is bright on T2.'], refs:['kandel']},
+  voxel:{title:'Voxels', kicker:'fMRI', body:['Not a pixel: a voxel, a volumetric pixel, a tiny 3D cube of brain, usually 2–3 mm wide.','Each one holds hundreds of thousands to millions of neurons. So one bright voxel ≠ one neuron firing.'], refs:['logothetis']},
+  salmon:{title:'The dead salmon', kicker:'fMRI statistics', body:['Researchers put a dead Atlantic salmon in an fMRI scanner, showed it photos of people in social situations, and “asked” it to judge their emotions. Without correction, the analysis found “significant activation” in the fish’s brain.','How? The scanner always measures something: thermal noise from the electronics, and protons that still respond to magnets in dead tissue. Test 20,000 voxels at p < .05 and about 1,000 will look significant by pure chance.','Once they corrected for multiple comparisons, the activation vanished. “The dead fish didn’t have brain activity, it had bad statistics.” The study won an Ig Nobel Prize.'], refs:['bennett']},
+  fmriproblems:{title:'Why fMRI results can mislead', kicker:'fMRI', body:['Multiple comparisons: testing 100,000 voxels creates thousands of false positives unless you correct (Bonferroni: very strict; FDR: allows ~5% false discoveries; cluster-based: keep only clusters too big to be chance).','Small samples: costly scanning led to studies with 15–30 people, which inflates false discoveries and exaggerates effect sizes.','Software assumptions: one analysis found common cluster methods could push false-positive rates as high as 70%.','Analytical flexibility: dozens of processing choices mean different teams can reach different conclusions from the same data. Double dipping: picking voxels because they lit up, then measuring the effect in those same voxels, manufactures strong results.'], refs:['eklund','button','kriegeskorte']},
+  positron:{title:'Positrons and annihilation', kicker:'PET', body:['A positron has the same mass as an electron but a positive charge: it’s the electron’s antimatter partner, not just an electron with a plus sign.','The tracer emits a positron, which travels a tiny distance, meets an electron, and the two annihilate, turning their mass into two 511 keV gamma photons flying in nearly opposite directions.','Detectors on opposite sides of the ring catch both at the same instant (coincidence detection), so the scanner knows the event happened somewhere on the line between them. Millions of lines build the image.'], refs:['kandel']},
+  murderers:{title:'The “41 murderers” study', kicker:'PET case file', body:['Adrian Raine and colleagues PET-scanned 41 people charged with murder who were pleading not guilty by reason of insanity, and 41 matched controls.','The murder group showed lower glucose metabolism in the prefrontal cortex, plus other differences.','BUT: you cannot PET-scan someone and determine that they’re a murderer. A group difference ≠ individual destiny.'], refs:['raine']},
+  schizo:{title:'Hypofrontality in schizophrenia', kicker:'PET study', body:['A meta-analysis combined 36 FDG-PET studies (1,335 people). Glucose metabolism in the frontal cortex was lower in schizophrenia than in controls, with large effect sizes, and lower in chronic than first-episode patients.','There wasn’t consistent evidence for changes in other regions. The findings support the “hypofrontality” hypothesis.'], refs:['townsend']},
+  promoter:{title:'How opsins reach only certain neurons', kicker:'Optogenetics', body:['Big misconception: “the virus only infects inhibitory neurons.” Viruses like AAV infect many neurons near the injection, sometimes glia too.','The trick is the promoter packaged with the opsin gene. A GAD promoter is only active in GABA (inhibitory) neurons; TH in dopamine neurons; CaMKIIα mostly in excitatory pyramidal neurons. The gene gets in everywhere but only turns on in the right cells.','Cre–lox is even cleaner: use a mouse that makes Cre only in one cell type, inject a Cre-dependent (“floxed”) opsin, and only those cells express it. Retrograde viruses injected into a target travel backward along axons, labeling only neurons that project there.'], refs:['boyden','zhang']},
+  falsememory:{title:'Creating a false fear memory', kicker:'Optogenetics', body:['1. A mouse explores Room A, and the hippocampal cells active there are genetically tagged with channelrhodopsin. Nothing scary happens.','2. In Room B, light reactivates the Room A memory cells while the mouse gets a mild foot shock.','3. Back in Room A, the mouse freezes in fear, even though nothing bad ever happened there.','This is how optogenetics moves us from correlation toward causation: turning specific cells on changed what the animal remembered.'], refs:['ramirez']},
+  wireless:{title:'Wireless optogenetics', kicker:'Optogenetics', body:['Optic fibers tether the animal. Researchers built a wireless implant small enough (20 mg, 10 mm³) to fit entirely under the skin, powered by radio frequency, heating tissue less than 1 °C.','It allowed light control of the brain, spinal cord and peripheral nerves while mice behaved naturally.'], refs:['montgomery']},
+  twophoton:{title:'Two-photon imaging', kicker:'Calcium imaging', body:['The molecule needs $10 to get excited. One-photon gives it a $10 bill; two-photon gives it two $5 bills at the exact same instant.','A single pulsed infrared laser is focused so tightly that, only at the focal point, two low-energy photons hit the same molecule within femtoseconds. Outside that spot it almost never happens.','Result: glow from a tiny 3D volume only, deep penetration (hundreds of microns), less damage, and single-cell, even dendrite-level, resolution.'], refs:['denk','chen']},
+  zebrafish:{title:'Watching a zebrafish decide to hunt', kicker:'GCaMP', body:['Zebrafish larvae are transparent, so researchers can image the whole brain at once.','When a larva sees prey, a flash of green calcium activity starts in visual areas and travels toward motor areas as the fish “decides” to hunt: sensory input turning into a motor command across a whole vertebrate brain.'], refs:['muto']}
+};
+
+/* ============ Helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const sm = t => { t = clamp(t,0,1); return t*t*(3-2*t); };
+const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+let seed = 5; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const V = (x,y,z=0) => new THREE.Vector3(x,y,z);
+const S = (x,y,z) => new THREE.Vector3(-x/80, (z-10)/80, (y+18)/80); // MNI mm -> scene (left hemisphere = +x)
+
+/* ============ Renderer ============ */
+const stage = $('#stage'), panel = $('#panel');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 80);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
+controls.minDistance = 1.5; controls.maxDistance = 14;
+scene.add(new THREE.HemisphereLight(0xfff3ee, 0x2a1d22, 0.7));
+const key = new THREE.DirectionalLight(0xffffff, 0.9); camera.add(key); key.position.set(1.5, 2.5, 1); scene.add(camera);
+const rim = new THREE.DirectionalLight(0xa9bcff, 0.45); rim.position.set(-3, 2, -4); scene.add(rim);
+
+/* ============ Brain material: tissue + glowing blobs (optionally voxelized) + false-positive noise ============ */
+const NB = 8;
+const U = {
+  uBlob:{value:Array.from({length:NB}, () => new THREE.Vector4(0,0,0,0.1))},
+  uBlobC:{value:Array.from({length:NB}, () => new THREE.Color())},
+  uBlobA:{value:new Array(NB).fill(0)},
+  uVox:{value:0}, uNoise:{value:0}, uTime:{value:0}, uAlpha:{value:1},
+  uLes:{value:[new THREE.Vector4(0,0,0,0.1), new THREE.Vector4(0,0,0,0.1)]}, uLesA:{value:0},
+  uTissue:{value:lin('#d9b2a4')}
+};
+function brainMat(){
+  const m = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.62});
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, U);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float curv; varying float vCurv; varying vec3 vPos;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPos = position; vCurv = curv;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying float vCurv; varying vec3 vPos;
+uniform vec4 uBlob[${NB}]; uniform vec3 uBlobC[${NB}]; uniform float uBlobA[${NB}];
+uniform float uVox; uniform float uNoise; uniform float uTime; uniform float uAlpha;
+uniform vec4 uLes[2]; uniform float uLesA; uniform vec3 uTissue;
+float h3(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,45.164)))*43758.5453); }`)
+    .replace('vec4 diffuseColor = vec4( diffuse, opacity );', `
+float ao = mix(0.5, 1.06, smoothstep(-0.75, 0.6, vCurv));
+vec3 col = uTissue*ao; vec3 glow = vec3(0.0);
+vec3 q = uVox > 0.0 ? (floor(vPos/uVox) + 0.5)*uVox : vPos;
+for (int i=0;i<${NB};i++){
+  float d = length(q - uBlob[i].xyz);
+  float w = (1.0 - smoothstep(uBlob[i].w*0.55, uBlob[i].w, d)) * uBlobA[i];
+  col = mix(col, uBlobC[i]*mix(0.8,1.0,ao), clamp(w,0.0,1.0)); glow += uBlobC[i]*w*0.45;
+}
+if (uNoise > 0.0){ vec3 vq = floor(vPos/0.045); float r = h3(vq + floor(uTime*1.3)*0.37);
+  if (r < uNoise){ vec3 nc = r < uNoise*0.5 ? vec3(1.0,0.25,0.15) : vec3(1.0,0.75,0.1); col = nc; glow += nc*0.4; } }
+for (int j=0;j<2;j++){ float d = length(vPos - uLes[j].xyz); float w = (1.0 - smoothstep(uLes[j].w*0.75, uLes[j].w, d))*uLesA; col = mix(col, vec3(0.05,0.025,0.02), w); glow -= glow*w; }
+vec4 diffuseColor = vec4(col, opacity*uAlpha);`)
+    .replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = emissive + glow;');
+  };
+  m.customProgramCacheKey = () => 'methods-brain';
+  return m;
+}
+const cortexMat = brainMat();
+let lh, rh, cereb, stem;
+const brainParts = [];
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer, n = 32492, f = 64980; let off = 0; const meshes = [];
+  for (let h=0; h<2; h++){
+    const pos = new Int16Array(buf, off, n*3); off += n*6;
+    const idx = new Uint16Array(buf, off, f*3); off += f*6;
+    const curv = new Int8Array(buf, off, n); off += n; off += n;
+    const P = new Float32Array(n*3), Cc = new Float32Array(n);
+    for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z; Cc[i] = curv[i]/127; }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setAttribute('curv', new THREE.BufferAttribute(Cc,1));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, cortexMat); scene.add(m); meshes.push(m); brainParts.push(m);
+  }
+  [lh, rh] = meshes;
+  // simple cerebellum + brainstem
+  const cg = new THREE.SphereGeometry(1, 120, 90), cp = cg.attributes.position, Cv = new Float32Array(cp.count), ctr = S(0,-62,-33), v = V(0,0);
+  for (let i=0;i<cp.count;i++){ v.fromBufferAttribute(cp,i); const fol = Math.sin((v.y*0.9 - v.z*0.45)*58);
+    const p = V(v.x*0.6, v.y*(v.y>0?0.24:0.31), v.z*(v.z>0?0.36:0.4)).multiplyScalar(1 + 0.016*fol).add(ctr); cp.setXYZ(i,p.x,p.y,p.z); Cv[i] = fol*0.9; }
+  cg.setAttribute('curv', new THREE.BufferAttribute(Cv,1)); cg.computeVertexNormals();
+  cereb = new THREE.Mesh(cg, cortexMat); scene.add(cereb); brainParts.push(cereb);
+  const sg = new THREE.CylinderGeometry(0.13, 0.1, 0.9, 30); const sc = new Float32Array(sg.attributes.position.count).fill(0.3);
+  sg.setAttribute('curv', new THREE.BufferAttribute(sc,1));
+  stem = new THREE.Mesh(sg, cortexMat); stem.position.copy(S(0,-32,-45)); stem.rotation.x = 0.35; scene.add(stem); brainParts.push(stem);
+}
+
+/* ============ Shared props ============ */
+const HEAD_C = V(0, 0.02, -0.02), HEAD_R = V(1.04, 1.0, 1.28);
+const head = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.MeshPhysicalMaterial({color:0xe9c3b0, roughness:0.6, transparent:true, opacity:0.13, depthWrite:false}));
+head.scale.copy(HEAD_R); head.position.copy(HEAD_C); scene.add(head);
+function onHead(theta, phi, lift=1.0){ const t = theta*Math.PI/180, p = phi*Math.PI/180;
+  return V(Math.sin(t)*Math.sin(p)*HEAD_R.x*lift, Math.cos(t)*HEAD_R.y*lift, Math.sin(t)*Math.cos(p)*HEAD_R.z*lift).add(HEAD_C); }
+const G = {}; // per-method groups
+['lesion','tms','eeg','ecog','dbs','fmri','pet','opto','dti','calcium'].forEach(k => { G[k] = new THREE.Group(); G[k].visible = false; scene.add(G[k]); });
+const matC = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.45, emissive:lin(c), emissiveIntensity:0.15});
+
+/* ---------- EEG cap (10–20) ---------- */
+const E1020 = [['Fp1',72,18],['Fp2',72,-18],['F7',72,54],['F3',47,40],['Fz',36,0],['F4',47,-40],['F8',72,-54],['T7',72,90],['C3',36,90],['Cz',0,0],['C4',36,-90],['T8',72,-90],['P7',72,126],['P3',47,140],['Pz',36,180],['P4',47,-140],['P8',72,-126],['O1',72,162],['O2',72,-162]];
+const electrodes = E1020.map(([name, th, ph]) => {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.03, 20), matC('#cfd6e4'));
+  const p = onHead(th, ph, 1.0); m.position.copy(p); m.quaternion.setFromUnitVectors(V(0,1,0), p.clone().sub(HEAD_C).normalize());
+  G.eeg.add(m); return {name, m, p};
+});
+(function(){ // cap wires
+  const mat = new THREE.LineBasicMaterial({color:0x5a6684});
+  [[0,90,180,'mid'],[90,'lat']].forEach(()=>{});
+  for (const ph of [0, 90, -90, 180, 45, -45, 135, -135]){
+    const pts = []; for (let th=0; th<=72; th+=4) pts.push(onHead(th, ph, 1.01));
+    G.eeg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+  const ring = []; for (let ph=0; ph<=360; ph+=5) ring.push(onHead(72, ph, 1.01)); G.eeg.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ring), mat));
+})();
+
+/* ---------- TMS coil ---------- */
+const TMS = { target:S(-38,-22,62), t0:-99, mode:null, pulses:[] };
+const coil = new THREE.Group(); G.tms.add(coil);
+[-0.2, 0.2].forEach(dx => { const t = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.045, 14, 48), matC('#5b6378')); t.position.x = dx; t.rotation.x = Math.PI/2; coil.add(t); });
+const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.7, 16), matC('#3e4456')); handle.position.set(0, 0.04, -0.42); handle.rotation.x = Math.PI/2; coil.add(handle);
+const fieldRings = Array.from({length:3}, () => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.012, 8, 64), new THREE.MeshBasicMaterial({color:lin('#ffd166'), transparent:true, opacity:0})); r.rotation.x = Math.PI/2; coil.add(r); return r; });
+function placeCoil(mni){ const t = S(...mni), n = t.clone().sub(V(0,0,-0.1)).normalize();
+  coil.position.copy(t).addScaledVector(n, 0.42); coil.quaternion.setFromUnitVectors(V(0,1,0), n); TMS.target = t; }
+placeCoil([-38,-22,62]);
+
+/* ---------- ECoG grid + Utah array ---------- */
+const ECOG = { cells:[], vals:[], utah:null, mode:null, t0:-99, site:null };
+function buildEcog(){
+  const ray = new THREE.Raycaster();
+  for (let i=0;i<6;i++) for (let j=0;j<8;j++){
+    const y = -0.32 + i*0.13, z = -0.42 + j*0.13; ray.set(V(1.6, y, z), V(-1,0,0));
+    const hit = ray.intersectObject(lh, false)[0]; if (!hit) continue;
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.01, 14), new THREE.MeshStandardMaterial({color:0xdfe6f2, emissive:lin('#5fe0a3'), emissiveIntensity:0}));
+    m.position.copy(hit.point).add(V(0.03,0,0)); m.rotation.z = Math.PI/2; G.ecog.add(m); ECOG.cells.push({m, p:hit.point.clone(), ph:rnd()*6});
+  }
+  const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 1.08), new THREE.MeshStandardMaterial({color:0x8fb0c8, transparent:true, opacity:0.18, side:THREE.DoubleSide, depthWrite:false}));
+  sheet.position.set(0.98, 0.0, 0.03); sheet.rotation.y = Math.PI/2; G.ecog.add(sheet);
+  const u = new THREE.Group(); const hk = S(-38,-22,62), n = hk.clone().normalize();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 0.16), matC('#8a93a8')); base.position.y = 0.03; u.add(base);
+  for (let a=0;a<10;a++) for (let b=0;b<10;b++){ const nd = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0015, 0.09, 4), matC('#c9cfdb')); nd.position.set(-0.07 + a*0.0155, -0.03, -0.07 + b*0.0155); u.add(nd); }
+  u.position.copy(hk).addScaledVector(n, 0.02); u.quaternion.setFromUnitVectors(V(0,1,0), n); G.ecog.add(u); ECOG.utah = u;
+  const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.9, 8), matC('#8a93a8')); wire.position.copy(hk).addScaledVector(n, 0.45); wire.quaternion.setFromUnitVectors(V(0,1,0), n); G.ecog.add(wire);
+}
+
+/* ---------- DBS ---------- */
+const DBS = { on:false, kind:'pd', amp:1 };
+const DBS_T = { pd:[S(-12,-13,-5), S(12,-13,-5)], et:[S(-14,-18,2), S(14,-18,2)] };
+const leads = [0,1].map(i => { const g = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 10), matC('#b9c0cf')); g.add(shaft);
+  const contacts = [0,1,2,3].map(k => { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.03, 12), new THREE.MeshStandardMaterial({color:0xdfe6f2, emissive:lin('#ff8f6b'), emissiveIntensity:0})); g.add(c); return c; });
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 14), new THREE.MeshBasicMaterial({color:lin('#ff8f6b'), transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending})); g.add(glow);
+  G.dbs.add(g); return {g, shaft, contacts, glow}; });
+const ipg = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.3, 0.1), matC('#9aa3b5')); ipg.position.set(0.55, -1.75, 0.55); G.dbs.add(ipg);
+const ipgWire = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({color:0x9aa3b5})); G.dbs.add(ipgWire);
+function placeLeads(){
+  leads.forEach((L, i) => { const t = DBS_T[DBS.kind][i], entry = V(i ? -0.32 : 0.32, 0.95, 0.38);
+    const dir = t.clone().sub(entry), len = dir.length(); L.shaft.scale.y = len; L.shaft.position.copy(entry).addScaledVector(dir, 0.5); L.shaft.quaternion.setFromUnitVectors(V(0,1,0), dir.clone().normalize());
+    L.contacts.forEach((c, k) => { c.position.copy(t).addScaledVector(dir.clone().normalize(), -0.02 - k*0.045); c.quaternion.copy(L.shaft.quaternion); });
+    L.glow.position.copy(t); L.entry = entry; });
+  const pts = [leads[0].entry, V(0.6, 1.02, 0.1), V(0.95, 0.2, -0.4), V(0.85, -1.1, 0.2), ipg.position.clone()];
+  ipgWire.geometry.setFromPoints(new THREE.CatmullRomCurve3(pts).getPoints(60));
+}
+placeLeads();
+
+/* ---------- fMRI scanner ---------- */
+const scanner = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 2.6, 64, 1, true), new THREE.MeshStandardMaterial({color:0xcfd6e4, transparent:true, opacity:0.08, side:THREE.DoubleSide, depthWrite:false}));
+scanner.position.y = -0.2; G.fmri.add(scanner);
+[1.3, -1.3].forEach(dy => { const r = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.05, 10, 80), matC('#7f8aa3')); r.rotation.x = Math.PI/2; r.position.y = -0.2 + dy; G.fmri.add(r); });
+const FMRI = { task:null, t0:-99, salmon:false };
+
+/* ---------- PET ring + annihilations ---------- */
+const petRing = new THREE.Mesh(new THREE.TorusGeometry(2.0, 0.09, 12, 96), matC('#7f8aa3')); petRing.rotation.x = Math.PI/2; G.pet.add(petRing);
+const PET = { t0:-99, sub:false, events:[] };
+const gammaMat = new THREE.LineBasicMaterial({color:lin('#ffe066'), transparent:true, opacity:0.9});
+for (let i=0;i<10;i++){ const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,0),V(0,0)]), gammaMat.clone()); G.pet.add(l);
+  const hits = [0,1].map(() => { const h = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshBasicMaterial({color:lin('#ffe066'), transparent:true, opacity:0})); G.pet.add(h); return h; });
+  PET.events.push({l, hits, t:-99}); }
+const PET_SPOTS = [S(-8,-90,4), S(8,-90,4), S(-30,40,20), S(30,40,20), S(0,-50,30), S(-40,-52,-18), S(40,-52,-18)];
+
+/* ---------- Optogenetics fiber ---------- */
+const OPTO = { color:null, t0:-99, step:0 };
+const HIPPO = S(-27,-24,-12);
+const fiber = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1, 10), new THREE.MeshStandardMaterial({color:0xe8f4ff, transparent:true, opacity:0.75}));
+(function(){ const entry = V(0.42, 0.95, -0.15), dir = HIPPO.clone().sub(entry); fiber.scale.y = dir.length(); fiber.position.copy(entry).addScaledVector(dir, 0.5); fiber.quaternion.setFromUnitVectors(V(0,1,0), dir.normalize()); })();
+G.opto.add(fiber);
+const optoGlow = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 16), new THREE.MeshBasicMaterial({color:lin('#4cc9f0'), transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending}));
+optoGlow.position.copy(HIPPO); G.opto.add(optoGlow);
+const hippoMesh = (function(){ const curve = new THREE.CatmullRomCurve3([[-22,-6,-22],[-28,-16,-17],[-30,-26,-11],[-27,-36,-4],[-20,-42,4]].map(p => S(...p)));
+  const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.055, 14, false), new THREE.MeshStandardMaterial({color:lin('#ec6f86'), emissive:lin('#ec6f86'), emissiveIntensity:0.3})); G.opto.add(m); return m; })();
+
+/* ---------- DTI tracts ---------- */
+const DTI = { shown:0 };
+(function(){
+  const tracts = [];
+  for (let k=0;k<9;k++){ const z = -0.55 + k*0.13, yb = 0.18 + 0.05*Math.cos(k*0.5);
+    tracts.push([V(-0.62, 0.42, z), V(-0.3, yb + 0.12, z), V(0, yb, z), V(0.3, yb + 0.12, z), V(0.62, 0.42, z)]); }           // corpus callosum
+  [1,-1].forEach(s => {
+    tracts.push([S(-50*s,18,8), S(-42*s,0,26), S(-38*s,-25,30), S(-46*s,-45,22), S(-56*s,-44,10)]);                           // arcuate
+    tracts.push([S(-36*s,-20,62), S(-28*s,-18,30), S(-20*s,-18,0), S(-12*s,-20,-25), S(-6*s,-28,-45)]);                        // corticospinal
+    tracts.push([S(-28*s,-90,0), S(-36*s,-60,-8), S(-40*s,-30,-18), S(-38*s,0,-28)]);                                          // inferior longitudinal
+    tracts.push([S(-8*s,38,18), S(-9*s,0,34), S(-9*s,-40,32), S(-8*s,-60,20)]);                                                // cingulum
+  });
+  tracts.forEach(pts => {
+    const curve = new THREE.CatmullRomCurve3(pts), geo = new THREE.TubeGeometry(curve, 60, 0.018, 6, false);
+    const col = new Float32Array(geo.attributes.position.count*3);
+    for (let i=0;i<geo.attributes.position.count;i++){ const u = Math.floor(i/7)/60, t = curve.getTangentAt(Math.min(1,u));
+      col[i*3] = Math.abs(t.x); col[i*3+1] = Math.abs(t.z); col[i*3+2] = Math.abs(t.y); }
+    geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+    const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, emissive:0x222222, roughness:0.4}));
+    G.dti.add(m);
+  });
+})();
+
+/* ---------- Lesion props ---------- */
+const LES = { tan:false, gage:false, hemi:false };
+let _gp = null;
+function gagePts(){ if (_gp) return _gp; const a = S(-30,30,-40), b = S(-10,55,95), rc = new THREE.Raycaster();
+  rc.set(b, a.clone().sub(b).normalize()); const top = rc.intersectObjects([lh, rh], false)[0];
+  rc.set(a, b.clone().sub(a).normalize()); const bot = rc.intersectObjects([lh, rh], false)[0];
+  _gp = [top ? top.point : S(-15,45,60), bot ? bot.point : S(-22,38,-10)]; return _gp; }
+const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.4, 10), matC('#6b6f7a'));
+(function(){ const a = S(-30,30,-40), b = S(-10,55,95), d = b.clone().sub(a); rod.position.copy(a).addScaledVector(d, 0.5); rod.scale.y = d.length()/2.4; rod.quaternion.setFromUnitVectors(V(0,1,0), d.normalize()); })();
+G.lesion.add(rod);
+
+/* ============ Labels ============ */
+const labelsEl = $('#labels');
+function mkTag(text, world, group, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.textContent = text; labelsEl.appendChild(el); return {el, world, group}; }
+const TAGS = [
+  ...electrodes.map(e => mkTag(e.name, e.p.clone().multiplyScalar(1.0).add(V(0,0.07,0)), 'eeg', 'plabel elec')),
+  mkTag('Figure-8 coil', V(0,0,0), 'tms'), mkTag('Induced current', V(0,0,0), 'tms'),
+  mkTag('ECoG grid (on the cortex)', V(1.05, 0.48, 0.1), 'ecog'), mkTag('Utah array (into the cortex)', S(-38,-22,62).add(V(0.1,0.25,0)), 'ecog'),
+  mkTag('Electrode lead', V(0.35, 0.75, 0.33), 'dbs'), mkTag('Target', V(0,0,0), 'dbs'), mkTag('Pulse generator (in the chest)', V(0.55, -1.5, 0.55), 'dbs'),
+  mkTag('Scanner bore: 1.5–3 tesla', V(1.6, 1.15, 0.9), 'fmri'),
+  mkTag('Detector ring', V(1.6, 0.25, 1.2), 'pet'),
+  mkTag('Optic fiber', V(0.45, 0.8, -0.12), 'opto'), mkTag('Hippocampus', HIPPO.clone().add(V(0.2,-0.18,0)), 'opto'),
+  Object.assign(mkTag('Iron rod (Gage, 1848)', S(-15,48,62).add(V(0.12,0.08,0)), 'lesion'), {gage:true}),
+  mkTag('Tan’s lesion (Broca’s area)', S(-62,18,8).add(V(0.05,0.12,0)), 'lesion'),
+  mkTag('Red = left–right', V(0, 0.6, 0.1), 'dti'), mkTag('Green = front–back', S(-48,-22,40).add(V(0.15,0,0)), 'dti'), mkTag('Blue = up–down', S(-30,-18,10).add(V(0.25,0,0)), 'dti')
+];
+function place(el, world){
+  const v = world.clone().project(camera);
+  el.style.transform = `translate(${((v.x+1)/2*innerWidth).toFixed(1)}px,${((1-v.y)/2*innerHeight).toFixed(1)}px) translate(-50%,-50%)`;
+  el.style.visibility = (v.z < 1 && v.z > -1) ? 'visible' : 'hidden';
+}
+
+/* ============ Camera ============ */
+const VIEWS = { home:[[2.6,1.4,3.4],[0,0,0]], lesion:[[3.3,0.9,1.4],[0,0,0.15]], gage:[[1.9,-0.2,3.3],[0,0.15,0.3]], tms:[[3.4,3.3,1.9],[0.3,0.3,0]], eeg:[[2.4,2.6,2.6],[0,0.2,0]],
+  ecog:[[3.2,0.9,1.2],[0.6,0.1,0]], dbs:[[2.4,0.4,3.4],[0.1,-0.4,0.1]], fmri:[[3.4,1.2,4.0],[0,-0.1,0]], pet:[[0.6,4.4,2.2],[0,0,0]],
+  opto:[[2.6,0.8,2.2],[0.2,0,0]], dti:[[2.6,1.4,2.8],[0,0,0]], calcium:[[2.6,1.4,3.4],[0,0,0]], faces:[[1.2,-3.3,0.9],[0,-0.25,-0.15]] };
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+function fly(name){ const [p, t] = VIEWS[name]; const P = V(...p), T = V(...t); if (isNarrow()) P.sub(T).multiplyScalar(1.45).add(T);
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:T, t0:performance.now(), dur:1100}; }
+controls.addEventListener('start', () => { tween = null; });
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w,h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.25), w, h); else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), Math.round(h*0.08), w, h);
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+/* ============ State & actions ============ */
+let T = 0;
+const state = { m:null, eeg:'alpha', quiz:0, quizPick:null };
+const ACT = {
+  tan: () => { LES.tan = !LES.tan; if (LES.tan){ LES.gage = false; LES.hemi = false; fly('lesion'); } },
+  gage: () => { LES.gage = !LES.gage; if (LES.gage){ LES.tan = false; LES.hemi = false; fly('gage'); } },
+  hemi: () => { LES.hemi = !LES.hemi; if (LES.hemi){ LES.tan = LES.gage = false; } },
+  tmsMotor: () => { TMS.mode = 'motor'; placeCoil([-38,-22,62]); TMS.pulses = [T]; fly('tms'); },
+  tmsDlpfc: () => { TMS.mode = 'dlpfc'; placeCoil([-42,32,36]); TMS.pulses = Array.from({length:20}, (_,i) => T + i*0.1); fly('tms'); },
+  tmsCereb: () => { TMS.mode = 'cereb'; placeCoil([-20,-80,-38]); TMS.pulses = [T, T+0.6, T+1.2]; VIEWS.tmsC = [[1.6,-0.6,-3.2],[0.1,-0.5,-0.7]]; fly('tmsC'); },
+  eegDelta: () => { state.eeg = 'delta'; }, eegTheta: () => { state.eeg = 'theta'; }, eegAlpha: () => { state.eeg = 'alpha'; }, eegBeta: () => { state.eeg = 'beta'; }, eegGamma: () => { state.eeg = 'gamma'; },
+  ecogRec: () => { ECOG.mode = 'rec'; ECOG.t0 = T; fly('ecog'); },
+  utah: () => { ECOG.mode = 'utah'; ECOG.t0 = T; VIEWS.utah = [[1.6,1.9,0.6],[0.47,0.65,-0.05]]; fly('utah'); },
+  penfield: () => { ECOG.mode = 'stim'; ECOG.t0 = T; ECOG.site = ECOG.cells[Math.floor(rnd()*ECOG.cells.length)]; fly('ecog'); },
+  dbsPD: () => { DBS.kind = 'pd'; DBS.on = true; placeLeads(); }, dbsET: () => { DBS.kind = 'et'; DBS.on = true; placeLeads(); }, dbsOff: () => { DBS.on = false; },
+  fmriMotor: () => { FMRI.task = 'motor'; FMRI.salmon = false; FMRI.t0 = T; stem.visible = cereb.visible = true; fly('fmri'); },
+  fmriFaces: () => { FMRI.task = 'faces'; FMRI.salmon = false; FMRI.t0 = T; stem.visible = cereb.visible = false; fly('faces'); },
+  fmriHouses: () => { FMRI.task = 'houses'; FMRI.salmon = false; FMRI.t0 = T; stem.visible = cereb.visible = false; fly('faces'); },
+  salmon: () => { FMRI.salmon = !FMRI.salmon; },
+  petInject: () => { PET.t0 = T; PET.sub = false; }, petSub: () => { PET.sub = true; if (PET.t0 < 0) PET.t0 = T - 10; },
+  optoBlue: () => { OPTO.color = 'blue'; OPTO.t0 = T; }, optoYellow: () => { OPTO.color = 'yellow'; OPTO.t0 = T; },
+  falseMem: () => { OPTO.step = 1; renderPanel(); const el = $('#fm'); if (el) el.scrollIntoView({block:'center', behavior:'smooth'}); },
+  dtiShow: () => { DTI.shown = DTI.shown ? 0 : 1; },
+  caFlash: () => {}
+};
+const TOGGLES = { tan:() => LES.tan, gage:() => LES.gage, hemi:() => LES.hemi, salmon:() => FMRI.salmon, dtiShow:() => !!DTI.shown,
+  eegDelta:() => state.eeg==='delta', eegTheta:() => state.eeg==='theta', eegAlpha:() => state.eeg==='alpha', eegBeta:() => state.eeg==='beta', eegGamma:() => state.eeg==='gamma',
+  dbsPD:() => DBS.on && DBS.kind==='pd', dbsET:() => DBS.on && DBS.kind==='et', dbsOff:() => !DBS.on,
+  fmriMotor:() => FMRI.task==='motor' && !FMRI.salmon, fmriFaces:() => FMRI.task==='faces' && !FMRI.salmon, fmriHouses:() => FMRI.task==='houses' && !FMRI.salmon,
+  optoBlue:() => OPTO.color==='blue', optoYellow:() => OPTO.color==='yellow' };
+function refreshTries(){ document.querySelectorAll('.try[data-act]').forEach(b => { const f = TOGGLES[b.dataset.act]; if (f) b.setAttribute('aria-pressed', String(!!f())); }); }
+
+function selectMethod(id){ if (stem) stem.visible = cereb.visible = true;
+  state.m = id;
+  Object.entries(G).forEach(([k, g]) => g.visible = k === id);
+  head.visible = ['eeg','tms'].includes(id);
+  document.body.dataset.m = id || '';
+  // sensible starting demos
+  if (id === 'tms' && !TMS.mode) ACT.tmsMotor();
+  if (id === 'dbs'){ DBS.on = false; }
+  if (id === 'fmri' && !FMRI.task){ FMRI.task = 'motor'; FMRI.t0 = T; }
+  if (id === 'ecog' && !ECOG.mode){ ECOG.mode = 'rec'; ECOG.t0 = T; }
+  if (id === 'pet' && PET.t0 < 0) PET.t0 = T;
+  fly(id ? (id === 'fmri' && FMRI.task !== 'motor' ? 'faces' : id) : 'home');
+  renderPanel(); panel.scrollTop = 0;
+}
+
+/* ============ Blobs ============ */
+function clearBlobs(){ for (let i=0;i<NB;i++) U.uBlobA.value[i] = 0; }
+function blob(i, p, r, c, a){ U.uBlob.value[i].set(p.x, p.y, p.z, r); U.uBlobC.value[i].copy(lin(c)); U.uBlobA.value[i] = a; }
+
+/* ============ HUD canvas ============ */
+const hud = $('#hudCanvas'), hx = hud.getContext('2d'), hudTitle = $('#hudTitle'), hudText = $('#hudText');
+const W = hud.width, H = hud.height;
+function axes(){ hx.fillStyle = '#0b0e14'; hx.fillRect(0,0,W,H); }
+function trace(y0, amp, fn, col, label, t0=0, t1=2){ hx.strokeStyle = col; hx.lineWidth = 2.4; hx.beginPath();
+  for (let x=0; x<=W-90; x+=2){ const t = t0 + (x/(W-90))*(t1-t0); const y = y0 - amp*fn(t); x ? hx.lineTo(x+80, y) : hx.moveTo(x+80, y); } hx.stroke();
+  if (label){ hx.fillStyle = '#a3abbc'; hx.font = '20px IBM Plex Mono, monospace'; hx.textAlign = 'left'; hx.fillText(label, 6, y0 + 6); } }
+const noise = (t, k=1) => 0.35*Math.sin(t*37.1*k+1.3) + 0.25*Math.sin(t*61.7*k+0.2) + 0.2*Math.sin(t*23.3*k+2.1) + 0.2*Math.sin(t*89.9*k);
+const BANDS = { delta:[2,1.0,'Delta ~2 Hz · deep sleep'], theta:[6,0.75,'Theta ~6 Hz · drowsy'], alpha:[10,0.6,'Alpha ~10 Hz · relaxed, eyes closed'], beta:[20,0.28,'Beta ~20 Hz · alert'], gamma:[40,0.16,'Gamma ~40 Hz · focused'] };
+let hudMsg = '';
+function drawHud(){
+  const m = state.m; axes();
+  hx.font = '20px IBM Plex Mono, monospace';
+  if (m === 'eeg'){
+    const [f, a, lab] = BANDS[state.eeg];
+    ['Fp1','C3','P3','O1'].forEach((ch, i) => { const boost = (state.eeg === 'alpha' && ch === 'O1') ? 1.7 : (state.eeg === 'alpha' && ch === 'Fp1') ? 0.6 : 1;
+      trace(40 + i*58, 22*a*boost, t => Math.sin(2*Math.PI*f*(t+T)) + 0.35*noise(t+T+i, 1) * (state.eeg==='gamma'?2:1), '#7ad7ff', ch, 0, 2); });
+    hudTitle.textContent = 'EEG · last 2 seconds'; hudMsg = `<b>${lab}.</b> Each trace is microvolts at the scalp, from millions of synchronized neurons.` + (state.eeg==='alpha' ? ' Alpha is strongest over the back of the head (O1).' : '');
+  } else if (m === 'tms'){
+    const win = 1.5;
+    hx.strokeStyle = '#283044'; hx.beginPath(); hx.moveTo(80, H/2); hx.lineTo(W-10, H/2); hx.stroke();
+    TMS.pulses.forEach(p => { const x = 80 + (1 - (T - p)/win)*(W-90); if (x > 80 && x < W){ hx.strokeStyle = '#ffd166'; hx.lineWidth = 2; hx.beginPath(); hx.moveTo(x, 20); hx.lineTo(x, H-20); hx.stroke(); } });
+    trace(H/2, 1, t => { const tt = t + T - win; let v = 0.08*noise(tt, 2); if (TMS.mode === 'motor') TMS.pulses.forEach(p => { const d = tt - p - 0.022; if (d > 0 && d < 0.03) v += 2.6*Math.sin(d/0.03*Math.PI*2)*Math.exp(-d*60); }); return v*30; }, '#ff8f6b', 'EMG', 0, win);
+    hudTitle.textContent = 'Right-hand muscle (EMG) · yellow lines = TMS pulses';
+    hudMsg = TMS.mode === 'motor' ? '<b>Single pulse over left motor cortex (hand area).</b> About 20 ms later your right hand twitches: a motor evoked potential. Left brain, right hand.'
+      : TMS.mode === 'dlpfc' ? '<b>rTMS over the left dorsolateral prefrontal cortex.</b> Trains of pulses (here 10 per second) used to treat depression. No twitch: this area doesn’t move muscles.'
+      : '<b>Pulses over the cerebellum.</b> In one case study this produced feelings of floating or being out of the body. Open the case below.';
+  } else if (m === 'ecog'){
+    if (ECOG.mode === 'utah'){
+      for (let n=0;n<12;n++){ const y = 24 + n*17; hx.fillStyle = '#a3abbc'; if (n%3===0) hx.fillText('n'+(n+1), 6, y+6);
+        for (let k=0;k<40;k++){ const t = (k*0.0491 + n*0.137) % 2; const rate = n < 4 ? 0.9 : 0.35; if (Math.sin(n*13.7 + k*7.31 + Math.floor(T*1.2)) > 1 - rate){ const x = 80 + ((t - (T % 2) + 2) % 2)/2*(W-90); hx.fillStyle = '#5fe0a3'; hx.fillRect(x, y-6, 2.5, 12); } } }
+      hudTitle.textContent = 'Utah array · spikes from 12 single neurons'; hudMsg = '<b>Listening to individual fans.</b> Each tick is one action potential from one neuron, the kind of signal used to decode imagined handwriting.';
+    } else if (ECOG.mode === 'stim'){
+      trace(H/2, 1, t => 0.3*noise(t+T, 0.7)*20, '#5fe0a3', 'LFP', 0, 2);
+      const lines = ['“I hear music… a song I knew as a kid.”','“Wait — I can’t say the word.”  → DON’T CUT HERE','“My left… no, right hand is tingling.”'];
+      hudTitle.textContent = 'Stimulating one electrode'; hudMsg = `<b>Now the microphone is a loudspeaker.</b> ${esc(lines[Math.floor(ECOG.t0*7) % 3])}`;
+    } else {
+      [0,1,2,3].forEach(i => trace(40 + i*58, 18, t => 0.6*Math.sin(2*Math.PI*(i<2?40:18)*(t+T)) + 0.6*noise(t+T+i*2, 0.6), '#5fe0a3', 'e'+(i*12+5), 0, 2));
+      hudTitle.textContent = 'ECoG · local field potentials'; hudMsg = '<b>Microphones on the stadium roof.</b> Each electrode hears millions of neurons, with far cleaner signal than EEG because the skull is out of the way.';
+    }
+  } else if (m === 'dbs'){
+    const f = DBS.kind === 'pd' ? 5 : 7;
+    trace(H/2, 1, t => 70*DBS.amp*Math.sin(2*Math.PI*f*(t+T)) + 6*noise(t+T,1), '#ff8f6b', 'Hand', 0, 2);
+    hudTitle.textContent = 'Hand tremor (accelerometer)';
+    hudMsg = DBS.on ? `<b>Stimulation on.</b> ${DBS.kind === 'pd' ? 'Leads in the subthalamic nucleus calm the resting tremor of Parkinson’s.' : 'Leads in the Vim of the thalamus calm the action tremor of essential tremor.'}` : '<b>Stimulation off.</b> The tremor is back. Pick a condition to switch the stimulator on.';
+  } else if (m === 'fmri'){
+    if (FMRI.salmon){
+      const N = 400, cols = 40; for (let i=0;i<N;i++){ const r = Math.sin(i*91.7 + Math.floor(T*1.3)*13.1)*0.5+0.5; hx.fillStyle = r < 0.05 ? '#ff5a3c' : '#1a2030'; hx.fillRect(90 + (i%cols)*17, 16 + Math.floor(i/cols)*21, 14, 18); }
+      hudTitle.textContent = '400 voxels, no real signal, tested at p < .05'; hudMsg = '<b>About 1 in 20 lights up by pure chance.</b> Scale that to 100,000 voxels and you get thousands of fake “activations”, even in a dead fish. Turn correction back on to make them vanish.';
+    } else {
+      const e = T - FMRI.t0, tx = t => 80 + t/20*(W-100), ty = v => H - 30 - v*(H-70);
+      hx.fillStyle = 'rgba(255,111,165,.18)'; hx.fillRect(tx(0), 18, tx(2)-tx(0), H-48);
+      hx.strokeStyle = '#283044'; hx.beginPath(); hx.moveTo(tx(0), ty(0)); hx.lineTo(tx(20), ty(0)); hx.stroke();
+      hx.strokeStyle = '#ffd166'; hx.lineWidth = 2; hx.beginPath(); for (let t=0;t<=20;t+=0.05){ const v = (t > 0.05 && t < 2) ? 0.75 : 0; t ? hx.lineTo(tx(t), ty(v)) : hx.moveTo(tx(t), ty(v)); } hx.stroke();
+      const hrf = t => t <= 0 ? 0 : Math.pow(t/5, 3)*Math.exp(3*(1 - t/5)) - 0.12*Math.pow(t/12,6)*Math.exp(6*(1-t/12));
+      hx.strokeStyle = '#ff6fa5'; hx.lineWidth = 3; hx.beginPath(); for (let t=0;t<=Math.min(20,e);t+=0.05){ const v = hrf(t)*0.85; t ? hx.lineTo(tx(t), ty(v)) : hx.moveTo(tx(t), ty(v)); } hx.stroke();
+      hx.fillStyle = '#a3abbc'; hx.textAlign = 'left';
+      [0,5,10,15,20].forEach(t => hx.fillText(t+'s', tx(t)-8, H-6));
+      hx.fillStyle = '#ffd166'; hx.fillText('neural activity', tx(2.4), ty(0.78)); hx.fillStyle = '#ff6fa5'; hx.fillText('BOLD (peaks ~5 s later)', tx(7), ty(0.88));
+      hudTitle.textContent = 'Stimulus (pink band) vs. BOLD response';
+      hudMsg = FMRI.task === 'faces' ? '<b>Faces:</b> voxels light up in the fusiform face area, stronger on the right. You’re looking from underneath the brain.'
+        : FMRI.task === 'houses' ? '<b>Houses:</b> a different spot lights up: the parahippocampal place area, on the inner underside of the temporal lobe.'
+        : '<b>Tapping right fingers:</b> voxels light up in the left motor cortex hand area. Notice the blood response arrives seconds after the neurons.';
+    }
+  } else if (m === 'pet'){
+    const e = T - PET.t0, up = clamp(e/12, 0, 1);
+    hx.strokeStyle = '#283044'; hx.beginPath(); hx.moveTo(80, H-30); hx.lineTo(W-10, H-30); hx.stroke();
+    hx.strokeStyle = '#ffd166'; hx.lineWidth = 3; hx.beginPath(); for (let k=0;k<=1.001;k+=0.01){ const x = 80 + k*(W-100), v = 1 - Math.exp(-k*3.2); k ? hx.lineTo(x, H-30-v*(H-70)) : hx.moveTo(x, H-30); if (k > up) break; } hx.stroke();
+    hx.fillStyle = '#a3abbc'; ['0','15','30','45','60 min'].forEach((t,i) => hx.fillText(t, 80 + i/4*(W-100) - 6, H-6));
+    hx.fillStyle = '#ffd166'; hx.fillText('FDG taken up by the brain', 100, 30);
+    hudTitle.textContent = 'Uptake (sped up) · each yellow line = one annihilation';
+    hudMsg = PET.sub ? '<b>Subtraction:</b> faces scan minus blank-wall scan. Everything the two share cancels, leaving only the face-related regions.' : '<b>FDG builds up where cells burn the most glucose.</b> Each annihilation fires two gamma photons in opposite directions; the ring catches both at once.';
+  } else if (m === 'opto'){
+    const e = T - OPTO.t0, win = 2;
+    for (let k=0;k<10;k++){ const p = Math.floor((T - win)/0.2) + k; const tp = p*0.2; if (tp < OPTO.t0 || !OPTO.color) continue; const x = 80 + (1 - (T - tp)/win)*(W-90);
+      if (OPTO.color === 'blue'){ hx.fillStyle = 'rgba(76,201,240,.35)'; hx.fillRect(x, 14, 10, H-28); } }
+    if (OPTO.color === 'yellow' && e > 0){ const x0 = 80 + Math.max(0, 1 - e/win)*(W-90); hx.fillStyle = 'rgba(255,209,102,.22)'; hx.fillRect(x0, 14, W - x0, H-28); }
+    for (let n=0;n<8;n++){ const y = 30 + n*24;
+      for (let k=0;k<60;k++){ const tt = T - win + k*(win/60); let spike = false;
+        if (OPTO.color === 'blue' && tt > OPTO.t0){ const ph = ((tt - OPTO.t0) % 0.2); spike = ph < 0.034 && k % 1 === 0 && (Math.sin(n*7 + Math.floor(tt/0.2)) > -0.6); }
+        else if (OPTO.color === 'yellow' && tt > OPTO.t0) spike = false;
+        else spike = Math.sin(n*17.3 + k*9.1 + Math.floor(tt*3)*3.7) > 0.93;
+        if (spike){ hx.fillStyle = '#eceef4'; hx.fillRect(80 + k*(W-90)/60, y-8, 2.5, 16); } } }
+    hudTitle.textContent = '8 neurons · ticks = spikes';
+    hudMsg = OPTO.color === 'blue' ? '<b>Blue flashes open channelrhodopsin.</b> Every flash drives a spike, timed to the millisecond.' : OPTO.color === 'yellow' ? '<b>Yellow light drives halorhodopsin.</b> Cl⁻ is pumped in and the neurons fall silent.' : '<b>No light:</b> neurons fire on their own, at random. Pick a light color.';
+  } else if (m === 'dti'){
+    hx.fillStyle = '#a3abbc'; hx.fillText('Direction color code', 90, 34);
+    [['#ff5a5a','Left ↔ right (e.g., corpus callosum)'],['#5fe0a3','Front ↔ back (e.g., arcuate, cingulum)'],['#6f8bff','Up ↕ down (e.g., corticospinal tract)']].forEach(([c,t],i) => { hx.fillStyle = c; hx.fillRect(90, 60+i*44, 40, 22); hx.fillStyle = '#eceef4'; hx.fillText(t, 145, 77+i*44); });
+    hudTitle.textContent = 'Tractography'; hudMsg = '<b>White-matter highways,</b> reconstructed from which way water diffuses along the axon bundles.';
+  } else if (m === 'calcium'){
+    for (let n=0;n<40;n++){ const cx = 100 + (n%10)*62 + (Math.floor(n/10)%2)*20, cy = 40 + Math.floor(n/10)*48;
+      const ph = (T*0.8 + Math.sin(n*12.9)*3) % 3, a = ph < 1.2 ? Math.exp(-ph*2.5) : 0;
+      hx.fillStyle = `rgba(125,255,161,${0.12 + 0.88*a})`; hx.beginPath(); hx.arc(cx, cy, 14, 0, 7); hx.fill(); }
+    hudTitle.textContent = 'GCaMP field of view · 40 neurons'; hudMsg = '<b>Each flash is calcium rushing in after the neuron fires.</b> You see where every cell is, but the glow is slower than the spike and lingers.';
+  } else if (m === 'lesion'){
+    const ev = [['1810s','Phrenology'],['1848','Gage'],['1861','Broca: “Tan”'],['1870','Fritsch & Hitzig'],['1873','Golgi stain'],['1888','Cajal: neurons'],['1924','Berger: EEG']];
+    hx.strokeStyle = '#c9a27a'; hx.lineWidth = 3; hx.beginPath(); hx.moveTo(70, H/2); hx.lineTo(W-40, H/2); hx.stroke();
+    ev.forEach(([y,t],i) => { const x = 80 + i*(W-140)/(ev.length-1); hx.fillStyle = '#c9a27a'; hx.beginPath(); hx.arc(x, H/2, 8, 0, 7); hx.fill();
+      hx.fillStyle = '#eceef4'; hx.textAlign = 'center'; hx.fillText(y, x, i%2 ? H/2+38 : H/2-22); hx.fillStyle = '#a3abbc'; hx.fillText(t, x, i%2 ? H/2+62 : H/2-46); });
+    hx.textAlign = 'left';
+    hudTitle.textContent = 'Before brain scanners'; hudMsg = LES.hemi ? '<b>One hemisphere removed.</b> Children who have this surgery for severe epilepsy can still recognize words and faces surprisingly well.' : LES.tan ? '<b>Tan’s damage (1861):</b> a lesion in the left frontal lobe, in what we now call Broca’s area. He understood speech but could only say “tan.”' : LES.gage ? '<b>Gage’s damage (1848):</b> the iron rod entered under his left cheekbone and exited the top of his skull, wrecking the front of his frontal lobes (orbitofrontal cortex). His personality changed.' : '<b>How we first mapped the brain:</b> by watching what changed when it was damaged.';
+  } else {
+    hudTitle.textContent = 'Methods'; hudMsg = 'Pick a method to see it work on the brain.';
+  }
+  if (hudText.dataset.h !== hudMsg){ hudText.dataset.h = hudMsg; hudText.innerHTML = hudMsg; }
+}
+
+/* ============ Per-frame scene updates ============ */
+function updScene(dt){
+  clearBlobs(); U.uVox.value = 0; U.uNoise.value = 0; U.uLesA.value = 0;
+  let alpha = 1;
+  const m = state.m;
+  if (m === 'lesion'){
+    if (LES.gage){ const g = gagePts(); U.uLes.value[0].set(g[0].x, g[0].y, g[0].z, 0.16); U.uLes.value[1].set(g[1].x, g[1].y, g[1].z, 0.26); } else { U.uLes.value[0].set(...S(-50,18,8).toArray(), LES.tan ? 0.24 : 1e-4); U.uLes.value[1].w = 1e-4; } U.uLesA.value = (LES.tan || LES.gage) ? 1 : 0; rod.visible = LES.gage;
+  }
+  if (rh) rh.visible = !(m === 'lesion' && LES.hemi);
+  if (m === 'tms'){
+    const last = TMS.pulses.filter(p => p <= T).pop(); const e = last != null ? T - last : 9;
+    fieldRings.forEach((r, i) => { const k = clamp((e - i*0.05)/0.35, 0, 1); r.scale.setScalar(0.6 + k*1.4); r.material.opacity = e < 0.5 ? (1-k)*0.9 : 0; });
+    blob(0, TMS.target, 0.17, '#ffd166', Math.exp(-e*3));
+    if (TMS.mode === 'motor'){ const r = S(-38,-22,62); blob(1, r, 0.1, '#ffb547', 0.25); }
+    TAGS.filter(t => t.group === 'tms').forEach((t, i) => t.world.copy(i ? TMS.target.clone().add(V(0.15,-0.12,0.1)) : coil.position.clone().add(V(0,0.18,0))));
+  }
+  if (m === 'eeg'){ const pulse = 0.5 + 0.5*Math.sin(T*2*Math.PI*BANDS[state.eeg][0]/8);
+    electrodes.forEach(e => { e.m.material.emissive.copy(lin('#7ad7ff')); e.m.material.emissiveIntensity = 0.15 + 0.5*pulse*(state.eeg==='alpha' && e.name[0]==='O' ? 1.4 : 1); }); }
+  if (m === 'ecog'){
+    ECOG.cells.forEach((c, i) => { let a = 0;
+      if (ECOG.mode === 'rec') a = 0.5 + 0.5*Math.sin(T*3 + c.ph + c.p.z*6);
+      if (ECOG.mode === 'stim') a = c === ECOG.site ? (0.6 + 0.4*Math.sin(T*20)) : 0;
+      c.m.material.emissiveIntensity = a*1.2; c.m.material.emissive.copy(lin(ECOG.mode === 'stim' && c === ECOG.site ? '#ffd166' : '#5fe0a3')); });
+    if (ECOG.mode === 'stim' && ECOG.site) blob(0, ECOG.site.p, 0.12, '#ffd166', 0.8);
+    if (ECOG.mode === 'utah') blob(0, S(-38,-22,62), 0.09, '#5fe0a3', 0.6 + 0.3*Math.sin(T*8));
+  }
+  if (m === 'dbs'){
+    alpha = 0.28; DBS.amp += ((DBS.on ? 0.05 : 1) - DBS.amp)*Math.min(1, dt*1.5);
+    leads.forEach(L => { L.contacts.forEach(c => c.material.emissiveIntensity = DBS.on ? 0.8 + 0.6*Math.sin(T*60) : 0); L.glow.material.opacity = DBS.on ? 0.35 + 0.15*Math.sin(T*12) : 0; });
+    TAGS.filter(t => t.group === 'dbs')[1].world.copy(DBS_T[DBS.kind][0]).add(V(0.25,-0.05,0.2));
+    TAGS.filter(t => t.group === 'dbs')[1].el.textContent = DBS.kind === 'pd' ? 'Subthalamic nucleus (STN)' : 'Thalamus (Vim)';
+  }
+  if (m === 'fmri'){
+    const e = T - FMRI.t0, hrf = t => t <= 0 ? 0 : Math.pow(t/5, 3)*Math.exp(3*(1 - t/5));
+    U.uVox.value = 0.06;
+    if (FMRI.salmon) U.uNoise.value = 0.05;
+    else { const a = clamp(hrf(e % 20)*1.1, 0, 1);
+      if (FMRI.task === 'motor') blob(0, S(-38,-22,58), 0.17, '#ff5a3c', a);
+      if (FMRI.task === 'faces'){ blob(0, S(40,-52,-18), 0.15, '#ff5a3c', a); blob(1, S(-40,-52,-18), 0.11, '#ff9a3c', a*0.7); }
+      if (FMRI.task === 'houses'){ blob(0, S(28,-42,-10), 0.13, '#ffd166', a); blob(1, S(-28,-42,-10), 0.13, '#ffd166', a); } }
+  }
+  if (m === 'pet'){
+    const e = T - PET.t0, up = clamp(e/12, 0, 1);
+    if (PET.sub){ blob(0, S(40,-52,-18), 0.15, '#ffd166', 0.9); blob(1, S(-40,-52,-18), 0.11, '#ffd166', 0.6); }
+    else PET_SPOTS.forEach((p, i) => blob(i, p, 0.2, i < 2 ? '#ff5a3c' : '#ffb547', up*(i < 2 ? 0.9 : 0.55)));
+    PET.events.forEach((ev, i) => {
+      const age = T - ev.t;
+      if (age > 0.8 && e > 0 && rnd() < 0.08){ ev.t = T; const src = PET_SPOTS[Math.floor(rnd()*PET_SPOTS.length)].clone().add(V((rnd()-0.5)*0.2, (rnd()-0.5)*0.2, (rnd()-0.5)*0.2));
+        const ang = rnd()*Math.PI*2, d = V(Math.cos(ang), 0, Math.sin(ang)); src.y = clamp(src.y, -0.15, 0.15);
+        ev.a = src.clone().addScaledVector(d, 2.6); ev.b = src.clone().addScaledVector(d, -2.6); ev.a.y = ev.b.y = 0; ev.src = src;
+        const ta = ring(src, d), tb = ring(src, d.clone().negate()); ev.ha = ta; ev.hb = tb; }
+      const a2 = T - ev.t;
+      if (ev.src && a2 < 0.6){ const k = clamp(a2/0.18, 0, 1); const p1 = ev.src.clone().lerp(ev.ha, k), p2 = ev.src.clone().lerp(ev.hb, k);
+        ev.l.geometry.setFromPoints([p1, p2]); ev.l.material.opacity = 1 - clamp((a2-0.2)/0.4, 0, 1); ev.l.visible = true;
+        ev.hits[0].position.copy(ev.ha); ev.hits[1].position.copy(ev.hb); ev.hits.forEach(h => h.material.opacity = a2 > 0.18 ? 1 - (a2-0.18)/0.42 : 0);
+      } else { ev.l.visible = false; ev.hits.forEach(h => h.material.opacity = 0); }
+    });
+  }
+  if (m === 'opto'){
+    alpha = 0.3; const e = T - OPTO.t0;
+    const flash = OPTO.color === 'blue' ? ((e % 0.2) < 0.05 ? 1 : 0.15) : OPTO.color === 'yellow' ? 0.75 : 0;
+    optoGlow.material.color.copy(lin(OPTO.color === 'yellow' ? '#ffd166' : '#4cc9f0')); optoGlow.material.opacity = flash*0.7;
+    hippoMesh.material.emissiveIntensity = OPTO.color === 'blue' ? 0.3 + flash*0.9 : OPTO.color === 'yellow' ? 0.05 : 0.3;
+  }
+  if (m === 'dti'){ alpha = DTI.shown ? 0.18 : 1; G.dti.children.forEach(c => c.visible = !!DTI.shown); }
+  if (m === 'calcium'){ for (let i=0;i<5;i++){ const ph = (T*0.8 + i*0.7) % 3; blob(i, [S(-30,30,30),S(-40,-20,50),S(-20,-80,10),S(-50,-30,0),S(-10,50,10)][i], 0.1, '#7dffa1', ph < 1.2 ? Math.exp(-ph*2.5) : 0); } }
+  U.uAlpha.value += (alpha - U.uAlpha.value)*Math.min(1, dt*5);
+  const want = U.uAlpha.value < 0.99;
+  if (cortexMat.transparent !== want){ cortexMat.transparent = want; cortexMat.depthWrite = !want; cortexMat.needsUpdate = true; }
+}
+function ring(src, d){ // where a ray from src in direction d (xz) hits the radius-2 ring
+  const b = src.x*d.x + src.z*d.z, c = src.x*src.x + src.z*src.z - 4; const t = -b + Math.sqrt(b*b - c); return V(src.x + d.x*t, 0, src.z + d.z*t);
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card'); let lastFocus = null;
+function rich(text){ return esc(text).replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (m,k,t) => CARDS[k] ? `<button class="term" data-card="${k}">${t}</button>` : t); }
+function openCard(key){
+  const c = CARDS[key]; if (!c) return; lastFocus = document.activeElement;
+  const M = METHODS.find(x => x.id === state.m); const sheet = cardEl.querySelector('.card-sheet'); sheet.style.setProperty('--c', M ? M.color : '#f4d27a');
+  sheet.innerHTML = `<div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div><button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${c.fig ? `<figure class="cfig">${FIGS[c.fig]}<figcaption>${esc(c.cap||'')}</figcaption></figure>` : ''}${c.body.map(p => `<p>${esc(p)}</p>`).join('')}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}</ol></details></div>`;
+  cardEl.hidden = false; sheet.scrollTop = 0; sheet.querySelector('.close').onclick = closeCard; sheet.querySelector('.close').focus();
+}
+function closeCard(){ cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term,[data-card]').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!cardEl.hidden) closeCard(); else if (state.m) selectMethod(null); } });
+
+/* ============ Resolution chart ============ */
+const RW = { read:['#7ad7ff','Records'], write:['#ffb547','Stimulates'], both:['#5fe0a3','Both'], history:['#c9a27a','Damage'] };
+function chartSVG(){
+  const W = 420, H = 300, x0 = 54, y0 = 16, w = W - x0 - 14, h = H - y0 - 44;
+  const tx = t => x0 + (t + 3.5)/(7.5)*w, sy = s => y0 + (1 - (s + 2.5)/(4.5))*h;
+  const gx = [[-3,'1 ms'],[-1,'0.1 s'],[0,'1 s'],[1.8,'1 min'],[3.6,'1 hr']], gy = [[-2,'cell'],[-1,'0.1 mm'],[0,'1 mm'],[1,'1 cm'],[2,'brain']];
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Methods by spatial and temporal resolution">`;
+  gx.forEach(([t,l]) => g += `<line x1="${tx(t)}" y1="${y0}" x2="${tx(t)}" y2="${y0+h}" stroke="var(--line)"/><text x="${tx(t)}" y="${y0+h+16}" text-anchor="middle" fill="var(--faint)" font-size="10.5" font-family="IBM Plex Mono, monospace">${l}</text>`);
+  gy.forEach(([s,l]) => g += `<line x1="${x0}" y1="${sy(s)}" x2="${x0+w}" y2="${sy(s)}" stroke="var(--line)"/><text x="${x0-6}" y="${sy(s)+4}" text-anchor="end" fill="var(--faint)" font-size="10.5" font-family="IBM Plex Mono, monospace">${l}</text>`);
+  g += `<text x="${x0 + w/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)" font-size="11.5">How fast it sees changes → slower</text>`;
+  g += `<text x="12" y="${y0 + h/2}" text-anchor="middle" fill="var(--muted)" font-size="11.5" transform="rotate(-90 12 ${y0+h/2})">Detail → coarser</text>`;
+  METHODS.filter(x => !x.more).forEach(M => { const cx = tx(M.t), cy = sy(M.s), col = RW[M.rw][0];
+    const shape = M.inv >= 2 ? `<rect x="${cx-8}" y="${cy-8}" width="16" height="16" transform="rotate(45 ${cx} ${cy})" fill="${col}"/>` : `<circle cx="${cx}" cy="${cy}" r="8.5" fill="${col}"/>`;
+    g += `<g class="pt" data-m="${M.id}" tabindex="0" role="button" aria-label="${esc(M.title)}">${shape}<text x="${cx + 12}" y="${cy + 4}" fill="var(--fg)" font-size="12" font-weight="700">${esc(M.short)}</text></g>`; });
+  return g + '</svg>';
+}
+
+/* ============ Panel ============ */
+function methodBtn(M){ return `<button class="mbtn" data-m="${M.id}" style="--c:${M.color}"><span class="mn">${esc(M.n)}</span><span><b>${esc(M.title)}</b><span>${esc(M.tag)}</span></span></button>`; }
+function demoBtn([l, a]){ return `<button class="try" data-act="${a}">▶ ${esc(l)}</button>`; }
+function specs(M){
+  const sp = M.s < -1 ? 'Single cells' : M.s < 0.5 ? 'Millimeters' : M.s < 1.3 ? 'About a centimeter' : 'Several centimeters';
+  const tm = M.t < -1.5 ? 'Milliseconds' : M.t < 0 ? 'Fractions of a second' : M.t < 1 ? 'Seconds' : M.t < 3 ? 'Minutes' : 'A static map';
+  const inv = ['None','Injection','Surgery','Surgery'][M.inv];
+  return `<dl class="pairs specs"><div><dt>Reads or writes?</dt><dd><span class="rw" style="--k:${RW[M.rw][0]}">${RW[M.rw][1]}</span></dd></div><div><dt>Spatial detail</dt><dd>${sp}</dd></div><div><dt>Timing</dt><dd>${tm}</dd></div><div><dt>Invasive?</dt><dd>${inv}</dd></div></dl>`;
+}
+const FM = [
+  ['Room A: tag the memory', 'The mouse explores Room A. Hippocampal cells active there are tagged with channelrhodopsin. Nothing scary happens.'],
+  ['Room B: light + shock', 'In a different room, blue light reactivates the Room A memory cells while the mouse gets a mild foot shock.'],
+  ['Back in Room A: freeze', 'The mouse freezes in fear in Room A, where nothing bad ever happened. A false memory.']
+];
+function renderPanel(){
+  const M = METHODS.find(x => x.id === state.m);
+  if (!M){
+    panel.style.setProperty('--c', '#f4d27a');
+    const main = METHODS.filter(x => !x.more), more = METHODS.filter(x => x.more);
+    const q = QUIZ[state.quiz % QUIZ.length];
+    panel.innerHTML = `
+      <div><div class="eyebrow">Unit 7 · Methods</div><h2>How we study the brain</h2></div>
+      <p class="lead">How do we see inside the brain, know what neurons are doing, or excite the brain? By the end, you should be able to tell <b>recording</b> (reading activity) from <b>stimulation</b> (changing it), and pick the right method for a research question.</p>
+      <div class="rwkey"><span class="rw" style="--k:#7ad7ff">Records</span><span class="rw" style="--k:#ffb547">Stimulates</span><span class="rw" style="--k:#5fe0a3">Both</span><span class="note">◆ = needs surgery</span></div>
+      <figure class="figure chart">${chartSVG()}<figcaption>Each method trades detail for speed. Tap a dot to open it.</figcaption></figure>
+      <ul class="mlist">${main.map(x => `<li>${methodBtn(x)}</li>`).join('')}</ul>
+      <div class="eyebrow">More methods</div>
+      <dl class="pairs">${OTHER.map(([k,v,rw,id]) => `<div><dt><span class="rw" style="--k:${RW[rw][0]}">${esc(k)}</span></dt><dd>${esc(v)}${id ? ` <button class="see3d" data-m="${id}">See it in 3D →</button>` : ''}</dd></div>`).join('')}</dl>
+      <section class="quiz" id="quiz" aria-label="Pick the method">
+        <div class="eyebrow">Pick the method · ${state.quiz % QUIZ.length + 1} of ${QUIZ.length}</div>
+        <p class="q">${esc(q.q)}</p>
+        <div class="qopts">${METHODS.filter(x => x.id !== 'lesion' && x.id !== 'calcium').map(x => `<button class="qopt" data-a="${x.id}" ${state.quizPick ? 'disabled' : ''} aria-pressed="${state.quizPick === x.id}">${esc(x.short)}</button>`).join('')}</div>
+        ${state.quizPick ? `<p class="qfb ${state.quizPick === q.a ? 'ok' : 'bad'}">${state.quizPick === q.a ? 'Right.' : `Not quite: the best fit is ${esc(METHODS.find(x => x.id === q.a).title)}.`} ${esc(q.why)}</p><button class="btn small primary" id="qnext">Next question →</button>` : ''}
+      </section>
+      <div class="eyebrow">Problems to keep in mind</div>
+      <button class="case" data-card="salmon" style="--c:#ff6fa5"><span class="eyebrow">fMRI</span><span>The dead salmon: why statistics matter</span><span class="case-go">Open →</span></button>
+      <button class="case" data-card="fmriproblems" style="--c:#ff6fa5"><span class="eyebrow">fMRI</span><span>Why fMRI results can mislead</span><span class="case-go">Open →</span></button>
+      <div class="qa"><div class="q">Can you trust the picture?</div><div class="a">Investigators have found duplicated, rotated and mirrored microscope images of neurons in published papers, including in major journals, traced to an outside lab that supplied the images. Spine counts and statistics are only as good as the raw images behind them. Always ask how an image was made, and whether anyone could check it.</div></div>
+      <p class="note">The future: AI is speeding up analysis, and the cost to map a brain is dropping fast.</p>`;
+    panel.querySelectorAll('.mbtn,.see3d').forEach(b => b.onclick = () => selectMethod(b.dataset.m));
+    panel.querySelectorAll('.pt').forEach(p => { p.onclick = () => selectMethod(p.dataset.m); p.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') selectMethod(p.dataset.m); }; });
+    panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quizPick = b.dataset.a; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); });
+    const qn = $('#qnext'); if (qn) qn.onclick = () => { state.quiz++; state.quizPick = null; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); };
+    bindTerms(panel); return;
+  }
+  const all = M.more ? [M] : METHODS.filter(x => !x.more), i = all.indexOf(M);
+  panel.style.setProperty('--c', M.color);
+  panel.innerHTML = `
+    <button class="back" id="back">← All methods</button>
+    <div class="topic-head"><div class="eyebrow">${M.more ? 'More methods' : 'Method ' + esc(M.n)} · ${esc(M.tag)}</div><h2>${esc(M.title)}</h2>${M.long ? `<div class="long">${esc(M.long)}</div>` : ''}</div>
+    <div class="mem-line">${esc(M.analogy)}</div>
+    <div class="tries">${M.demos.map(demoBtn).join('')}</div>
+    ${M.id === 'opto' && OPTO.step ? `<div class="fm" id="fm"><div class="eyebrow">The false-memory experiment · step ${OPTO.step} of 3</div><div class="fm-steps">${FM.map((s,k) => `<div class="fms ${k+1 === OPTO.step ? 'on' : k+1 < OPTO.step ? 'done' : ''}"><b>${k+1}. ${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('')}</div><div class="row">${OPTO.step < 3 ? '<button class="btn small primary" id="fmNext">Next step →</button>' : '<button class="btn small" data-card="falsememory">Read the study</button>'}</div></div>` : ''}
+    ${specs(M)}
+    ${M.mn ? `<div class="mn"><div class="mn-title">${esc(M.mn.title)}</div>${M.mn.rows.map(([L,w,d]) => `<div class="mn-row"><span class="L">${esc(L)}</span><div><b>${esc(w)}</b><span class="det">${esc(d)}</span></div></div>`).join('')}</div>` : ''}
+    ${M.pairs ? `<dl class="pairs">${M.pairs.map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+    <ul class="blist">${M.points.map(p => `<li>${rich(p)}</li>`).join('')}</ul>
+    ${M.cases.length ? `<div class="eyebrow">Studies & cases</div><div class="cases">${M.cases.map(([k,t]) => `<button class="case" data-card="${k}"><span class="eyebrow">${esc(CARDS[k].kicker)}</span><span>${esc(t)}</span><span class="case-go">Open →</span></button>`).join('')}</div>` : ''}
+    ${M.id === 'opto' ? '<p class="note">See a single neuron respond to blue light in the <a href="neurons.html">Neuron Lab</a>.</p>' : ''}
+    <div class="pager"><button class="btn" id="prevM" ${i===0?'disabled':''}>← ${i>0?esc(all[i-1].title):'Back'}</button>
+      <button class="btn primary" id="nextM">${i<all.length-1?esc(all[i+1].title)+' →':'All methods'}</button></div>`;
+  $('#back').onclick = () => selectMethod(null);
+  $('#prevM').onclick = () => i > 0 && selectMethod(all[i-1].id);
+  $('#nextM').onclick = () => selectMethod(i < all.length-1 ? all[i+1].id : null);
+  panel.querySelectorAll('.try').forEach(b => b.onclick = () => { ACT[b.dataset.act](); refreshTries(); });
+  const fn = $('#fmNext'); if (fn) fn.onclick = () => { OPTO.step++; renderPanel(); $('#fm').scrollIntoView({block:'nearest'}); };
+  bindTerms(panel); refreshTries();
+}
+
+/* ============ Loop ============ */
+let last = 0;
+const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - (last||now))/1000); last = now; T += dt; U.uTime.value = T;
+  if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = ease(k); camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
+  if (!state.m && !tween) controls.autoRotate = true; else controls.autoRotate = false;
+  controls.autoRotateSpeed = 0.5; controls.update();
+  if (lh) updScene(dt);
+  renderer.render(scene, camera);
+  TAGS.forEach(t => { const on = t.group === state.m && (t.group !== 'lesion' || (t.gage ? LES.gage : LES.tan)) && (t.group !== 'dti' || DTI.shown); t.el.style.opacity = on ? 1 : 0; if (on) place(t.el, t.world); });
+  drawHud();
+}
+
+/* ============ Boot ============ */
+resize();
+camera.position.set(...VIEWS.home[0]); controls.target.set(...VIEWS.home[1]);
+if (isNarrow()) camera.position.multiplyScalar(1.45);
+renderPanel();
+requestAnimationFrame(frame);
+loadCortex().then(() => { buildEcog(); $('#loading').hidden = true; resize(); })
+  .catch(err => { $('#loading').textContent = 'The brain model could not load. Reload the page to try again.'; console.error(err); });
+</script>
+</body></html>

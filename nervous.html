@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nervous System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: the Mimage map is the stage (Manhattan = nervous system); outline and notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 80% 70% at 40% 35%,#2a1d4a 0%,#140f24 60%,#0b0912 100%)}
+.otree{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.otree li{margin-left:calc(var(--d)*18px);position:relative}
+.otree li::before{content:"";position:absolute;left:-11px;top:-6px;bottom:50%;border-left:1px solid var(--line);border-bottom:1px solid var(--line);width:9px;display:var(--tree,block)}
+.otree li[style*="--d:0"]::before{display:none}
+.onode{width:100%;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;text-align:left;padding:8px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.onode:hover,.onode:focus-visible{border-color:var(--c)}
+.odot{width:11px;height:11px;border-radius:50%;background:var(--c)}
+.onode b{display:block;font-size:14.5px;font-family:var(--f-display)}
+.onode span span{display:block;font-size:12.5px;color:var(--chalk)}
+.kids{display:flex;flex-direction:column;gap:7px}
+.kids .mbtn .mn{width:14px;height:14px}
+.figure.narrow img{max-height:260px;background:#f4ead2}
+.figure img{background:#f4ead2}
+.plabel b{color:var(--chalk)}
+.plabel.big{font-size:14px}
+#hudCanvas[hidden]{display:none}
+#bodyCard{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);right:calc(var(--panel-w) + 14px);z-index:5;width:132px;background:rgba(15,19,28,.88);border:1px solid var(--line);border-radius:14px;padding:10px 10px 8px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:6px}
+#bodyCard svg{width:100%;height:auto;display:block}
+#bodyCard .key{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted);line-height:1.3}
+#bodyCard .key i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+#bodySvg .cns,#bodySvg .som,#bodySvg .aut,#bodySvg .brainS,#bodySvg .cord,#bodySvg .cbl,#bodySvg .vagus,#bodySvg .chain,#bodySvg .heart,#bodySvg .gut{transition:opacity .4s,filter .4s}
+#bodySvg .hit path,#bodySvg .hit ellipse{stroke:transparent;stroke-width:9;fill:none;pointer-events:stroke;cursor:pointer}
+#bodySvg .hit ellipse{fill:transparent;pointer-events:all}
+.dim{opacity:.16}.mid{opacity:.45}
+.glowY{filter:drop-shadow(0 0 3px #ffd166) drop-shadow(0 0 6px #ffd166)}
+.glowB{filter:drop-shadow(0 0 2px #5ab8ff) drop-shadow(0 0 5px #5ab8ff)}
+.glowG{filter:drop-shadow(0 0 3px #5fe0a3)}.glowR{filter:drop-shadow(0 0 3px #ff7a59)}.glowP{filter:drop-shadow(0 0 3px #ff8fb0)}
+.flowOut .nv,.flowOut.vagus,.flowOut .vagus{stroke-dasharray:5 5;animation:flow .8s linear infinite}
+.flowIn .nv{stroke-dasharray:5 5;animation:flow .8s linear infinite reverse}
+@keyframes flow{to{stroke-dashoffset:-10}}
+@media (max-height:700px) and (min-width:821px){ #bodyCard{width:104px} }
+@media (max-width:820px){ #bodyCard{width:96px;padding:6px;top:calc(env(safe-area-inset-top,0px) + 56px);right:10px} #bodyCard .key,#bodyCard .eyebrow{display:none} }
+#bodySvg .skin{fill:#2a3142;stroke:#4a5470;stroke-width:1}
+#bodySvg .cord{stroke:#ffd166;stroke-width:4;stroke-linecap:round;fill:none}.brainS,.cbl{fill:#ffd166}
+.nv{stroke:#5ab8ff;stroke-width:1.4;fill:none;stroke-linecap:round}
+.vagus{stroke:#5fe0a3;stroke-width:1.6;fill:none}.chain circle{fill:#ff7a59}
+.org{fill:none;stroke:#ff8fb0;stroke-width:1.2;opacity:.7}
+
+.parts .part b{font-family:var(--f-display);font-size:15px}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the map…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Nervous system</h1>
+  <div class="brand-sub">NYC = Nervous system</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle">How to use this map</div>
+  <canvas id="hudCanvas" width="900" height="240" aria-label="Live view of the signal or of your body’s state"></canvas>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<section id="bodyCard" aria-label="Body diagram">
+  <div class="eyebrow">Your body</div>
+  <svg id="bodySvg" data-hl="ns" viewBox="20 4 160 386" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Body diagram: the brain and spinal cord in yellow (CNS) and the nerves branching to the arms, chest and legs in blue (PNS)">
+<path class="skin" d="M100 10 C114 10 123 21 123 35 C123 47 117 55 110 58 L110 66 C128 69 143 74 148 82 C154 92 155 116 157 136 C159 160 163 190 168 214 C171 226 172 246 168 262 C166 270 158 270 157 262 C155 248 155 232 152 220 C146 198 141 172 137 150 L133 126 C131 146 131 166 133 186 C136 214 139 246 139 276 C139 310 135 346 133 378 C133 388 117 388 117 378 C115 346 111 312 109 280 L104 226 L96 226 L91 280 C89 312 85 346 83 378 C83 388 67 388 67 378 C65 346 61 310 61 276 C61 246 64 214 67 186 C69 166 69 146 67 126 L63 150 C59 172 54 198 48 220 C45 232 45 248 43 262 C42 270 34 270 32 262 C28 246 29 226 32 214 C37 190 41 160 43 136 C45 116 46 92 52 82 C57 74 72 69 90 66 L90 58 C83 55 77 47 77 35 C77 21 86 10 100 10 Z"/>
+<g class="aut"><ellipse class="org heart" cx="106" cy="114" rx="7" ry="8"/><path class="org gut" d="M86 160 C86 150 114 150 114 160 C114 170 86 168 86 178 C86 188 114 186 114 194 C114 200 98 202 92 198"/><g class="chain"><circle cx="93" cy="84" r="1.7"/><circle cx="107" cy="84" r="1.7"/><circle cx="93" cy="93" r="1.7"/><circle cx="107" cy="93" r="1.7"/><circle cx="93" cy="102" r="1.7"/><circle cx="107" cy="102" r="1.7"/><circle cx="93" cy="111" r="1.7"/><circle cx="107" cy="111" r="1.7"/><circle cx="93" cy="120" r="1.7"/><circle cx="107" cy="120" r="1.7"/><circle cx="93" cy="129" r="1.7"/><circle cx="107" cy="129" r="1.7"/><circle cx="93" cy="138" r="1.7"/><circle cx="107" cy="138" r="1.7"/><circle cx="93" cy="147" r="1.7"/><circle cx="107" cy="147" r="1.7"/><circle cx="93" cy="156" r="1.7"/><circle cx="107" cy="156" r="1.7"/><circle cx="93" cy="165" r="1.7"/><circle cx="107" cy="165" r="1.7"/><circle cx="93" cy="174" r="1.7"/><circle cx="107" cy="174" r="1.7"/><circle cx="93" cy="183" r="1.7"/><circle cx="107" cy="183" r="1.7"/><circle cx="93" cy="192" r="1.7"/><circle cx="107" cy="192" r="1.7"/></g><path class="vagus" d="M97 50 C91 60 92 72 90 84 C88 96 92 106 96 114 C100 124 92 138 90 150 C88 160 92 166 94 172"/></g>
+<g class="som"><path class="nv" d="M100 74 C112 76 124 80 140 92 C146 110 148 132 150 150 C153 176 157 200 161 222 C164 238 164 250 163 262"/><path class="nv" d="M 100 74 C 88 76 76 80 60 92 C 54 110 52 132 50 150 C 47 176 43 200 39 222 C 36 238 36 250 37 262"/><path class="nv" d="M140 92 C150 112 156 140 158 160 C160 180 164 200 166 214"/><path class="nv" d="M 60 92 C 50 112 44 140 42 160 C 40 180 36 200 34 214"/><path class="nv" d="M140 92 C144 120 146 150 147 172 C149 196 152 216 156 236 C158 246 158 254 158 262"/><path class="nv" d="M 60 92 C 56 120 54 150 53 172 C 51 196 48 216 44 236 C 42 246 42 254 42 262"/><path class="nv" d="M126 84 C134 96 137 108 138 118"/><path class="nv" d="M 74 84 C 66 96 63 108 62 118"/><path class="nv" d="M103 96 C115.0 93 127 98 131 106"/><path class="nv" d="M 97 96 C 85 93 73 98 69 106"/><path class="nv" d="M103 108 C116.0 105 129 110 133 118"/><path class="nv" d="M 97 108 C 84 105 71 110 67 118"/><path class="nv" d="M103 120 C117.0 117 131 122 135 130"/><path class="nv" d="M 97 120 C 83 117 69 122 65 130"/><path class="nv" d="M103 132 C118.0 129 133 134 137 142"/><path class="nv" d="M 97 132 C 82 129 67 134 63 142"/><path class="nv" d="M103 144 C117.0 141 131 146 135 154"/><path class="nv" d="M 97 144 C 83 141 69 146 65 154"/><path class="nv" d="M103 156 C116.0 153 129 158 133 166"/><path class="nv" d="M 97 156 C 84 153 71 158 67 166"/><path class="nv" d="M103 168 C115.0 165 127 170 131 178"/><path class="nv" d="M 97 168 C 85 165 73 170 69 178"/><path class="nv" d="M101 196 C112 206 120 222 122 244 C124 266 124 290 122 312"/><path class="nv" d="M 99 196 C 88 206 80 222 78 244 C 76 266 76 290 78 312"/><path class="nv" d="M101 202 C108 218 112 236 114 262 C116 290 118 318 120 346 C122 362 124 374 126 382"/><path class="nv" d="M 99 202 C 92 218 88 236 86 262 C 84 290 82 318 80 346 C 78 362 76 374 74 382"/><path class="nv" d="M115 300 C124 316 130 334 132 352 C133 364 133 374 132 382"/><path class="nv" d="M 85 300 C 76 316 70 334 68 352 C 67 364 67 374 68 382"/><path class="nv" d="M122 244 C128 262 130 286 129 306"/><path class="nv" d="M 78 244 C 72 262 70 286 71 306"/><path class="nv" d="M100 200 L100 222"/><path class="nv" d="M100 200 L97 220"/><path class="nv" d="M100 200 L103 220"/></g>
+<g class="cns"><path class="cord" d="M100 50 L100 202"/><ellipse class="brainS" cx="100" cy="30" rx="17" ry="13.5"/><ellipse class="cbl" cx="100" cy="45" rx="8" ry="4.5"/></g>
+</svg>
+  <div class="key"><span><i style="background:#ffd166"></i>CNS = Central Park</span><span><i style="background:#5ab8ff"></i>PNS = Purple Sea</span></div>
+</section>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<div id="lightbox" hidden><img alt="Mimage, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Nervous system outline (from Professor Freed's Mimage) ============ */
+const C = { cns:'#5fd08a', brain:'#7fe0a0', cord:'#e9dcc0', pns:'#b58bff', som:'#8fb4ff', aut:'#9fb0c4', sym:'#ff7a59', par:'#5fe0a3', ent:'#ff8fb0' };
+const NODES = [
+  { id:'ns', depth:0, title:'The nervous system', mn:'NYC = Nervous system', color:'#f4d27a', img:'img/nervous/mimage.jpg',
+    lead:'Your nervous system has two big parts. The central nervous system (CNS) is the brain and spinal cord. The peripheral nervous system (PNS) is every nerve outside them. On this map, Manhattan’s Central Park is the CNS and the purple sea around it is the PNS.',
+    points:[
+      'The CNS (brain and spinal cord) takes in information, makes decisions and sends out commands.',
+      'The PNS carries messages between the CNS and the rest of your body: 12 pairs of cranial nerves and 31 pairs of spinal nerves.',
+      'The PNS splits into the somatic system (movement and senses you’re aware of) and the autonomic system (organs that run without you thinking about them).'] },
+
+  { id:'cns', parent:'ns', depth:1, title:'CNS: central nervous system', short:'CNS', mn:'Central Park = Central nervous system', color:C.cns, img:'img/nervous/park.jpg',
+    lead:'The brain and spinal cord. Think of the trees in Central Park: the canopy is the brain and the trunk is the spinal cord.',
+    demos:[['Turn the big tree into a brain and spinal cord','cnsShow']],
+    points:[
+      'The CNS is the command center: it combines incoming information, decides and sends out commands.',
+      'It’s heavily protected: bone (skull and vertebrae), three layers of membranes (the meninges), cushioning cerebrospinal fluid, and the blood–brain barrier.',
+      'The human brain has about 86 billion neurons ([[neurons86|how we know]]).',
+      'Damage to the CNS heals poorly; cut nerves in the PNS can regrow. See [[regen|why]].'],
+    cases:[['sci','Spinal cord injury: why the level matters']] },
+
+  { id:'brain', parent:'cns', depth:2, title:'Brain', mn:'The tree canopy: four lobes', color:C.brain,
+    lead:'The canopy of the big tree is the brain. Each hemisphere has four lobes, and each lobe has its own job.',
+    demos:[['Frontal','lobe0'],['Parietal','lobe1'],['Temporal','lobe2'],['Occipital','lobe3']],
+    lobes:[['Frontal lobe','Planning, decisions, personality and movement. The motor cortex (motor homunculus) is at its back edge.','#ff8f6b'],
+           ['Parietal lobe','Touch and body sense (the sensory homunculus), plus knowing where things are in space.','#ffd166'],
+           ['Temporal lobe','Hearing, understanding language, and memory (the hippocampus sits inside).','#5fe0a3'],
+           ['Occipital lobe','Vision. Signals from your eyes arrive at the very back of the brain.','#a58bff']],
+    points:[
+      'Tap a lobe button to light it up on the tree canopy.',
+      'You’ve already learned each lobe’s five parts in the Neuroanatomy unit.'],
+    go:['neuroanatomy.html','Open Neuroanatomy →','Walk through every lobe in 3D with its Mimage.'] },
+
+  { id:'cord', parent:'cns', depth:2, title:'Spinal cord', mn:'The tree trunk', color:C.cord, img:null,
+    lead:'The trunk of the tree is the spinal cord: the main cable between your brain and your body. Spinal nerves branch off it in pairs.',
+    demos:[['Run a reflex (touch a hot stove)','reflex'],['Show the 31 pairs of spinal nerves','pairs']],
+    points:[
+      'About 45 cm long in adults. 31 pairs of spinal nerves leave it: 8 cervical, 12 thoracic, 5 lumbar, 5 sacral and 1 coccygeal.',
+      'In a cross-section, the gray matter (cell bodies) is a butterfly shape in the middle and the white matter (axons) is on the outside. That’s the opposite of the brain’s cortex, where gray matter is on the outside.',
+      'Each spinal nerve joins the cord by two roots: the <b>dorsal</b> root at the back, which brings sensory information in, and the <b>ventral</b> root at the front, which sends motor commands out.',
+      'Reflexes such as pulling your hand off a hot stove are handled right in the spinal cord. Your hand moves before the pain reaches your brain.'],
+    cases:[['sci','Spinal cord injury: why the level matters'],['magendie','The Bell–Magendie law']] },
+
+  { id:'dorsal', parent:'cord', depth:3, title:'Dorsal root', mn:'Dorsal = Delivers sensory information', color:'#7ad7ff',
+    lead:'The dorsal (back) root delivers sensory information into the spinal cord: touch, pain, temperature and body position.',
+    demos:[['Deliver a touch signal in','dorsalGo']],
+    points:[
+      'Sensory neurons are afferent: they carry signals toward the CNS.',
+      'Their cell bodies sit in a bump on the dorsal root called the [[drg|dorsal root ganglion]].',
+      'If a dorsal root is cut, that patch of skin goes numb, but the muscles still move.',
+      'Bonus mnemonic: <b>SAME DAVE</b>. Sensory = Afferent, Motor = Efferent; Dorsal = Afferent, Ventral = Efferent.'] },
+
+  { id:'ventral', parent:'cord', depth:3, title:'Ventral root', mn:'Ventral = Vrooms (motor commands out)', color:'#ffb547',
+    lead:'The ventral (front) root is where motor commands vroom out of the spinal cord to your muscles.',
+    demos:[['Vroom a motor command out','ventralGo']],
+    points:[
+      'Motor neurons are efferent: they carry signals away from the CNS.',
+      'Their cell bodies sit in the ventral horn of the gray matter, and their axons leave through the ventral root.',
+      'If a ventral root is cut, those muscles are paralyzed, but you can still feel the skin.',
+      'Polio damages motor neurons in the ventral horn. That’s why it causes paralysis, not numbness.'] },
+
+  { id:'pns', parent:'ns', depth:1, title:'PNS: peripheral nervous system', short:'PNS', mn:'Purple Sea = Peripheral nervous system', color:C.pns, img:'img/nervous/sea.jpg',
+    lead:'Every nerve outside the brain and spinal cord: the purple sea that surrounds Central Park and reaches every part of the map.',
+    demos:[['Light up the nerves in the sea','pnsGlow']],
+    points:[
+      'On a body diagram, the PNS is all the <b>blue</b>: the nerves branching out to your arms, chest, legs and organs. That’s the Purple Sea. The <b>yellow</b> brain and spinal cord are Central Park.',
+      'Includes the 12 pairs of cranial nerves (from the brain), the 31 pairs of spinal nerves (from the cord), and clusters of nerve cell bodies called ganglia.',
+      'It isn’t protected by bone or the blood–brain barrier, so it’s more exposed to injury and toxins.',
+      'Unlike the CNS, cut peripheral nerves can regrow, about 1 mm a day, guided by Schwann cells ([[regen|why]]).',
+      'Two divisions: the <b>somatic</b> system (Samurai) and the <b>autonomic</b> system (Atomic Sub).'] },
+
+  { id:'somatic', parent:'pns', depth:2, title:'Somatic nervous system', mn:'Samurai = Somatic (movement & senses)', color:C.som, img:'img/nervous/samurai.jpg',
+    lead:'The part you control and feel: voluntary movement of your skeletal muscles, and the senses coming in from your skin, muscles and joints.',
+    demos:[['Swing the sword (motion)','motion'],['Feel the water (touch)','touch']],
+    points:[
+      'Motion: commands go out from the brain, down the spinal cord, and out to skeletal muscles.',
+      'Touch: signals come in from the body, up the spinal cord, to the brain.',
+      'At the muscle, motor neurons release acetylcholine (ACh) at the neuromuscular junction. Block those receptors and the samurai can’t swing ([[curare|curare]]).'],
+    cases:[['homunculus','The homunculi: your body map in the brain'],['curare','Curare: freezing the samurai']] },
+
+  { id:'motion', parent:'somatic', depth:3, title:'Motion', mn:'Think frontal lobe: the Athlete is where movement signals start', color:'#ff8f6b',
+    lead:'Movement starts in the primary motor cortex at the back of the frontal lobe, the motor homunculus.',
+    demos:[['Swing the sword','motion']],
+    route:['Frontal lobe (motor cortex)','Down the spinal cord','Out the ventral root','Muscle contracts'],
+    points:[
+      'The motor cortex has a map of your body, the [[homunculus|motor homunculus]]: hands, lips and tongue get the most space because they need the finest control.',
+      'Commands travel down the corticospinal tract, cross to the other side, and leave the cord through the ventral root (Vrooms).',
+      'The left motor cortex moves the right side of your body.'] },
+
+  { id:'touch', parent:'somatic', depth:3, title:'Touch', mn:'Think PITT: parietal lobe, where signals from the body arrive', color:'#ffd166',
+    lead:'Touch signals travel from receptors in your skin to the primary somatosensory cortex at the front of the parietal lobe, the sensory homunculus.',
+    demos:[['Feel the water','touch']],
+    route:['Receptors in the skin','In the dorsal root','Up the spinal cord','Parietal lobe (sensory homunculus)'],
+    points:[
+      'Signals enter through the dorsal root (Delivers), climb the spinal cord, stop at the thalamus, then reach the parietal lobe.',
+      'The [[homunculus|sensory homunculus]] gives fingertips and lips the most space, which is why they’re so sensitive.',
+      'The right side of your body is felt by the left parietal lobe.'] },
+
+  { id:'autonomic', parent:'pns', depth:2, title:'Autonomic nervous system', mn:'Atomic Sub = Autonomic (subconscious)', color:C.aut, img:'img/nervous/sub.jpg',
+    lead:'Runs automatically, below your awareness: heart rate, breathing, pupils, sweating, digestion. Like a submarine running silently under the surface.',
+    demos:[['Fight or flight','sym'],['Rest and digest','par']],
+    dash:true,
+    points:[
+      'It controls heart muscle, smooth muscle (blood vessels, airways, gut) and glands.',
+      'The hypothalamus is its main commander in the brain.',
+      'Three branches, front to back of the sub: <b>sympathetic</b> (fight or flight), <b>parasympathetic</b> (rest and digest) and <b>enteric</b> (the gut’s own nervous system).',
+      'Most organs get both sympathetic and parasympathetic nerves, which push in opposite directions, like a gas pedal and a brake.'] },
+
+  { id:'sym', parent:'autonomic', depth:3, title:'Sympathetic', mn:'Front of the sub: Rambo Simpson = Sympathetic (fight or flight)', color:C.sym, img:'img/nervous/front.jpg',
+    lead:'Fight or flight. Your body gears up for action: heart pounding, pupils wide, airways open, digestion on hold.',
+    demos:[['Fight or flight!','sym']], dash:true,
+    points:[
+      'Speeds the heart, dilates the pupils, opens the airways, releases stored glucose, and slows digestion and saliva (dry mouth before a speech).',
+      'The adrenal glands release [[adrenaline|adrenaline (epinephrine)]] into the blood, so the whole body gets the message.',
+      'Its nerves leave the thoracic and lumbar spinal cord, and most use norepinephrine at the target organ.',
+      'Walter Cannon named the [[cannon|fight-or-flight response]] in 1915.'] },
+
+  { id:'par', parent:'autonomic', depth:3, title:'Parasympathetic', mn:'Middle of the sub: Parachuting Simpson = Parasympathetic (rest and digest)', color:C.par, img:'img/nervous/middle.jpg',
+    lead:'Rest and digest. Your body slows down and recharges: calm heart, saliva flowing, stomach and intestines at work.',
+    demos:[['Rest and digest','par'],['Send a signal down the vagus nerve','vagus']], dash:true,
+    points:[
+      'Slows the heart, constricts the pupils, increases saliva and digestion, and helps the bladder empty.',
+      'Its nerves leave the brainstem (cranial nerves) and the sacral spinal cord, and they use acetylcholine at the target organ.',
+      'Bonus: the [[vagus|vagus nerve (CN X)]] carries most of the parasympathetic signals. It wanders from the brainstem to your heart, lungs and gut.',
+      'Too much vagus at once can make you faint ([[vasovagal|vasovagal fainting]]).'] },
+
+  { id:'ent', parent:'autonomic', depth:3, title:'Enteric', mn:'Back of the sub: pile of guts = Enteric (gut system)', color:C.ent, img:'img/nervous/back.jpg',
+    lead:'The nervous system inside your gut wall. It can run digestion on its own, which is why it’s called the “second brain.”',
+    demos:[['Watch the gut work','gut'],['Send a gut feeling to the brain','gutBrain']],
+    points:[
+      'Hundreds of millions of neurons line your digestive tract, more than in your spinal cord ([[secondbrain|the second brain]]).',
+      'It squeezes food along (peristalsis) and controls digestive secretions, even if its connection to the brain is cut.',
+      'Mind–gut connection: it talks with the brain through the vagus nerve. Most vagus fibers carry messages up from the gut, not down.',
+      'Most of your body’s serotonin is made in the gut, not the brain ([[serotonin|serotonin in the gut]]). “Butterflies in your stomach” are your gut and brain talking.'] }
+];
+const NODE = Object.fromEntries(NODES.map(n => [n.id, n]));
+const ORDER = NODES.map(n => n.id);
+
+const REFS = {
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (2021). Principles of Neural Science (6th ed.). McGraw Hill.',
+  purves:'Purves, D., et al. (2018). Neuroscience (6th ed.). Oxford University Press.',
+  bear:'Bear, M. F., Connors, B. W., & Paradiso, M. A. (2016). Neuroscience: Exploring the Brain (4th ed.). Wolters Kluwer.',
+  azevedo:'Azevedo, F. A. C., et al. (2009). Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. Journal of Comparative Neurology, 513(5), 532–541.',
+  penfield:'Penfield, W., & Boldrey, E. (1937). Somatic motor and sensory representation in the cerebral cortex of man as studied by electrical stimulation. Brain, 60(4), 389–443.',
+  cannon:'Cannon, W. B. (1915). Bodily Changes in Pain, Hunger, Fear and Rage. D. Appleton.',
+  furness:'Furness, J. B. (2012). The enteric nervous system and neurogastroenterology. Nature Reviews Gastroenterology & Hepatology, 9(5), 286–294.',
+  gershon:'Gershon, M. D. (1998). The Second Brain. HarperCollins.',
+  yano:'Yano, J. M., et al. (2015). Indigenous bacteria from the gut microbiota regulate host serotonin biosynthesis. Cell, 161(2), 264–276.',
+  breit:'Breit, S., Kupferberg, A., Rogler, G., & Hasler, G. (2018). Vagus nerve as modulator of the brain–gut axis in psychiatric and inflammatory disorders. Frontiers in Psychiatry, 9, 44.',
+  magendie:'Magendie, F. (1822). Expériences sur les fonctions des racines des nerfs rachidiens. Journal de physiologie expérimentale et pathologique, 2, 276–279.',
+  syncope:'Brignole, M., et al. (2018). 2018 ESC Guidelines for the diagnosis and management of syncope. European Heart Journal, 39(21), 1883–1948.',
+  sci:'Ahuja, C. S., et al. (2017). Traumatic spinal cord injury. Nature Reviews Disease Primers, 3, 17018.',
+  bowman:'Bowman, W. C. (2006). Neuromuscular block. British Journal of Pharmacology, 147(S1), S277–S286.'
+};
+const CARDS = {
+  neurons86:{title:'86 billion neurons', kicker:'How we know', body:['For years textbooks said 100 billion. In 2009, Suzana Herculano-Houzel’s lab dissolved brains into a “soup” of cell nuclei and counted them: about 86 billion neurons, and roughly as many non-neuron cells.','Most of those neurons, about 69 billion, are in the cerebellum.'], refs:['azevedo']},
+  regen:{title:'Why the PNS heals and the CNS doesn’t', kicker:'Repair', body:['When a peripheral nerve is cut, Schwann cells clear the debris and line up into tunnels that guide the regrowing axon, about 1 mm a day.','In the CNS, the support cells (oligodendrocytes and astrocytes) do the opposite: they release growth-blocking molecules and form a glial scar. That’s why spinal cord injuries are usually permanent.'], refs:['kandel','purves']},
+  sci:{title:'Spinal cord injury: why the level matters', kicker:'Case file', body:['Everything below an injury loses its connection to the brain, so the higher the injury, the more of the body is affected.','An injury in the neck (cervical) can affect both arms and legs (quadriplegia/tetraplegia); very high injuries can affect breathing. An injury lower down, in the thoracic or lumbar cord, usually affects the legs (paraplegia).','Reflexes below the injury can still work, because the reflex circuit lives in the cord itself.'], refs:['sci']},
+  magendie:{title:'The Bell–Magendie law', kicker:'Classic discovery', body:['In the early 1800s, Charles Bell and François Magendie showed that the spinal roots have different jobs.','Magendie (1822) cut dorsal roots in puppies: the leg still moved but lost feeling. Cutting ventral roots caused paralysis while feeling remained.','Rule: dorsal roots are sensory (Delivers), ventral roots are motor (Vrooms).'], refs:['magendie','kandel']},
+  drg:{title:'Dorsal root ganglion', kicker:'Where sensory cell bodies live', body:['A ganglion is a cluster of neuron cell bodies outside the CNS.','Sensory neurons are unusual: their cell body sits off to the side in the dorsal root ganglion, with one long branch reaching out to the skin and another reaching into the spinal cord.'], refs:['purves']},
+  homunculus:{title:'The homunculi', kicker:'Your body map in the brain', body:['Wilder Penfield stimulated the brains of awake patients during surgery and mapped which spot moved or felt which body part.','The motor homunculus sits in the frontal lobe (motion); the sensory homunculus sits just behind it in the parietal lobe (touch).','Body parts get space based on how precise they are, not how big: the hands, lips and tongue are huge.'], refs:['penfield']},
+  curare:{title:'Curare: freezing the samurai', kicker:'Case file', body:['Curare is a plant poison some South American hunters put on darts. It blocks acetylcholine receptors at the neuromuscular junction.','The motor command arrives, but the muscle can’t hear it: the animal is paralyzed. Breathing muscles stop too.','Drugs based on curare are used during surgery to relax muscles, with a machine breathing for the patient.'], refs:['bowman']},
+  adrenaline:{title:'Adrenaline (epinephrine)', kicker:'Fight or flight in the blood', body:['The sympathetic system signals the adrenal glands (on top of the kidneys) to release adrenaline into the bloodstream.','That spreads the fight-or-flight message to the whole body within seconds, and it lingers, which is why your heart keeps pounding after a scare.'], refs:['purves']},
+  cannon:{title:'Fight or flight', kicker:'Walter Cannon, 1915', body:['Physiologist Walter Cannon described how fear and rage trigger the same bodily changes: a racing heart, faster breathing, sugar released into the blood and digestion on hold.','The point: get the body ready to fight or run.'], refs:['cannon']},
+  vagus:{title:'The vagus nerve (CN X)', kicker:'The wanderer', body:['“Vagus” is Latin for wandering. Cranial nerve X leaves the brainstem and wanders down to the heart, lungs and most of the gut.','It carries most of the parasympathetic signals that slow the heart and turn on digestion.','It’s a two-way road: most of its fibers carry information up from the organs to the brain.'], refs:['breit','kandel']},
+  vasovagal:{title:'Fainting at the sight of blood', kicker:'Vasovagal syncope', body:['In some people, a trigger such as blood, a needle or standing for a long time causes a sudden rush of vagus (parasympathetic) activity.','The heart slows and blood vessels relax, blood pressure drops, the brain briefly gets too little blood, and the person faints. Lying down usually brings them right back.'], refs:['syncope']},
+  secondbrain:{title:'The second brain', kicker:'Enteric nervous system', body:['The gut wall holds two layers of neuron networks (the myenteric and submucosal plexuses), roughly 200–600 million neurons in humans.','It can run peristalsis and secretions on its own, even when cut off from the brain. Michael Gershon called it “the second brain.”'], refs:['furness','gershon']},
+  serotonin:{title:'Serotonin in the gut', kicker:'Mind–gut connection', body:['About 90% of the body’s serotonin is made in the gut, mostly by enterochromaffin cells in the gut lining. It helps control gut movement.','Gut bacteria help drive how much is made. Gut serotonin doesn’t cross into the brain, but the gut and brain stay in constant contact through the vagus nerve.'], refs:['yano','breit']}
+};
+
+const QUIZ = [
+  {q:'Your heart pounds as your professor calls on you.', a:'sym', why:'A racing heart is fight or flight: sympathetic (Rambo).'},
+  {q:'After a big meal you feel sleepy while your stomach gets to work.', a:'par', why:'Rest and digest: parasympathetic (Parachuting).'},
+  {q:'You decide to raise your hand.', a:'somatic', why:'Voluntary movement is somatic (Samurai).'},
+  {q:'You feel a mosquito land on your arm.', a:'somatic', why:'Touch from the skin is somatic too: the Samurai covers movement and senses.'},
+  {q:'Your intestines keep squeezing food along while you sleep.', a:'ent', why:'That’s the gut’s own nervous system: enteric (pile of guts).'},
+  {q:'A pinprick signal enters the spinal cord through the…', a:'dorsal', why:'Dorsal = Delivers sensory information.'},
+  {q:'A command to kick a ball leaves the spinal cord through the…', a:'ventral', why:'Ventral = Vrooms motor commands out.'},
+  {q:'Which part is protected by bone: the skull and vertebrae?', a:'cns', why:'The CNS (Central Park): brain and spinal cord.'}
+];
+const QOPTS = [['cns','CNS'],['dorsal','Dorsal root'],['ventral','Ventral root'],['somatic','Somatic'],['sym','Sympathetic'],['par','Parasympathetic'],['ent','Enteric']];
+
+/* ============ Scene ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let seed = 7; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x1a1230, 16, 34);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 100);
+camera.position.set(2, 9, 12);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.2; controls.maxDistance = 24; controls.maxPolarAngle = Math.PI*0.48;
+scene.add(new THREE.HemisphereLight(0xfff2e0, 0x3a2466, 0.7));
+const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(-5, 10, 6); scene.add(sun);
+const fill = new THREE.DirectionalLight(0xb9a8ff, 0.35); fill.position.set(6, 4, -6); scene.add(fill);
+const std = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:lin(c), roughness:0.7}, o));
+
+/* ---- purple sea ---- */
+const seaU = {uT:{value:0}, uGlow:{value:0}};
+const seaMat = new THREE.MeshStandardMaterial({color:lin('#5b2fb0'), roughness:0.85, metalness:0.0, emissive:lin('#2a0f63'), emissiveIntensity:0.5});
+seaMat.onBeforeCompile = sh => { Object.assign(sh.uniforms, seaU);
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uT; varying vec2 vW;')
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+      vW = position.xy;
+      transformed.z += 0.035*sin(position.x*2.1 + uT*1.3) + 0.03*sin(position.y*2.7 - uT*1.1) + 0.015*sin((position.x+position.y)*5.0 + uT*2.0);`);
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uT; uniform float uGlow; varying vec2 vW;')
+    .replace('vec3 totalEmissiveRadiance = emissive;', `vec3 totalEmissiveRadiance = emissive;
+      float wv = sin(vW.x*3.1 + uT*0.9 + sin(vW.y*1.7))*sin(vW.y*2.3 - uT*0.7);
+      totalEmissiveRadiance += vec3(0.55,0.35,1.0)*(0.06*smoothstep(0.6,1.0,wv) + uGlow*0.22*(0.6+0.4*wv));`); };
+seaMat.customProgramCacheKey = () => 'sea';
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(60, 60, 220, 220), seaMat);
+sea.rotation.x = -Math.PI/2; scene.add(sea);
+
+/* ---- Manhattan island (north = -z in island space) ---- */
+const isle = new THREE.Group(); isle.rotation.y = -0.5; scene.add(isle);
+const ISLE_H = 0.22;
+function halfW(z){ // z from 4.4 (south tip) to -4.6 (north tip)
+  const k = [[4.4,0.08],[3.9,0.55],[3.0,0.95],[1.5,1.2],[0,1.28],[-1.5,1.22],[-3.0,1.0],[-4.0,0.65],[-4.6,0.12]];
+  for (let i=0;i<k.length-1;i++){ const [z0,w0] = k[i], [z1,w1] = k[i+1]; if (z <= z0 && z >= z1){ const t = (z0 - z)/(z0 - z1); return w0 + (w1 - w0)*(t*t*(3-2*t)); } }
+  return 0.08;
+}
+const shp = new THREE.Shape(), N = 70;
+for (let i=0;i<=N;i++){ const z = 4.4 - i*9/N; const x = halfW(z) + 0.05*Math.sin(i*1.7) + 0.03*Math.sin(i*4.3); i ? shp.lineTo(x, -z) : shp.moveTo(x, -z); }
+for (let i=N;i>=0;i--){ const z = 4.4 - i*9/N; const x = -halfW(z) - 0.05*Math.sin(i*2.3) - 0.03*Math.sin(i*5.1); shp.lineTo(x, -z); }
+function gridTex(){ const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#ead9ae'; g.fillRect(0,0,256,256);
+  g.strokeStyle = 'rgba(120,96,60,.55)'; g.lineWidth = 3; for (let i=0;i<=256;i+=32){ g.beginPath(); g.moveTo(i,0); g.lineTo(i,256); g.stroke(); }
+  g.lineWidth = 2; for (let i=0;i<=256;i+=16){ g.beginPath(); g.moveTo(0,i); g.lineTo(256,i); g.stroke(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1.2, 1.2); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; }
+const islandGeo = new THREE.ExtrudeGeometry(shp, {depth:ISLE_H, bevelEnabled:true, bevelThickness:0.04, bevelSize:0.05, bevelSegments:2, curveSegments:4});
+islandGeo.rotateX(-Math.PI/2); islandGeo.translate(0, -0.06, 0);
+const island = new THREE.Mesh(islandGeo, [std('#ead9ae', {map:gridTex(), roughness:0.9}), std('#c8a874', {roughness:0.95})]);
+isle.add(island);
+const TOP = ISLE_H - 0.06 + 0.04;
+
+/* ---- Central Park (CNS) ---- */
+const PARK = {x0:-0.62, x1:0.62, z0:-2.9, z1:-0.1};
+const parkMat = std('#4caf62', {roughness:0.95, emissive:lin('#1d6b33'), emissiveIntensity:0});
+const park = new THREE.Mesh(new THREE.BoxGeometry(PARK.x1-PARK.x0, 0.04, PARK.z1-PARK.z0), parkMat);
+park.position.set(0, TOP + 0.02, (PARK.z0+PARK.z1)/2); isle.add(park);
+const pond = new THREE.Mesh(new THREE.CircleGeometry(0.2, 24), std('#5b8fe0', {roughness:0.2}));
+pond.rotation.x = -Math.PI/2; pond.scale.set(1, 1.5, 1); pond.position.set(0.25, TOP + 0.045, -2.55); isle.add(pond);
+
+/* brain-like canopy geometry: wrinkled ellipsoid with lobe colors */
+const LOBE_COL = ['#ff8f6b','#ffd166','#5fe0a3','#a58bff'];
+function lobeOf(p){ // brain faces +x; p normalized-ish local
+  if (p.x > 0.28) return 0;
+  if (p.x < -0.55) return 3;
+  if (p.y < 0.02 && Math.abs(p.z) > 0.32 && p.x < 0.35) return 2;
+  return 1;
+}
+function brainGeo(det){
+  const g = new THREE.SphereGeometry(1, det*16, det*11), P = g.attributes.position, lobe = new Float32Array(P.count), v = V();
+  for (let i=0;i<P.count;i++){ v.fromBufferAttribute(P, i).normalize();
+    lobe[i] = lobeOf(v);
+    const w = 0.045*Math.sin(v.x*15 + Math.sin(v.y*9)*2.2) * Math.sin(v.y*13 + v.z*7) + 0.025*Math.sin(v.z*23 + v.x*11);
+    const fis = v.y > 0.2 ? -0.08*Math.exp(-Math.pow(v.z/0.07, 2)) : 0; // midline fissure
+    const r = 1 + w + fis;
+    P.setXYZ(i, v.x*r*1.18, (v.y < 0 ? v.y*0.72 : v.y*0.86)*r, v.z*r*0.92); }
+  g.setAttribute('lobe', new THREE.BufferAttribute(lobe, 1));
+  g.computeVertexNormals(); return g; }
+const canopyGeo = brainGeo(1.4);
+const treeMat = std('#4fa95a', {roughness:0.85});
+const trunkMat = std('#8a6440', {roughness:0.9});
+const trees = [];
+function addTree(x, z, s){
+  const t = new THREE.Group(); t.position.set(x, TOP + 0.04, z);
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.035*s, 0.05*s, 0.42*s, 8), trunkMat); tr.position.y = 0.21*s; t.add(tr);
+  const c = new THREE.Mesh(canopyGeo, treeMat); c.scale.setScalar(0.19*s); c.position.y = 0.5*s; c.rotation.y = rnd()*6.28; t.add(c);
+  isle.add(t); trees.push(t); return t; }
+for (let i=0;i<26;i++){ const x = PARK.x0 + 0.12 + rnd()*(PARK.x1 - PARK.x0 - 0.24), z = PARK.z0 + 0.15 + rnd()*(PARK.z1 - PARK.z0 - 0.3);
+  if (Math.hypot(x - 0.0, z + 1.35) < 0.55 || Math.hypot(x - 0.25, z + 2.55) < 0.3) continue; addTree(x, z, 0.8 + rnd()*0.5); }
+for (let i=0;i<14;i++){ const z = 3.5 - rnd()*7.6, w = halfW(z)*0.8; const x = (rnd()*2-1)*w; if (z > PARK.z0 - 0.2 && z < PARK.z1 + 0.2 && Math.abs(x) < 0.8) continue; addTree(x, z, 0.55 + rnd()*0.25); }
+
+/* hero tree: canopy = brain, trunk = spinal cord */
+const HERO = V(0, TOP + 0.04, -1.35);
+const hero = new THREE.Group(); hero.position.copy(HERO); isle.add(hero);
+const heroCanopyMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.62});
+const heroU = {uMix:{value:0}, uLobe:{value:-1}, uGreen:{value:lin('#53b25f')}, uCols:{value:LOBE_COL.map(lin)}};
+heroCanopyMat.onBeforeCompile = sh => { Object.assign(sh.uniforms, heroU);
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float lobe; varying float vLobe;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvLobe = lobe;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uMix; uniform float uLobe; uniform vec3 uGreen; uniform vec3 uCols[4]; varying float vLobe;')
+    .replace('vec4 diffuseColor = vec4( diffuse, opacity );', `
+      int li = int(vLobe + 0.5); vec3 lc = li==0 ? uCols[0] : li==1 ? uCols[1] : li==2 ? uCols[2] : uCols[3];
+      vec3 pink = vec3(0.86,0.64,0.6);
+      vec3 b = uLobe < -0.5 ? mix(pink, lc, 0.72) : (abs(vLobe - uLobe) < 0.5 ? lc : pink*0.75);
+      vec4 diffuseColor = vec4(mix(uGreen, b, uMix), opacity);`)
+    .replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = emissive + (uLobe > -0.5 && abs(vLobe - uLobe) < 0.5 ? lc*0.25 : vec3(0.0));'); };
+heroCanopyMat.customProgramCacheKey = () => 'hero';
+const heroCanopy = new THREE.Mesh(brainGeo(7), heroCanopyMat); heroCanopy.scale.setScalar(0.5); heroCanopy.position.y = 1.32; heroCanopy.rotation.y = 0.5; hero.add(heroCanopy);
+const cordMat = std('#8a6440', {roughness:0.75, emissive:lin('#000000')});
+const heroTrunk = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.12, 1.0, 16), cordMat); heroTrunk.position.y = 0.5; hero.add(heroTrunk);
+const stubs = new THREE.Group(); hero.add(stubs); // 31 pairs of spinal nerves = little branches
+const stubMat = std('#c7a46e', {emissive:lin('#ffd166'), emissiveIntensity:0});
+for (let i=0;i<31;i++){ const y = 0.98 - i*0.03; for (const s of [-1, 1]){ const b = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.13, 5), stubMat); b.rotation.z = s*1.25; b.position.set(s*0.13, y - 0.02, 0); stubs.add(b); } }
+const heroTop = () => heroCanopy.getWorldPosition(V()).add(V(0, 0.3, 0));
+
+/* ---- nerves out into the sea (PNS) ---- */
+const nerveMat = new THREE.MeshStandardMaterial({color:lin('#d9c7ff'), emissive:lin('#b58bff'), emissiveIntensity:0.25, roughness:0.5, transparent:true, opacity:0.75});
+const NERVES = {};
+function nerve(name, pts, r=0.018){ const c = new THREE.CatmullRomCurve3(pts); const m = new THREE.Mesh(new THREE.TubeGeometry(c, 90, r, 6), nerveMat.clone()); isle.add(m); NERVES[name] = {curve:c, mesh:m}; return NERVES[name]; }
+
+/* ---- Samurai (somatic) ---- */
+const SAM = V(-2.85, 0, 0.6);
+const samurai = new THREE.Group(); samurai.position.copy(SAM); samurai.rotation.y = 1.0; isle.add(samurai);
+{ const navy = std('#2d3550', {roughness:0.55}), plate = std('#3c4766', {roughness:0.45, metalness:0.3}), gold = std('#d8a840', {metalness:0.6, roughness:0.35}), skin = std('#e9c39d'), red = std('#b8322c');
+  const leg = new THREE.CylinderGeometry(0.05, 0.06, 0.38, 10);
+  for (const s of [-1,1]){ const l = new THREE.Mesh(leg, navy); l.position.set(s*0.1, 0.19, 0); l.rotation.z = s*0.18; samurai.add(l);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.04, 0.16), std('#6b4a2c')); f.position.set(s*0.14, 0.02, 0.03); samurai.add(f); }
+  const hakama = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.24, 0.32, 14), navy); hakama.position.y = 0.42; samurai.add(hakama);
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.22), plate); torso.position.y = 0.73; samurai.add(torso);
+  for (let i=0;i<3;i++){ const band = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.012, 0.225), gold); band.position.y = 0.62 + i*0.1; samurai.add(band); }
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.05, 0.24), red); belt.position.y = 0.57; samurai.add(belt);
+  for (const s of [-1,1]){ const sh = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.03, 0.2), plate); sh.position.set(s*0.22, 0.86, 0); sh.rotation.z = -s*0.4; samurai.add(sh); }
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 18, 14), skin); head.position.y = 1.0; samurai.add(head);
+  const helm = new THREE.Mesh(new THREE.SphereGeometry(0.125, 18, 10, 0, Math.PI*2, 0, Math.PI*0.55), plate); helm.position.y = 1.02; samurai.add(helm);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.2, 0.03, 18), plate); brim.position.y = 0.97; samurai.add(brim);
+  const crest = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.012, 6, 16, Math.PI), gold); crest.position.set(0, 1.13, 0.06); samurai.add(crest);
+  samurai.userData.arm = new THREE.Group(); samurai.userData.arm.position.set(0, 0.86, 0.02); samurai.add(samurai.userData.arm);
+  for (const s of [-1,1]){ const a = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.04, 0.3, 8), navy); a.position.set(s*0.12, 0.1, 0.06); a.rotation.x = -0.9; a.rotation.z = -s*0.4; samurai.userData.arm.add(a); }
+  const sword = new THREE.Group(); sword.position.set(0, 0.24, 0.16); samurai.userData.arm.add(sword);
+  const hilt = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.14, 8), std('#1d1d24')); sword.add(hilt);
+  const guard = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 12), gold); guard.position.y = 0.075; sword.add(guard);
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.62, 0.006), std('#e6ebf3', {metalness:0.85, roughness:0.2})); blade.position.y = 0.39; sword.add(blade);
+  sword.rotation.x = -0.35; samurai.userData.arm.rotation.x = -0.5; }
+const ripples = [0,1,2].map(i => { const r = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.28, 40), new THREE.MeshBasicMaterial({color:0xe9ddff, transparent:true, opacity:0, side:THREE.DoubleSide, depthWrite:false})); r.rotation.x = -Math.PI/2; r.position.set(SAM.x, 0.06, SAM.z); isle.add(r); return r; });
+
+/* ---- Atomic sub (autonomic) ---- */
+const SUB = V(2.9, 0.12, 1.3);
+const sub = new THREE.Group(); sub.position.copy(SUB); sub.rotation.y = 0.35 + Math.PI; isle.add(sub); // front (sympathetic) faces left on screen
+const hullMat = std('#8d99ab', {metalness:0.55, roughness:0.38, transparent:true, opacity:1});
+const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 2.0, 10, 28), hullMat); hull.rotation.z = Math.PI/2; sub.add(hull);
+const tower = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.36, 0.26), hullMat); tower.position.set(0.15, 0.52, 0); sub.add(tower);
+const towerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.62, 16, 1, false, 0, Math.PI), hullMat); towerCap.rotation.z = Math.PI/2; towerCap.position.set(0.15, 0.7, 0); sub.add(towerCap);
+const peri = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8), hullMat); peri.position.set(0.3, 0.9, 0); sub.add(peri);
+const atom = new THREE.Group(); atom.position.set(0.15, 0.52, 0.14); sub.add(atom);
+{ const am = new THREE.MeshStandardMaterial({color:0xffd166, emissive:0xffb020, emissiveIntensity:0.5});
+  atom.add(new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 10), am));
+  for (let i=0;i<3;i++){ const r = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.008, 6, 30), am); r.rotation.set(Math.PI/2, i*Math.PI/3, 0); r.scale.set(1, 0.45, 1); r.rotation.order = 'ZXY'; r.rotation.z = i*Math.PI/3; atom.add(r); } }
+const WINDOWS = [];
+const prop = new THREE.Group(); prop.position.set(-1.48, 0, 0); sub.add(prop);
+for (let i=0;i<4;i++){ const b = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.32, 0.08), hullMat); b.rotation.x = i*Math.PI/2; b.position.y = 0; prop.add(b); }
+for (const [y, z] of [[0.32,0],[-0.32,0],[0,0.32],[0,-0.32]]){ const fin = new THREE.Mesh(new THREE.BoxGeometry(0.3, y ? 0.24 : 0.02, z ? 0.24 : 0.02), hullMat); fin.position.set(-1.25, y*0.8, z*0.8); sub.add(fin); }
+for (let i=0;i<9;i++){ const w = new THREE.Mesh(new THREE.CircleGeometry(0.03, 12), std('#ffe9a8', {emissive:lin('#ffcf6b'), emissiveIntensity:0.5})); w.position.set(-0.9 + i*0.2, 0.02, 0.425); sub.add(w); WINDOWS.push(w); }
+// interior (x-ray)
+const inside = new THREE.Group(); inside.visible = false; sub.add(inside);
+const COMP = { sym:V(0.82,0,0), par:V(0,0,0), ent:V(-0.82,0,0) };
+const compGlow = {};
+for (const [k, p] of Object.entries(COMP)){
+  const g = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.7, 24, 1, true), new THREE.MeshBasicMaterial({color:lin(C[k]), transparent:true, opacity:0.08, side:THREE.BackSide, depthWrite:false}));
+  g.rotation.z = Math.PI/2; g.position.copy(p); inside.add(g); compGlow[k] = g; }
+for (const x of [-0.41, 0.41]){ const d = new THREE.Mesh(new THREE.TorusGeometry(0.37, 0.025, 8, 30), std('#6c788c', {metalness:0.5, transparent:true, opacity:0.45})); d.rotation.y = Math.PI/2; d.position.x = x; inside.add(d); }
+const skinM = std('#e7b48c'), shirt = std('#d8433a'), shorts = std('#3d6fd1');
+function person(){ const p = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.16, 10), shirt); body.position.y = 0.0; p.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.065, 14, 12), skinM); head.position.y = 0.14; p.add(head);
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(0.067, 14, 8, 0, Math.PI*2, 0, Math.PI*0.45), std('#3a2a1e')); hair.position.y = 0.145; p.add(hair);
+  const legs = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.06, 0.1, 10), shorts); legs.position.y = -0.12; p.add(legs);
+  for (const s of [-1,1]){ const l = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.1, 6), skinM); l.position.set(s*0.03, -0.21, 0); p.add(l); }
+  return p; }
+// front: action hero with a water blaster (sympathetic)
+const hero1 = person(); hero1.position.copy(COMP.sym).add(V(0.02, -0.02, 0)); hero1.rotation.y = -Math.PI/2; inside.add(hero1);
+{ const band = new THREE.Mesh(new THREE.TorusGeometry(0.066, 0.012, 6, 20), std('#ff2d2d')); band.rotation.x = Math.PI/2; band.position.y = 0.17; hero1.add(band);
+  const gun = new THREE.Group(); gun.position.set(0.0, 0.03, 0.12); hero1.add(gun);
+  gun.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.16), std('#5bd35b')), {}));
+  const tank = new THREE.Mesh(new THREE.SphereGeometry(0.035, 10, 8), std('#ff9b2f')); tank.position.set(0, 0.05, -0.02); gun.add(tank);
+  const nz = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.06, 8), std('#c040ff')); nz.rotation.x = Math.PI/2; nz.position.z = 0.1; gun.add(nz);
+  for (const s of [-1,1]){ const a = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.12, 6), skinM); a.position.set(s*0.05, 0.03, 0.06); a.rotation.x = Math.PI/2; hero1.add(a); } }
+const squirt = Array.from({length:14}, () => { const d = new THREE.Mesh(new THREE.SphereGeometry(0.012, 6, 5), new THREE.MeshBasicMaterial({color:0x8fd8ff, transparent:true, opacity:0})); inside.add(d); return d; });
+// middle: parachutist with a picnic (parasympathetic)
+const chute = new THREE.Group(); chute.position.copy(COMP.par); inside.add(chute);
+{ const cg = new THREE.SphereGeometry(0.24, 16, 6, 0, Math.PI*2, 0, Math.PI*0.42), col = new Float32Array(cg.attributes.position.count*3);
+  for (let i=0;i<cg.attributes.position.count;i++){ const x = cg.attributes.position.getX(i), z = cg.attributes.position.getZ(i); const seg = Math.floor(((Math.atan2(z, x) + Math.PI)/(2*Math.PI))*8); const c = seg % 2 ? lin('#ff8a2a') : lin('#ffffff'); c.toArray(col, i*3); }
+  cg.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const canopy = new THREE.Mesh(cg, new THREE.MeshStandardMaterial({vertexColors:true, side:THREE.DoubleSide, roughness:0.7})); canopy.position.y = 0.08; chute.add(canopy);
+  const p2 = person(); p2.position.y = -0.12; p2.scale.setScalar(0.8); chute.add(p2); chute.userData.p = p2;
+  for (let i=0;i<4;i++){ const a = i*Math.PI/2 + 0.4; const ln = new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(Math.cos(a)*0.2, 0.12, Math.sin(a)*0.2), V(0, -0.05, 0)]), new THREE.LineBasicMaterial({color:0xdddddd})); chute.add(ln); }
+  const basket = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.08), std('#a5703a')); basket.position.set(0.0, -0.3, -0.16); inside.add(basket); basket.position.add(COMP.par);
+  const blanketTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); for (let i=0;i<8;i++) for (let j=0;j<8;j++){ g.fillStyle = (i+j)%2 ? '#e8504a' : '#fff4e8'; g.fillRect(i*8,j*8,8,8); } const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t; })();
+  const blanket = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 0.18), new THREE.MeshStandardMaterial({map:blanketTex, side:THREE.DoubleSide})); blanket.rotation.x = -Math.PI/2; blanket.position.copy(COMP.par).add(V(0.05, -0.33, 0.12)); inside.add(blanket);
+  const pillow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), std('#e9eef6')); pillow.scale.set(1.4, 0.6, 1); pillow.position.copy(COMP.par).add(V(0.16, -0.3, 0.12)); inside.add(pillow); }
+// back: pile of guts (enteric)
+const gutPts = []; { let p = V(); for (let i=0;i<46;i++){ const a = i*0.9, r = 0.12 + 0.08*Math.sin(i*0.37); p = V(Math.cos(a)*r, -0.2 + i*0.0065 + 0.03*Math.sin(i*1.3), Math.sin(a)*r*1.3); gutPts.push(p); } }
+const gutCurve = new THREE.CatmullRomCurve3(gutPts);
+const gutU = {uT:{value:0}, uRate:{value:1}, uGlow:{value:0}};
+const gutMat = new THREE.MeshStandardMaterial({color:lin('#e98aa6'), roughness:0.55, emissive:lin('#ff6f9a'), emissiveIntensity:0.0});
+gutMat.onBeforeCompile = sh => { Object.assign(sh.uniforms, gutU);
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uT; uniform float uRate; varying float vS;')
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+      float sq = 0.5 + 0.5*sin(uv.x*90.0 - uT*uRate*3.0);
+      transformed += normal * (0.006 - 0.011*pow(sq, 6.0)); vS = sq;`);
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uGlow; varying float vS;')
+    .replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = emissive + vec3(1.0,0.4,0.6)*uGlow*pow(vS,6.0)*0.6;'); };
+gutMat.customProgramCacheKey = () => 'gut';
+const guts = new THREE.Mesh(new THREE.TubeGeometry(gutCurve, 400, 0.034, 10), gutMat); guts.position.copy(COMP.ent); inside.add(guts);
+
+/* ---- spinal cord cross-section (billboard) ---- */
+const xs = new THREE.Group(); xs.visible = false; scene.add(xs);
+const XS = {};
+{ const white = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.12, 48), std('#f1e6cf', {roughness:0.6})); white.rotation.x = Math.PI/2; xs.add(white); XS.white = white;
+  const bf = new THREE.Shape(); const R = [[0,0.1],[0.1,0.12],[0.17,0.25],[0.22,0.46],[0.3,0.47],[0.27,0.24],[0.2,0.04],[0.34,-0.08],[0.42,-0.28],[0.3,-0.42],[0.14,-0.26],[0,-0.16]];
+  R.forEach(([x,y],i) => i ? bf.lineTo(x,y) : bf.moveTo(x,y)); [...R].reverse().forEach(([x,y]) => bf.lineTo(-x,y));
+  const gray = new THREE.Mesh(new THREE.ExtrudeGeometry(bf, {depth:0.03, bevelEnabled:false}), std('#b99a9c', {roughness:0.6})); gray.position.z = 0.06; xs.add(gray); XS.gray = gray;
+  const canal = new THREE.Mesh(new THREE.CircleGeometry(0.025, 16), new THREE.MeshBasicMaterial({color:0x2b2233})); canal.position.set(0, -0.02, 0.095); xs.add(canal);
+  XS.dorsal = []; XS.ventral = []; XS.curves = {};
+  for (const s of [-1, 1]){
+    const dc = new THREE.CatmullRomCurve3([V(s*0.24,0.44,0.06), V(s*0.45,0.62,0.06), V(s*0.8,0.5,0.06), V(s*1.05,0.12,0.06)]);
+    const vc = new THREE.CatmullRomCurve3([V(s*0.3,-0.4,0.06), V(s*0.52,-0.5,0.06), V(s*0.82,-0.3,0.06), V(s*1.05,0.06,0.06)]);
+    const nv = new THREE.CatmullRomCurve3([V(s*1.05,0.09,0.06), V(s*1.4,0.0,0.06), V(s*1.95,-0.22,0.06)]);
+    const dm = new THREE.Mesh(new THREE.TubeGeometry(dc, 40, 0.045, 10), std('#7ad7ff', {roughness:0.5, emissive:lin('#2a8fc0'), emissiveIntensity:0.2})); xs.add(dm); XS.dorsal.push(dm);
+    const vm = new THREE.Mesh(new THREE.TubeGeometry(vc, 40, 0.05, 10), std('#ffb547', {roughness:0.5, emissive:lin('#c07a10'), emissiveIntensity:0.2})); xs.add(vm); XS.ventral.push(vm);
+    const nm = new THREE.Mesh(new THREE.TubeGeometry(nv, 30, 0.07, 10), std('#e8d6b8')); xs.add(nm);
+    const gang = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), std('#5fb8e0', {roughness:0.5})); gang.scale.set(1.3, 0.85, 0.85); gang.position.copy(dc.getPoint(0.55)); xs.add(gang); if (s < 0) XS.gang = gang;
+    if (s < 0){ XS.curves.dIn = new THREE.CatmullRomCurve3([...nv.points].reverse().concat([...dc.points].reverse().slice(1)));
+      XS.curves.vOut = new THREE.CatmullRomCurve3(vc.points.concat(nv.points.slice(1)));
+      XS.curves.inter = new THREE.CatmullRomCurve3([V(-0.24,0.4,0.1), V(-0.18,0.1,0.1), V(-0.3,-0.36,0.1)]); }
+  }
+}
+
+/* ---- pulses ---- */
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const PULSES = [];
+function pulse(curve, color, dur, parent, cb, size=0.16, delay=0){
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(color), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending}));
+  sp.scale.setScalar(size); sp.visible = false; (parent || isle).add(sp);
+  PULSES.push({curve, sp, t:-delay, dur, cb}); }
+function updPulses(dt){
+  for (let i=PULSES.length-1;i>=0;i--){ const p = PULSES[i]; p.t += dt; const k = p.t/p.dur;
+    if (k < 0) continue; p.sp.visible = true;
+    if (k >= 1){ p.sp.parent.remove(p.sp); PULSES.splice(i,1); if (p.cb) p.cb(); continue; }
+    p.sp.position.copy(p.curve.getPointAt(k)); } }
+
+/* ============ Nerve paths (island space) ============ */
+isle.updateMatrixWorld(true);
+const subLocal = p => isle.worldToLocal(sub.localToWorld(p.clone()));
+const H = (x, y, z) => HERO.clone().add(V(x, y, z));
+const CANOPY = H(0, 1.32, 0);
+nerve('somatic', [H(-0.06,0.35,0.02), H(-0.45,0.12,0.4), V(-1.3,0.16,-0.4), V(-1.9,0.12,0.0), V(SAM.x+0.35,0.25,SAM.z-0.1), V(SAM.x+0.1,0.62,SAM.z+0.05)]);
+nerve('sym', [H(0.07,0.6,0.02), H(0.5,0.14,0.5), V(1.4,0.16,0.4), V(2.0,0.12,0.9), subLocal(COMP.sym).add(V(0,0.2,0))]);
+nerve('vagus', [H(0.02,1.08,0.02), H(0.3,0.8,0.3), H(0.6,0.3,0.6), V(1.0,0.3,0.0), V(1.5,0.35,0.6), V(1.8,0.22,0.3), V(2.2,0.3,1.0), subLocal(COMP.par).add(V(0,0.2,0))], 0.022);
+nerve('n1', [H(0,0.3,0), H(-0.3,0.12,-0.6), V(-1.0,0.15,-2.6), V(-1.9,0.1,-3.4)]);
+nerve('n2', [H(0,0.3,0), H(0.3,0.12,-0.6), V(1.1,0.15,-2.2), V(2.2,0.1,-2.8)]);
+nerve('n3', [H(0,0.3,0), V(0.2,0.14,1.6), V(-0.3,0.15,3.4), V(-1.2,0.1,4.6)]);
+nerve('n4', [H(0,0.3,0), V(0.5,0.14,1.0), V(1.4,0.12,2.6), V(2.0,0.1,3.9)]);
+const MOTOR = new THREE.CatmullRomCurve3([CANOPY.clone().add(V(0.28,0.24,0.05)), CANOPY.clone().add(V(0.05,-0.15,0.02)), H(0,0.9,0.02), ...NERVES.somatic.curve.points]);
+const TOUCH = new THREE.CatmullRomCurve3([...[...NERVES.somatic.curve.points].reverse().map((p, i) => i === 0 ? V(SAM.x+0.1, 0.08, SAM.z+0.1) : p), H(0,0.9,0.02), CANOPY.clone().add(V(-0.05,-0.15,0.02)), CANOPY.clone().add(V(-0.12,0.3,0.02))]);
+const VAGUS_UP = new THREE.CatmullRomCurve3([subLocal(COMP.ent).add(V(0,0.1,0)), ...[...NERVES.vagus.curve.points].reverse(), CANOPY.clone().add(V(0,0.1,0))]);
+
+/* ============ Labels ============ */
+function mkTag(text, world, show, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = text; labelsEl.appendChild(el); return {el, world, show}; }
+const W = p => () => isle.localToWorld(p.clone());
+const SUBW = p => () => sub.localToWorld(p.clone());
+const XSW = p => () => xs.localToWorld(p.clone());
+const fam = (...ids) => () => ids.includes(state.n);
+const TAGS = [
+  mkTag('Central Park = <b>CNS</b>', W(V(-0.2, 1.0, -2.6)), fam('ns','pns'), 'plabel big'),
+  mkTag('Manhattan', W(V(-0.4, 0.5, 2.4)), fam('ns')),
+  mkTag('Purple Sea = <b>PNS</b>', W(V(2.7, 0.3, -2.2)), fam('ns','pns'), 'plabel big'),
+  mkTag('Samurai = <b>Somatic</b>', W(V(SAM.x, 1.45, SAM.z)), fam('ns','pns','somatic'), 'plabel big'),
+  mkTag('Atomic Sub = <b>Autonomic</b>', () => sub.localToWorld(V(0.15, 1.15, 0)), fam('ns','pns'), 'plabel big'),
+  mkTag('Brain = tree canopy', () => heroCanopy.localToWorld(V(0, 1.2, 0)), fam('cns','brain')),
+  mkTag('Spinal cord = trunk', () => hero.localToWorld(V(0.16, 0.55, 0)), fam('cns','cord')),
+  mkTag('Motor cortex (frontal lobe)', () => heroCanopy.localToWorld(V(0.6, 0.9, 0)), fam('motion')),
+  mkTag('Sensory cortex (parietal lobe)', () => heroCanopy.localToWorld(V(-0.2, 1.15, 0)), fam('touch')),
+  mkTag('<span class="lobe-tag"></span>', () => heroCanopy.localToWorld(V(...[[1.2,0.4,0],[-0.3,1.05,0],[0.2,-0.6,0.9],[-1.25,0.2,0]][Math.max(0, heroU.uLobe.value)])), () => state.n === 'brain' && heroU.uLobe.value >= 0, 'plabel hot'),
+  mkTag('Dorsal root: <b>Delivers</b> (sensory in)', XSW(V(-0.55, 0.78, 0.1)), fam('cord','dorsal','ventral')),
+  mkTag('Ventral root: <b>Vrooms</b> (motor out)', XSW(V(-0.6, -0.68, 0.1)), fam('cord','dorsal','ventral')),
+  mkTag('Dorsal root ganglion', XSW(V(-0.95, 0.42, 0.1)), fam('dorsal')),
+  mkTag('Gray matter (cell bodies)', XSW(V(0.28, 0.12, 0.12)), fam('cord')),
+  mkTag('White matter (axons)', XSW(V(0.35, -0.62, 0.1)), fam('cord')),
+  mkTag('Spinal nerve', XSW(V(-1.6, -0.02, 0.1)), fam('cord')),
+  mkTag('1 · Sympathetic', SUBW(V(0.82, 0.55, 0)), fam('autonomic','sym','par','ent')),
+  mkTag('2 · Parasympathetic', SUBW(V(0, 0.98, 0)), fam('autonomic','sym','par','ent')),
+  mkTag('3 · Enteric', SUBW(V(-0.82, 0.55, 0)), fam('autonomic','sym','par','ent')),
+  mkTag('Vagus nerve (CN X)', W(NERVES.vagus.curve.getPoint(0.55).add(V(0, 0.18, 0))), fam('par','ent')),
+  mkTag('Sympathetic nerves', W(NERVES.sym.curve.getPoint(0.5).add(V(0, 0.15, 0))), fam('sym'))
+];
+const _v = V();
+function placeTags(){ const w = innerWidth, h = innerHeight;
+  TAGS.forEach(t => { const on = t.show(); t.el.style.opacity = on ? 1 : 0; if (!on) return;
+    _v.copy(t.world()).project(camera); if (_v.z > 1){ t.el.style.opacity = 0; return; }
+    t.el.style.transform = `translate(${(_v.x*0.5+0.5)*w}px, ${(-_v.y*0.5+0.5)*h}px) translate(-50%, -140%)`; }); }
+
+/* ============ Views ============ */
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+function flyTo(target, dist, dir = V(0.35, 0.62, 1)){
+  const T = target.clone(), P = T.clone().add(dir.clone().normalize().multiplyScalar(dist * (isNarrow() ? 1.35 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:T, t0:performance.now(), dur:1200}; }
+controls.addEventListener('start', () => { tween = null; });
+const xsPos = () => isle.localToWorld(H(0.0, 0.9, 0)).add(V(1.5, 0.35, 0.35));
+const wHero = y => isle.localToWorld(H(0, y, 0));
+function viewFor(id){
+  switch(id){
+    case 'ns': return [V(0.2, 0, 0.6), 13.5, V(0.25, 0.85, 1)];
+    case 'cns': return [wHero(0.6).lerp(isle.localToWorld(V(0, 0.2, -1.5)), 0.4), 5.2, V(0.3, 0.55, 1)];
+    case 'brain': return [wHero(1.32), 3.1, V(0.1, 0.22, 1)];
+    case 'cord': case 'dorsal': case 'ventral': return [xsPos().add(V(-0.8, -0.35, 0)), 5.0, V(0.15, 0.3, 1)];
+    case 'pns': return [V(0, 0, 0.4), 15.5, V(0.1, 1.25, 1)];
+    case 'somatic': case 'motion': case 'touch': return [isle.localToWorld(V(-1.6, 0.6, -0.4)), 6.0, V(0.05, 0.42, 1)];
+    case 'autonomic': return [sub.localToWorld(V(0, 0.2, 0)), 4.2, V(0.15, 0.45, 1)];
+    case 'sym': case 'par': case 'ent': return [sub.localToWorld(COMP[id].clone()), 3.0, V(0.15, 0.4, 1)];
+  }
+}
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.22), w, h); else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2 + 70), Math.round(h*0.04), w, h);
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+/* ============ State ============ */
+const state = { n:'ns', brainLook:0, quiz:0, quizPick:null };
+const ANS = { s:0, target:0 };
+let T = 0, ROUTE = null, swing = -1, rippleT = -1, squirtT = -1, pairsGlow = 0, seaGlowT = 0;
+function rk(v){ if (ROUTE) ROUTE.k = v; }
+function setRoute(steps, color){ ROUTE = {steps, color, k:0}; }
+const ACT = {
+  cnsShow: () => { state.brainLook = state.brainLook ? 0 : 1; },
+  lobe0: () => setLobe(0), lobe1: () => setLobe(1), lobe2: () => setLobe(2), lobe3: () => setLobe(3),
+  reflex: () => { setRoute(['Hand touches a hot stove','Dorsal root (Delivers)','Interneuron in the cord','Ventral root (Vrooms)','Hand pulls away'], '#7ad7ff'); ROUTE.k = 0.1;
+    pulse(XS.curves.dIn, '#7ad7ff', 1.4, xs, () => { rk(0.5); pulse(XS.curves.inter, '#ffffff', 0.5, xs, () => { rk(0.7); pulse(XS.curves.vOut, '#ffb547', 1.4, xs, () => { rk(1); }, 0.22); }, 0.18); }, 0.22);
+    hudMsg = '<b>Reflex arc:</b> the signal comes in the dorsal root, crosses an interneuron, and goes right back out the ventral root. Your brain finds out afterward.'; },
+  pairs: () => { pairsGlow = 3; hudMsg = '<b>31 pairs of spinal nerves</b> branch off the trunk: 8 cervical, 12 thoracic, 5 lumbar, 5 sacral, 1 coccygeal.'; },
+  dorsalGo: () => { setRoute(['Skin receptor','Spinal nerve','Dorsal root ganglion','Dorsal horn'], '#7ad7ff'); pulse(XS.curves.dIn, '#7ad7ff', 1.8, xs, () => { rk(1); }, 0.24); ROUTE.anim = 1.8; },
+  ventralGo: () => { setRoute(['Ventral horn (motor neuron)','Ventral root','Spinal nerve','Muscle'], '#ffb547'); pulse(XS.curves.vOut, '#ffb547', 1.8, xs, () => { rk(1); }, 0.24); ROUTE.anim = 1.8; },
+  pnsGlow: () => { seaGlowT = 4; ['somatic','sym','vagus','n1','n2','n3','n4'].forEach((k, i) => pulse(NERVES[k].curve, '#e7d6ff', 2.2, isle, null, 0.3, i*0.15)); hudMsg = '<b>The PNS reaches everywhere:</b> nerves fan out from the brain and spinal cord to every muscle, organ and patch of skin.'; },
+  motion: () => { const steps = NODE.motion.route; setRoute(steps, '#ff8f6b'); ROUTE.anim = 2.4; pulse(MOTOR, '#ff8f6b', 2.4, isle, () => { swing = 0; rk(1); }, 0.3);
+    hudMsg = '<b>Motion:</b> the command starts in the motor cortex (frontal lobe), runs down the spinal cord, and vrooms out to the muscles.'; },
+  touch: () => { const steps = NODE.touch.route; setRoute(steps, '#ffd166'); ROUTE.anim = 2.4; rippleT = 0; pulse(TOUCH, '#ffd166', 2.4, isle, () => { rk(1); }, 0.3);
+    hudMsg = '<b>Touch:</b> the samurai’s feet feel the water. The signal enters through the dorsal root, climbs the cord, and arrives in the parietal lobe.'; },
+  sym: () => { ANS.target = 1; squirtT = 0; pulse(NERVES.sym.curve, '#ff7a59', 1.4, isle, null, 0.3); },
+  par: () => { ANS.target = -1; pulse(NERVES.vagus.curve, '#5fe0a3', 2.0, isle, null, 0.3); },
+  vagus: () => { ANS.target = -1; for (let i=0;i<3;i++) pulse(NERVES.vagus.curve, '#5fe0a3', 2.2, isle, null, 0.32, i*0.5);
+    hudMsg = '<b>Vagus nerve (CN X):</b> wanders from the brainstem to the heart, lungs and gut, slowing the heart and switching on digestion.'; },
+  gut: () => { gutU.uGlow.value = 1; ANS.target = -0.6; hudMsg = '<b>Peristalsis:</b> waves of squeezing push food along. The enteric system runs this on its own.'; },
+  gutBrain: () => { for (let i=0;i<3;i++) pulse(VAGUS_UP, '#ff8fb0', 2.6, isle, null, 0.32, i*0.45); gutU.uGlow.value = 1;
+    hudMsg = '<b>Gut → brain:</b> most vagus fibers carry messages up from the gut. That’s part of what a “gut feeling” is.'; }
+};
+let hudMsg = '';
+function setLobe(i){ heroU.uLobe.value = heroU.uLobe.value === i ? -1 : i; const L = NODE.brain.lobes[i];
+  const tag = labelsEl.querySelector('.lobe-tag'); if (tag) tag.textContent = L[0];
+  hudMsg = heroU.uLobe.value === i ? `<b>${L[0]}:</b> ${L[1]}` : 'Pick a lobe to light it up.'; refreshTries(); }
+const TOGGLES = { cnsShow:() => !!state.brainLook, lobe0:() => heroU.uLobe.value === 0, lobe1:() => heroU.uLobe.value === 1, lobe2:() => heroU.uLobe.value === 2, lobe3:() => heroU.uLobe.value === 3,
+  sym:() => ANS.target === 1, par:() => ANS.target === -1 };
+function refreshTries(){ document.querySelectorAll('.try[data-act]').forEach(b => { const f = TOGGLES[b.dataset.act]; if (f) b.setAttribute('aria-pressed', String(!!f())); }); }
+
+function selectNode(id){
+  state.n = id; const n = NODE[id];
+  ROUTE = null; hudMsg = ''; heroU.uLobe.value = -1; gutU.uGlow.value = 0;
+  if (!['autonomic','sym','par','ent'].includes(id)) ANS.target = 0;
+  if (id === 'sym') ANS.target = 1; if (id === 'par') ANS.target = -1;
+  state.brainLook = ['brain','cord','dorsal','ventral','motion','touch'].includes(id) ? 1 : 0;
+  xs.visible = ['cord','dorsal','ventral'].includes(id);
+  const [t, d, dir] = viewFor(id); flyTo(t, d, dir);
+  renderPanel(); panel.scrollTop = 0; bodyHL(id);
+  if (id === 'ent') ACT.gut();
+}
+
+/* ============ HUD ============ */
+const hud = $('#hudCanvas'), hx = hud.getContext('2d'), HW = hud.width, HH = hud.height;
+const hudTitle = $('#hudTitle'), hudText = $('#hudText');
+function heart(x, y, s){ hx.beginPath(); hx.moveTo(x, y + s*0.35); hx.bezierCurveTo(x - s*1.1, y - s*0.35, x - s*0.45, y - s*1.05, x, y - s*0.45); hx.bezierCurveTo(x + s*0.45, y - s*1.05, x + s*1.1, y - s*0.35, x, y + s*0.35); hx.fill(); }
+function drawDash(){
+  const s = ANS.s, bpm = Math.round(s >= 0 ? 72 + 58*s : 72 + 16*s);
+  hx.clearRect(0,0,HW,HH); hx.font = '600 20px "Atkinson Hyperlegible", system-ui'; hx.textAlign = 'center';
+  const cols = 5, cw = HW/cols, cy = 100, lab = (i, a, b) => { hx.fillStyle = '#eceef4'; hx.font = '700 20px "Atkinson Hyperlegible", system-ui'; hx.fillText(a, cw*i + cw/2, 196); hx.fillStyle = '#a3abbc'; hx.font = '500 17px "Atkinson Hyperlegible", system-ui'; hx.fillText(b, cw*i + cw/2, 222); };
+  // heart
+  const beat = Math.pow(Math.max(0, Math.sin(T*Math.PI*bpm/60)), 8); hx.fillStyle = '#ff6b6b'; heart(cw/2, cy + 10, 46 + 10*beat); lab(0, bpm + ' bpm', 'Heart rate');
+  // pupil
+  const pr = 13 + 11*s; hx.fillStyle = '#f4f1ea'; hx.beginPath(); hx.ellipse(cw*1.5, cy, 62, 34, 0, 0, 7); hx.fill(); hx.fillStyle = '#5a8fc8'; hx.beginPath(); hx.arc(cw*1.5, cy, 30, 0, 7); hx.fill(); hx.fillStyle = '#0b0e14'; hx.beginPath(); hx.arc(cw*1.5, cy, pr, 0, 7); hx.fill();
+  lab(1, s > 0.3 ? 'Dilated' : s < -0.3 ? 'Constricted' : 'Normal', 'Pupils');
+  // airways
+  hx.strokeStyle = '#9fd3ff'; hx.lineCap = 'round'; const aw = 9 + 7*s; hx.lineWidth = aw; hx.beginPath(); hx.moveTo(cw*2.5, cy - 60); hx.lineTo(cw*2.5, cy - 10); hx.moveTo(cw*2.5, cy - 10); hx.lineTo(cw*2.5 - 42, cy + 40); hx.moveTo(cw*2.5, cy - 10); hx.lineTo(cw*2.5 + 42, cy + 40); hx.stroke();
+  hx.lineWidth = aw*0.6; hx.beginPath(); hx.moveTo(cw*2.5 - 26, cy + 20); hx.lineTo(cw*2.5 - 52, cy + 22); hx.moveTo(cw*2.5 + 26, cy + 20); hx.lineTo(cw*2.5 + 52, cy + 22); hx.stroke();
+  lab(2, s > 0.3 ? 'Wide open' : s < -0.3 ? 'Relaxed' : 'Normal', 'Airways');
+  // digestion
+  const rate = s > 0 ? 1 - 0.85*s : 1 - 1.4*s; hx.strokeStyle = '#ff8fb0'; hx.lineWidth = 10; hx.beginPath();
+  for (let x=-60;x<=60;x+=3){ const y = cy + Math.sin(x*0.09 - T*rate*3)*(10 + 10*Math.max(0,-s)); x === -60 ? hx.moveTo(cw*3.5 + x, y) : hx.lineTo(cw*3.5 + x, y); } hx.stroke();
+  lab(3, s > 0.3 ? 'On hold' : s < -0.3 ? 'Busy' : 'Normal', 'Digestion');
+  // saliva
+  const drops = s > 0.3 ? 0 : s < -0.3 ? 3 : 1; hx.fillStyle = '#8fd8ff';
+  for (let i=0;i<drops;i++){ const x = cw*4.5 - (drops-1)*22 + i*44, y = cy - 10 + ((T*40 + i*25) % 60); hx.beginPath(); hx.arc(x, y, 10, 0, Math.PI); hx.lineTo(x, y - 22); hx.closePath(); hx.fill(); }
+  if (!drops){ hx.fillStyle = '#6e7689'; hx.font = '600 18px "Atkinson Hyperlegible", system-ui'; hx.fillText('dry mouth', cw*4.5, cy + 5); }
+  lab(4, s > 0.3 ? 'Low' : s < -0.3 ? 'Flowing' : 'Normal', 'Saliva');
+  hx.textAlign = 'left';
+  const mode = s > 0.5 ? 'Fight or flight (sympathetic)' : s < -0.5 ? 'Rest and digest (parasympathetic)' : 'Balanced';
+  hudTitle.textContent = 'Your body right now: ' + mode;
+  if (!hudMsg) hudMsg = '<b>Try it:</b> press <b>Fight or flight</b> or <b>Rest and digest</b> and watch your body change.';
+}
+function drawRoute(){
+  hx.clearRect(0,0,HW,HH); const st = ROUTE.steps, n = st.length, k = ROUTE.k, x0 = 70, x1 = HW - 70, y = 95;
+  hx.strokeStyle = '#283044'; hx.lineWidth = 6; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x1, y); hx.stroke();
+  hx.strokeStyle = ROUTE.color; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x0 + (x1 - x0)*k, y); hx.stroke();
+  st.forEach((s, i) => { const x = x0 + (x1 - x0)*i/(n-1), on = k >= i/(n-1) - 0.001;
+    hx.fillStyle = on ? ROUTE.color : '#1a2030'; hx.strokeStyle = on ? ROUTE.color : '#3a4258'; hx.lineWidth = 3; hx.beginPath(); hx.arc(x, y, 14, 0, 7); hx.fill(); hx.stroke();
+    hx.fillStyle = on ? '#eceef4' : '#6e7689'; hx.font = '700 17px "Atkinson Hyperlegible", system-ui'; hx.textAlign = 'center';
+    const words = s.split(' '), lines = []; let cur = ''; words.forEach(w => { if ((cur + ' ' + w).trim().length > 16){ lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }); lines.push(cur.trim());
+    lines.forEach((l, j) => hx.fillText(l, x, y + 44 + j*21)); });
+  hx.textAlign = 'left'; hudTitle.textContent = 'Signal route';
+}
+function drawHud(dt){
+  const n = state.n, dashOn = ['autonomic','sym','par'].includes(n) && !ROUTE;
+  hud.hidden = !(dashOn || ROUTE);
+  if (ROUTE){ if (ROUTE.anim && ROUTE.k < 1) ROUTE.k = Math.min(0.97, ROUTE.k + dt/ROUTE.anim); drawRoute(); }
+  else if (dashOn) drawDash();
+  else { hudTitle.textContent = n === 'ns' ? 'How to use this map' : NODE[n].title;
+    if (!hudMsg) hudMsg = n === 'ns' ? 'Tap a place on the map (the park, the sea, the samurai or the sub) or pick a part of the outline.' : n === 'ent' ? '<b>The gut at work:</b> watch the waves of squeezing travel along the guts in the back of the sub.' : NODE[n].lead; }
+  if (hudText.innerHTML !== hudMsg) hudText.innerHTML = hudMsg;
+}
+
+/* ============ Scene update ============ */
+const _q = new THREE.Quaternion();
+function updScene(dt){
+  seaU.uT.value = T; gutU.uT.value = T;
+  ANS.s += clamp(ANS.target - ANS.s, -dt*1.5, dt*1.5);
+  heroU.uMix.value += clamp(state.brainLook - heroU.uMix.value, -dt*1.6, dt*1.6);
+  const cordOn = ['cns','cord','dorsal','ventral'].includes(state.n) || heroU.uMix.value > 0.5;
+  cordMat.color.lerp(lin(cordOn ? '#efe2c4' : '#8a6440'), Math.min(1, dt*3));
+  parkMat.emissiveIntensity += ((state.n === 'cns' ? 0.45 + 0.15*Math.sin(T*3) : 0) - parkMat.emissiveIntensity)*Math.min(1, dt*4);
+  pairsGlow = Math.max(0, pairsGlow - dt); stubMat.emissiveIntensity = (state.n === 'cord' ? 0.2 : 0) + pairsGlow*0.6*(0.5 + 0.5*Math.sin(T*8));
+  seaGlowT = Math.max(0, seaGlowT - dt); seaU.uGlow.value = (state.n === 'pns' ? 0.6 : 0) + Math.min(1, seaGlowT)*0.6;
+  // nerves
+  const hot = {somatic:['somatic','motion','touch'], sym:['sym','autonomic'], vagus:['par','ent','autonomic']};
+  Object.entries(NERVES).forEach(([k, n]) => { const on = (hot[k] || []).includes(state.n) || state.n === 'pns';
+    n.mesh.material.emissiveIntensity += ((on ? 0.9 : 0.15) - n.mesh.material.emissiveIntensity)*Math.min(1, dt*4);
+    n.mesh.material.opacity = state.n === 'ns' ? 0.45 : on ? 0.95 : 0.35; });
+  // samurai
+  if (swing >= 0){ swing += dt; const k = swing/0.9; const a = k < 0.35 ? -0.5 - 1.6*(k/0.35) : k < 0.6 ? -2.1 + 3.2*((k-0.35)/0.25) : 1.1 - 1.6*((k-0.6)/0.4); samurai.userData.arm.rotation.x = a; if (k >= 1){ swing = -1; samurai.userData.arm.rotation.x = -0.5; } }
+  else samurai.userData.arm.rotation.x = -0.5 + 0.04*Math.sin(T*1.6);
+  samurai.position.y = 0.04*Math.sin(T*1.1);
+  if (rippleT >= 0){ rippleT += dt; ripples.forEach((r, i) => { const k = (rippleT - i*0.35)/1.4; r.material.opacity = k > 0 && k < 1 ? (1 - k)*0.8 : 0; r.scale.setScalar(1 + Math.max(0,k)*2.4); }); if (rippleT > 2.6) rippleT = -1; }
+  // sub
+  const xr = ['autonomic','sym','par','ent'].includes(state.n);
+  hullMat.opacity += ((xr ? 0.16 : 1) - hullMat.opacity)*Math.min(1, dt*4); hullMat.depthWrite = hullMat.opacity > 0.9; inside.visible = hullMat.opacity < 0.95; WINDOWS.forEach(w => w.visible = !inside.visible);
+  sub.position.y += ((xr ? 0.42 : SUB.y) + 0.03*Math.sin(T*0.9) - sub.position.y)*Math.min(1, dt*3); sub.rotation.z = 0.02*Math.sin(T*0.7);
+  prop.rotation.x += dt*(2 + 6*Math.max(0, ANS.s));
+  atom.rotation.z += dt*0.8;
+  for (const k of ['sym','par','ent']){ const on = state.n === k || (k === 'sym' && ANS.s > 0.5) || (k === 'par' && ANS.s < -0.5) || (k === 'ent' && gutU.uGlow.value > 0);
+    compGlow[k].material.opacity += ((on ? 0.38 : 0.06) - compGlow[k].material.opacity)*Math.min(1, dt*4); }
+  hero1.rotation.z = ANS.s > 0.5 ? 0.06*Math.sin(T*14) : 0; hero1.position.y = COMP.sym.y - 0.02 + (ANS.s > 0.5 ? 0.02*Math.abs(Math.sin(T*9)) : 0);
+  if (ANS.s > 0.5 && squirtT < 0) squirtT = 0;
+  if (squirtT >= 0){ squirtT += dt; squirt.forEach((d, i) => { const k = ((squirtT*1.4 + i/14) % 1); d.position.copy(COMP.sym).add(V(0.13 + k*0.22, 0.01 + k*0.04 - k*k*0.12, 0)); d.material.opacity = ANS.s > 0.5 ? (1 - k) : 0; }); if (ANS.s <= 0.5) squirtT = -1; }
+  chute.position.y = COMP.par.y + (ANS.s < -0.5 ? 0.0 : 0.04) + 0.025*Math.sin(T*1.4); chute.rotation.z = 0.08*Math.sin(T*0.9);
+  gutU.uRate.value = ANS.s > 0 ? 1 - 0.85*ANS.s : 1 - 1.5*ANS.s;
+  // cross-section billboard beside the trunk
+  if (xs.visible){ xs.position.copy(xsPos()); camera.getWorldQuaternion(_q); xs.quaternion.copy(_q); xs.scale.setScalar(0.62);
+    const d = state.n === 'dorsal', v = state.n === 'ventral';
+    XS.dorsal.forEach(m => m.material.emissiveIntensity = d ? 0.6 + 0.3*Math.sin(T*4) : 0.2);
+    XS.ventral.forEach(m => m.material.emissiveIntensity = v ? 0.6 + 0.3*Math.sin(T*4) : 0.2); }
+}
+
+/* ============ Picking ============ */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+function pickAt(e){ const r = renderer.domElement.getBoundingClientRect(); mouse.set(((e.clientX - r.left)/r.width)*2 - 1, -((e.clientY - r.top)/r.height)*2 + 1);
+  camera.updateMatrixWorld(); ray.setFromCamera(mouse, camera);
+  const objs = [heroCanopy, heroTrunk, park, ...trees, samurai, sub, sea, xs].filter(o => o.visible);
+  const hit = ray.intersectObjects(objs, true)[0]; if (!hit) return null; let o = hit.object;
+  if (xs.visible && XS.dorsal.includes(o)) return 'dorsal';
+  if (xs.visible && XS.ventral.includes(o)) return 'ventral';
+  if (xs.visible && (o === XS.white || o === XS.gray)) return 'cord';
+  if (o === heroCanopy) return 'brain';
+  if (o === heroTrunk) return 'cord';
+  while (o){ if (o === samurai) return 'somatic';
+    if (o === sub){ if (inside.visible){ const p = sub.worldToLocal(hit.point.clone()); return p.x > 0.41 ? 'sym' : p.x < -0.41 ? 'ent' : 'par'; } return 'autonomic'; }
+    if (o === park || trees.includes(o)) return 'cns';
+    if (o === sea) return 'pns';
+    o = o.parent; }
+  return null; }
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const id = pickAt(e); if (id && id !== state.n) selectNode(id); });
+renderer.domElement.addEventListener('pointermove', e => { if (e.buttons) return; renderer.domElement.classList.toggle('hovering', !!pickAt(e) && pickAt(e) !== 'pns'); });
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>').replace(/\[\[(\w+)\|([^\]]+)\]\]/g, (m, k, t) => `<button class="term" data-card="${k}">${t}</button>`);
+const crumbs = id => { const out = []; let n = NODE[id]; while (n && n.parent){ n = NODE[n.parent]; if (n.id !== 'ns') out.unshift(n.short || n.title); } return out; };
+function outline(){
+  return `<ol class="otree">${NODES.filter(n => n.id !== 'ns').map(n => `<li style="--d:${n.depth - 1};--c:${n.color}"><button class="onode" data-n="${n.id}"><span class="odot"></span><span><b>${esc(n.title)}</b><span>${esc(n.mn)}</span></span></button></li>`).join('')}</ol>`;
+}
+function renderPanel(){
+  const n = NODE[state.n]; panel.style.setProperty('--c', n.color);
+  if (n.id === 'ns'){
+    const q = QUIZ[state.quiz % QUIZ.length];
+    panel.innerHTML = `
+      <div><div class="eyebrow">Unit 5 · The nervous system</div><h2>NYC = Nervous system</h2></div>
+      <p class="lead">${fmt(n.lead)}</p>
+      <figure class="figure"><img src="${n.img}" alt="Professor Freed’s Mimage: a map of Manhattan where Central Park is the CNS, the purple sea is the PNS, a samurai is the somatic system and an atomic sub holds the sympathetic, parasympathetic and enteric systems." data-zoom><figcaption>Your Mimage. Tap to enlarge. Every piece of it is on the 3D map.</figcaption></figure>
+      <div class="eyebrow">The outline · tap any part</div>
+      ${outline()}
+      <ul class="blist">${n.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul>
+      <section class="quiz" id="quiz" aria-label="Which part?">
+        <div class="eyebrow">Which part is it? · ${state.quiz % QUIZ.length + 1} of ${QUIZ.length}</div>
+        <p class="q">${esc(q.q)}</p>
+        <div class="qopts">${QOPTS.map(([k, l]) => `<button class="qopt" data-a="${k}" ${state.quizPick ? 'disabled' : ''} aria-pressed="${state.quizPick === k}">${esc(l)}</button>`).join('')}</div>
+        ${state.quizPick ? `<p class="qfb ${state.quizPick === q.a ? 'ok' : 'bad'}">${state.quizPick === q.a ? 'Right.' : `Not quite: it’s ${esc(NODE[q.a].title)}.`} ${esc(q.why)}</p><button class="btn small primary" id="qnext">Next question →</button>` : ''}
+      </section>`;
+  } else {
+    const i = ORDER.indexOf(n.id), prev = NODE[ORDER[i-1]], next = NODE[ORDER[i+1]];
+    const kids = NODES.filter(k => k.parent === n.id), cr = crumbs(n.id);
+    panel.innerHTML = `
+      <button class="back" id="toMap">← Whole map</button>
+      <div class="topic-head"><div class="eyebrow">${esc(cr.length ? cr.join(' › ') : 'Nervous system')}</div><h2>${esc(n.title)}</h2></div>
+      <div class="mem-line">${esc(n.mn)}</div>
+      <p class="lead">${fmt(n.lead)}</p>
+      ${n.img && n.id !== 'ns' ? `<figure class="figure narrow"><img src="${n.img}" alt="Part of Professor Freed’s Mimage for ${esc(n.title)}" data-zoom><figcaption>From your Mimage.</figcaption></figure>` : ''}
+      ${n.demos ? `<div class="tries">${n.demos.map(([l, a]) => `<button class="try" data-act="${a}">▶ ${esc(l)}</button>`).join('')}</div>` : ''}
+      ${n.lobes ? `<ul class="parts">${n.lobes.map(([t, d, c], j) => `<li><button class="part" data-lobe="${j}" style="--c:${c}"><b style="color:${c}">${esc(t)}</b><span>${esc(d)}</span></button></li>`).join('')}</ul>` : ''}
+      <ul class="blist">${n.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul>
+      ${kids.length ? `<div class="eyebrow">Inside ${esc(n.short || n.title)}</div><div class="kids">${kids.map(k => `<button class="mbtn" data-n="${k.id}" style="--c:${k.color}"><span class="mn"></span><span><b>${esc(k.title)}</b><span>${esc(k.mn)}</span></span></button>`).join('')}</div>` : ''}
+      ${n.cases ? `<div class="cases">${n.cases.map(([k, t]) => `<button class="case" data-card="${k}"><span class="eyebrow">Case file</span><span>${esc(t)}</span><span class="case-go">Open →</span></button>`).join('')}</div>` : ''}
+      ${n.go ? `<a class="go-card" href="${n.go[0]}"><b>${esc(n.go[1])}</b><span>${esc(n.go[2])}</span></a>` : ''}
+      <div class="pager"><button class="btn" id="prevN">← ${esc(prev.short || prev.title)}</button>${next ? `<button class="btn primary" id="nextN">${esc(next.short || next.title)} →</button>` : `<button class="btn primary" id="nextN">Whole map</button>`}</div>`;
+    $('#toMap').onclick = () => selectNode('ns');
+    $('#prevN').onclick = () => selectNode(prev.id);
+    $('#nextN').onclick = () => selectNode(next ? next.id : 'ns');
+  }
+  panel.querySelectorAll('[data-n]').forEach(b => b.onclick = () => selectNode(b.dataset.n));
+  panel.querySelectorAll('.try').forEach(b => b.onclick = () => { ACT[b.dataset.act](); refreshTries(); });
+  panel.querySelectorAll('.part[data-lobe]').forEach(b => b.onclick = () => setLobe(+b.dataset.lobe));
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quizPick = b.dataset.a; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); });
+  const qn = $('#qnext'); if (qn) qn.onclick = () => { state.quiz++; state.quizPick = null; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); };
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  bindTerms(panel); refreshTries();
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card'), lb = $('#lightbox'); let lastFocus = null;
+lb.onclick = () => { lb.hidden = true; };
+function openCard(key){
+  const c = CARDS[key]; if (!c) return; lastFocus = document.activeElement;
+  const sheet = cardEl.querySelector('.card-sheet'); sheet.style.setProperty('--c', NODE[state.n].color);
+  sheet.innerHTML = `<div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div><button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${c.body.map(p => `<p>${esc(p)}</p>`).join('')}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}</ol></details></div>`;
+  cardEl.hidden = false; sheet.scrollTop = 0; sheet.querySelector('.close').onclick = closeCard; sheet.querySelector('.close').focus(); }
+function closeCard(){ cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term,[data-card]').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (!cardEl.hidden) closeCard(); else if (state.n !== 'ns') selectNode(NODE[state.n].parent || 'ns'); } });
+
+
+/* ============ Body diagram: yellow CNS, blue PNS ============ */
+const bodySvg = $('#bodySvg');
+const BQ = sel => [...bodySvg.querySelectorAll(sel)];
+// wide invisible copies so thin nerves are easy to tap
+[['.som path','somatic'],['.vagus','par'],['.chain circle','sym'],['.heart','sym'],['.gut','ent'],['.cord','cord'],['.brainS','brain'],['.cbl','brain']].forEach(([sel, id]) => {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'hit'); g.dataset.n = id;
+  BQ(sel).forEach(el => { const c = el.cloneNode(); c.removeAttribute('class'); g.appendChild(c); }); bodySvg.appendChild(g); });
+bodySvg.querySelectorAll('.hit').forEach(g => g.addEventListener('click', () => selectNode(g.dataset.n)));
+function bodyHL(id){
+  const all = '.cns,.som,.aut,.brainS,.cord,.cbl,.vagus,.chain,.heart,.gut';
+  BQ(all).forEach(el => el.classList.remove('dim','mid','glowY','glowB','glowG','glowR','glowP','flowOut','flowIn'));
+  const add = (sel, ...c) => BQ(sel).forEach(el => el.classList.add(...c));
+  const cnsSet = ['cns','brain','cord','dorsal','ventral'], somSet = ['somatic','motion','touch'], autSet = ['autonomic','sym','par','ent'];
+  if (cnsSet.includes(id)){ add('.som,.aut', 'dim');
+    if (id === 'brain'){ add('.brainS,.cbl', 'glowY'); add('.cord', 'mid'); }
+    else if (id === 'cns') add('.cns', 'glowY');
+    else { add('.cord', 'glowY'); add('.brainS,.cbl', 'mid'); if (id === 'dorsal') add('.som', 'mid', 'flowIn'); if (id === 'ventral') add('.som', 'mid', 'flowOut'); } }
+  else if (id === 'pns'){ add('.cns', 'dim'); add('.som', 'glowB'); add('.aut', 'glowB'); }
+  else if (somSet.includes(id)){ add('.aut', 'dim'); add('.cns', 'mid'); add('.som', 'glowB'); if (id === 'motion') add('.som', 'flowOut'); if (id === 'touch') add('.som', 'flowIn'); }
+  else if (autSet.includes(id)){ add('.som', 'dim'); add('.cns', 'mid');
+    if (id === 'autonomic'){ add('.vagus', 'glowG'); add('.chain', 'glowR'); add('.heart,.gut', 'glowP'); }
+    if (id === 'sym'){ add('.chain,.heart', 'glowR'); add('.vagus,.gut', 'dim'); }
+    if (id === 'par'){ add('.vagus', 'glowG', 'flowOut'); add('.chain', 'dim'); }
+    if (id === 'ent'){ add('.gut', 'glowP'); add('.chain,.heart', 'dim'); add('.vagus', 'mid'); } }
+}
+
+/* ============ Loop ============ */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt;
+  if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+    camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
+  controls.update(); updScene(dt); updPulses(dt); drawHud(dt);
+  renderer.render(scene, camera); placeTags();
+  requestAnimationFrame(frame); }
+resize(); renderPanel(); bodyHL('ns');
+const [t0, d0, dir0] = viewFor('ns'); camera.position.copy(t0.clone().add(dir0.clone().normalize().multiplyScalar(d0*(isNarrow() ? 1.35 : 1)))); controls.target.copy(t0);
+$('#loading').remove(); requestAnimationFrame(frame);
+
+</script>
+</body></html>

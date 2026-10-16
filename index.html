@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Professor Freed’s interactive Neuroscience 101 study lab: 3D neurons, glia, cranial nerves, methods and neuroanatomy with Mimages.">
+<title>Neuroscience 101</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single column home base: short hero, then unit tiles that open each interactive unit. Same dark lab look as the units. */
+:root{
+  color-scheme: dark;
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#161c29; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+body{background:radial-gradient(ellipse 80% 50% at 20% 0%,var(--bg-2) 0%,var(--bg) 70%) fixed,var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding-inline:20px;padding-block:44px 64px}
+.prof{font-family:var(--f-display);font-weight:800;font-size:20px;letter-spacing:-.01em;margin-bottom:22px;color:var(--fg)}
+.unit .num{font-family:var(--f-mono);font-size:11.5px;color:var(--faint)}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(34px,6vw,60px);line-height:1;letter-spacing:-.02em;margin:10px 0 14px;text-wrap:balance;max-width:16ch}
+h1 em{font-style:normal;color:var(--chalk)}
+.lead{color:var(--muted);font-size:18px;max-width:58ch;margin:0}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;margin-top:40px}
+.unit{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:16px;background:var(--panel);overflow:hidden;text-decoration:none;color:inherit;transition:border-color .2s,transform .2s}
+a.unit:hover,a.unit:focus-visible{border-color:var(--c);transform:translateY(-3px);outline:none}
+.unit .shot{aspect-ratio:16/10;max-width:100%;background:#0b0e14 center/cover no-repeat;border-bottom:1px solid var(--line)}
+.unit .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1}
+.unit .eyebrow{color:var(--c)}
+.unit h2{font-family:var(--f-display);font-weight:800;font-size:26px;line-height:1.05;margin:0}
+.unit p{margin:0;color:var(--muted);font-size:15px}
+.unit .go{margin-top:auto;padding-top:10px;font-weight:700;color:var(--c);font-size:15px}
+.unit.soon{opacity:.75}
+.unit.soon .shot{display:grid;place-items:center;background:repeating-linear-gradient(135deg,#121722 0 14px,#0f131c 14px 28px)}
+.unit.soon .shot span{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);border:1px dashed var(--line);padding:6px 12px;border-radius:999px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;color:var(--fg);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.how{margin-top:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:18px;border-top:1px solid var(--line);padding-top:28px}
+.how h3{font-family:var(--f-display);font-size:18px;margin:6px 0 4px}
+.how p{margin:0;color:var(--muted);font-size:15px}
+.how .n{font-family:var(--f-mono);font-size:12px;color:var(--chalk)}
+footer{margin-top:44px;color:var(--faint);font-size:12.5px}
+</style>
+</head>
+<body>
+
+<main class="wrap">
+  <div class="prof">Professor Freed</div>
+  <div class="eyebrow">Neuroscience 101</div>
+  <h1>See it, move it, <em>remember</em> it.</h1>
+  <p class="lead">Interactive study units for the course. Explore a real 3D brain, run a working neuron, and lock it all in with Professor Freed’s Mimages: memory scenes for every part.</p>
+
+  <div class="units">
+    <a class="unit" href="basics.html" style="--c:#7ad7ff">
+      <div class="shot" style="background-image:url('img/home/basics.jpg')" role="img" aria-label="A 3D solar system on the journey from the Big Bang to the brain"></div>
+      <div class="body">
+        <div class="num">Unit 1</div>
+        <div class="eyebrow">Brain basics</div>
+        <h2>Why neuroscience is hard</h2>
+        <p>Travel from the Big Bang to your brain, play Conway’s Game of Life, size up the brain’s numbers, step inside Leibniz’s mill, and bust common brain myths.</p>
+        <div class="tags"><span class="tag">3D journey</span><span class="tag">Game of Life</span><span class="tag">Myth or fact</span></div>
+        <span class="go">Start here →</span>
+      </div>
+    </a>
+    <a class="unit" href="neurons.html" style="--c:#ffd166">
+      <div class="shot" style="background-image:url('img/home/neurons.jpg')" role="img" aria-label="A 3D neuron with a myelinated axon"></div>
+      <div class="body">
+        <div class="num">Unit 2</div>
+        <div class="eyebrow">Neurophysiology</div>
+        <h2>Neurons</h2>
+        <p>Fire an action potential and watch Na⁺ flood in. Compare dominoes with a skipping stone, add multiple sclerosis, shine light on the cell, and zoom into the synapse.</p>
+        <div class="tags"><span class="tag">Neuron Lab</span><span class="tag">8 topics</span><span class="tag">Case files</span><span class="tag">▶ Video</span></div>
+        <span class="go">Open the Neuron Lab →</span>
+      </div>
+    </a>
+    <a class="unit" href="membrane.html" style="--c:#5fe0a3">
+      <div class="shot" style="background-image:url('img/home/membrane.jpg')" role="img" aria-label="A 3D cell membrane with proteins"></div>
+      <div class="body">
+        <div class="num">Unit 3</div>
+        <div class="eyebrow">Neurophysiology</div>
+        <h2>The membrane’s 4 “holes”</h2>
+        <p>Leak channels, gated channels, metabotropic receptors and pumps, each with its own 3D demo, plus the case files: TTX, barium, Devil’s Breath and digoxin.</p>
+        <div class="tags"><span class="tag">Membrane Lab</span><span class="tag">4 demos</span><span class="tag">6 case files</span><span class="tag">▶ Video</span></div>
+        <span class="go">Open the Membrane Lab →</span>
+      </div>
+    </a>
+    <a class="unit" href="glia.html" style="--c:#ff9ec0">
+      <div class="shot" style="background-image:url('img/home/glia.jpg')" role="img" aria-label="A 3D neuron whose axon is wrapped by an oligodendrocyte in a park and Schwann cells over a purple sea"></div>
+      <div class="body">
+        <div class="num">Unit 4</div>
+        <div class="eyebrow">Glial cells</div>
+        <h2>SOMA: the glue that does a lot more</h2>
+        <p>Swans on the Purple Sea, octopuses in Central Park, the Microcleaner and the stars: watch each glial cell wrap, clean, guard and repair in 3D.</p>
+        <div class="tags"><span class="tag">3D cells</span><span class="tag">MS vs. Guillain-Barré</span><span class="tag">Case files</span></div>
+        <span class="go">Open Glial cells →</span>
+      </div>
+    </a>
+    <a class="unit" href="nervous.html" style="--c:#b58bff">
+      <div class="shot" style="background-image:url('img/home/nervous.jpg')" role="img" aria-label="A 3D Manhattan island in a purple sea with a samurai and a submarine"></div>
+      <div class="body">
+        <div class="num">Unit 5</div>
+        <div class="eyebrow">The nervous system</div>
+        <h2>NYC = Nervous system</h2>
+        <p>Explore the Mimage in 3D: Central Park (CNS), the Purple Sea (PNS), the Samurai (somatic) and the Atomic Sub with its sympathetic, parasympathetic and enteric crew.</p>
+        <div class="tags"><span class="tag">3D map</span><span class="tag">Reflex arc</span><span class="tag">Fight or flight</span></div>
+        <span class="go">Open Nervous system →</span>
+      </div>
+    </a>
+    <a class="unit" href="cranial.html" style="--c:#c49bff">
+      <div class="shot" style="background-image:url('img/home/cranial.jpg')" role="img" aria-label="A glass head with the cranial nerves, surrounded by twelve number-shape objects arranged like a clock"></div>
+      <div class="body">
+        <div class="num">Unit 6</div>
+        <div class="eyebrow">Cranial nerves</div>
+        <h2>Twelve nerves, twelve shapes</h2>
+        <p>Candle, swan, butterfly… all the way to the clock. Watch each nerve work: move the eyes, test the pupil reflex, smile, shrug, stick out the tongue and slow the heart.</p>
+        <div class="tags"><span class="tag">3D head</span><span class="tag">12 Mimages</span><span class="tag">Palsy demos</span><span class="tag">▶ Video</span></div>
+        <span class="go">Open Cranial nerves →</span>
+      </div>
+    </a>
+    <a class="unit" href="methods.html" style="--c:#ffb547">
+      <div class="shot" style="background-image:url('img/home/methods.jpg')" role="img" aria-label="A 3D brain wearing an EEG cap"></div>
+      <div class="body">
+        <div class="num">Unit 7</div>
+        <div class="eyebrow">Methods</div>
+        <h2>How we study the brain</h2>
+        <p>Put an EEG cap on, fire a TMS coil, implant a DBS lead, light up an fMRI scan and shine light on neurons. See what each method reads or changes, and how fast and how sharply.</p>
+        <div class="tags"><span class="tag">3D methods</span><span class="tag">10 methods</span><span class="tag">Pick-the-method quiz</span></div>
+        <span class="go">Open Methods →</span>
+      </div>
+    </a>
+    <a class="unit" href="neuroanatomy.html" style="--c:#7ea6ff">
+      <div class="shot" style="background-image:url('img/home/anatomy.jpg')" role="img" aria-label="A 3D brain with colored lobes"></div>
+      <div class="body">
+        <div class="num">Unit 8</div>
+        <div class="eyebrow">Neuroanatomy · Part I</div>
+        <h2>The lobes</h2>
+        <p>Walk through the frontal, parietal, temporal and occipital lobes and the cerebellum. Every part of each memory scene lights up its own spot on a real brain.</p>
+        <div class="tags"><span class="tag">3D brain</span><span class="tag">5 Mimages</span><span class="tag">MRI cards</span></div>
+        <span class="go">Open Neuroanatomy Part I →</span>
+      </div>
+    </a>
+    <div class="unit soon" style="--c:#a3abbc" aria-disabled="true">
+      <div class="shot"><span>Coming soon</span></div>
+      <div class="body">
+        <div class="num">Unit 9</div>
+        <div class="eyebrow">Neuroanatomy · Part II</div>
+        <h2>Deeper structures</h2>
+        <p>The other brain areas in more detail, in their own section so Part I stays clean.</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="how" aria-label="How to use these units">
+    <div><div class="n">01</div><h3>Start with the scene</h3><p>Each unit opens on its Mimage. Read the story first, then step through the parts.</p></div>
+    <div><div class="n">02</div><h3>Tap what’s underlined</h3><p>Underlined terms open cards with explanations, real images, quick experiments and sources.</p></div>
+    <div><div class="n">03</div><h3>Quiz yourself</h3><p>Turn on “Quiz me” in Neuroanatomy to hide the answers, and predict what the neuron will do before you press Fire.</p></div>
+  </section>
+
+  <footer>Built for Professor Freed’s students. 3D brain surface: Conte69 (Van Essen et al.). MRI: MNI ICBM152 template. Other image credits appear with each image.</footer>
+</main>
+
+</body>
+</html>

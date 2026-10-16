@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cranial Nerves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a glass head with the 12 nerves and their number-shape pegs on a clock; nerve notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 75% 70% at 40% 40%,#1d2440 0%,#10131f 62%,#0a0b12 100%)}
+.plabel b{color:var(--chalk)}
+.plabel.peg{font-size:12px;font-weight:600;background:rgba(11,14,20,.78);transition:opacity .3s}
+.plabel.peg b{color:var(--chalk);font-size:14px}
+#hudCanvas[hidden]{display:none}
+.video{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000}
+.video-frame{position:relative;aspect-ratio:16/9}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video figcaption{background:var(--raise);padding:9px 12px;font-size:13px;color:var(--muted)}
+.video figcaption b{color:var(--fg)}
+.yt-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at center,#2a1420 0%,#0b0e14 75%)}
+.yt-card .yt-play{width:74px;height:52px;border-radius:14px;background:#ff0033;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 30px rgba(255,0,51,.35)}
+.yt-card .yt-t{font-weight:700;font-size:14px}.yt-card:hover .yt-play{transform:scale(1.06)}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters .chip{font-size:12.5px;padding:6px 10px}
+.cnlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cnrow{width:100%;display:grid;grid-template-columns:34px 44px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.cnrow:hover,.cnrow:focus-visible{border-color:var(--c)}
+.cnrow .num{font-family:var(--f-display);font-weight:800;font-size:26px;color:var(--c);text-align:center}
+.cnrow img{width:44px;height:58px;object-fit:cover;border-radius:6px;display:block}
+.cnrow b{font-family:var(--f-display);font-size:16px;margin-right:6px}
+.cnrow .shape{display:block;color:var(--chalk);font-size:12.5px;font-weight:700}
+.cnrow .fn{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}
+.bignum{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--c);color:#0b0e14;font-size:26px;vertical-align:4px;margin-right:6px}
+.hint{font-size:14px;color:var(--muted)}.hint b{color:var(--chalk)}
+.poster img{max-height:420px;object-fit:contain;background:#1b1712}
+.figure img{background:#f4ead2}
+.qopts.nums .qopt{min-width:44px}
+.chip[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 24%,rgba(17,21,30,.9));font-weight:700}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the scene…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Cranial nerves</h1>
+  <div class="brand-sub">Number → shape → job</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle">The 12 cranial nerves</div>
+  <canvas id="hudCanvas" width="900" height="240" aria-label="Live view of the current demo"></canvas>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<div id="lightbox" hidden><img alt="Image, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Cranial nerves (from Professor Freed's Cranial Nerves deck) ============ */
+const TYPE = { S:['Sensory','#7ad7ff'], M:['Motor','#ffb547'], B:['Mixed','#c49bff'] };
+const ROMAN = ['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+const NERVES = [
+  { n:1, name:'Olfactory', type:'S', shape:'Candle', fn:'Smell',
+    mn:'A candle in an Old Factory (OLFACTORY) burning so strongly that thick, swirling scent clouds fill the room. People cover their noses.',
+    hint:'Smelly Old Factory',
+    demos:[['Smell the candle','smell']],
+    points:[
+      'Detects odor molecules in the nasal cavity. Its axons pass through tiny holes in the skull, the [[cribriform|cribriform plate]], to the olfactory bulb.',
+      'Sends smell information straight to the olfactory cortex and limbic structures. That’s why smells are so strongly tied to memory and emotion.',
+      'One of the two exceptions: CN I is really part of the <b>CNS</b> ([[cnsexception|why]]).',
+      'Locks in: pure incoming smell. No movement, no muscles.'] },
+  { n:2, name:'Optic', type:'S', shape:'Swan', fn:'Vision',
+    mn:'A swan with enormous, exaggerated eyes (OPTICS), calmly taking in everything around it as light beams enter its eyes.',
+    demos:[['Shine light into the eyes','see']],
+    points:[
+      'Carries visual information from the retina: light, color, shape and motion.',
+      'Fibers partly cross at the [[chiasm|optic chiasm]], then travel to the occipital lobe.',
+      'Damage causes vision loss, and the pattern depends on where along the pathway the damage is.',
+      'Purely about seeing, not moving the eyes. That’s III, IV and VI.',
+      'The other CNS exception: the optic nerve is a brain extension, myelinated by oligodendrocytes, so it can get MS lesions ([[cnsexception|why]]).'] },
+  { n:3, name:'Oculomotor', type:'M', shape:'Butterfly', fn:'Most eye movements, pupil constriction, raising the eyelid',
+    mn:'A butterfly with motorized eyeballs (OCULOMOTOR) on its wings, pushing the eyes up, down, left and right and squeezing the pupils tight.',
+    demos:[['Move the eyes (up, down, in)','eyes3'],['Pupil light reflex (II in, III out)','pupil'],['CN III palsy','palsy3']],
+    points:[
+      'Controls most of the muscles that move the eye, and keeps both eyes aligned.',
+      'Raises the upper eyelid.',
+      'Carries parasympathetic fibers that constrict the pupil. Shine a light and II brings the signal in, III squeezes the pupil.',
+      'Damage ([[palsy3|CN III palsy]]): the eye drifts down and out, the eyelid droops, and the pupil may be wide.'] },
+  { n:4, name:'Trochlear', type:'M', shape:'Sailboat', fn:'Moves the eye down and in',
+    mn:'A sailboat PULLING (TROCHLEAR) an eyeball down and in, like a rope tightening a sail. Trochlea means “pulley.”',
+    demos:[['Look down and in','eyes4']],
+    points:[
+      'Controls one muscle, the superior oblique, which runs through a pulley-like loop of cartilage (the trochlea).',
+      'Moves the eye down and inward: important for reading and walking down stairs.',
+      'The only cranial nerve that exits from the back (dorsal side) of the brainstem.',
+      'Damage causes double vision looking down; people often tilt their head to compensate.'] },
+  { n:5, name:'Trigeminal', type:'B', shape:'Hook (trident)', fn:'Face sensation, chewing',
+    mn:'A three-pronged trident hook (TRIGEMINAL) grabs the face, tugging on cheeks and lips, while the jaw below chews aggressively.',
+    hint:'Three branches: MOM (Ophthalmic, Maxillary, Mandibular)',
+    demos:[['Forehead (V1)','v1'],['Cheek (V2)','v2'],['Jaw (V3)','v3'],['Chew','chew']],
+    points:[
+      'Brings touch, pain and temperature from the face: one of the main sensory highways of the head.',
+      'Three branches (“MOM”): <b>Ophthalmic (V1)</b>, forehead and eye area; <b>Maxillary (V2)</b>, upper face and upper teeth; <b>Mandibular (V3)</b>, lower face and jaw.',
+      'V3 also powers the chewing muscles, which makes this a mixed nerve.',
+      'Migraine: trigeminal fibers in the brain’s coverings carry much of the headache pain ([[migraine|how]]).'] },
+  { n:6, name:'Abducens', type:'M', shape:'Golf club', fn:'Moves the eye outward',
+    mn:'A golf club held in someone’s abs (ABDUCENS) smacks an eyeball straight to the side like a golf ball off a tee: left eye left, right eye right.',
+    demos:[['Look to the side','eyes6'],['CN VI palsy','palsy6']],
+    points:[
+      'Controls one muscle, the lateral rectus, which pulls the eye straight outward (abduction).',
+      'One simple job: lets you look to the side.',
+      'Damage: the eye can’t turn outward, so it drifts in toward the nose, causing double vision when looking to that side.'] },
+  { n:7, name:'Facial', type:'B', shape:'Cliff edge', fn:'Facial expression, taste (front 2/3 of the tongue)',
+    mn:'A cliff with a face in it (FACIAL), cycling through huge expressions (smiling, crying, grimacing) while food tastes splash onto the tongue.',
+    demos:[['Smile','smile'],['Taste: front of the tongue','taste7'],['Bell’s palsy (left side)','bell']],
+    points:[
+      'Controls the muscles of facial expression: smiling, frowning, raising your eyebrows, closing your eyes.',
+      'Carries taste from the <b>front two-thirds</b> of the tongue.',
+      'Parasympathetic fibers drive tears and saliva (two of the salivary glands).',
+      'Damage ([[bell|Bell’s palsy]]): one whole side of the face droops.'] },
+  { n:8, name:'Vestibulocochlear', type:'S', shape:'Hourglass', fn:'Hearing and balance',
+    mn:'An hourglass in a VEST with a CONCH shell (VESTIBULOCOCHLEAR), with large ears, walking a tightrope.',
+    demos:[['Hear a sound','hear'],['Turn the head (eyes stay steady)','vor']],
+    points:[
+      'Two branches: <b>cochlear</b> for hearing and <b>vestibular</b> for balance.',
+      'Keeps your vision stable when your head moves: the eyes counter-rotate automatically (the [[vor|vestibulo-ocular reflex]]).',
+      'Pure perception, no movement output.',
+      'Damage: hearing loss, ringing in the ears, dizziness or vertigo.'] },
+  { n:9, name:'Glossopharyngeal', type:'B', shape:'Tennis racket', fn:'Taste (back 1/3 of the tongue), swallowing',
+    mn:'A glass tennis racket held by Pharrell (GLOSSOPHARYNGEAL) smacks the back of the tongue and throat, triggering taste and a reflexive swallow.',
+    demos:[['Taste: back of the tongue','taste9'],['Say “Ah” (damaged left side)','ah']],
+    points:[
+      'Taste and general sensation from the <b>back third</b> of the tongue, the tonsils and the upper throat.',
+      'Helps trigger swallowing and the gag reflex.',
+      'Drives saliva from the parotid gland and monitors blood pressure in the neck.',
+      'Damage: trouble swallowing, a weak gag reflex, less saliva, and when you say “Ah,” the uvula swings toward the healthy side.'] },
+  { n:10, name:'Vagus', type:'B', shape:'Fork & plate', fn:'Rest and digest: heart, lungs, gut',
+    mn:'A fork and plate float in Las VEGAS (VAGUS): fork in food (rest and digest), with Parachuting Simpson (parasympathetic) coming in. What happens in Vegas… stays in the body.',
+    demos:[['Slow the heart','vagusHeart'],['Turn on digestion','vagusGut']],
+    points:[
+      'The main nerve of the parasympathetic system, “rest and digest”: it slows the heart, helps control breathing, and runs digestion.',
+      'The longest cranial nerve: “vagus” means wandering. It wanders from the brainstem to the heart, lungs and gut.',
+      'Also helps with your voice and swallowing.',
+      'Connects to the Nervous System unit: it’s the vagus nerve to the middle of the Atomic Sub.'],
+    extra:[['img/cn/vegas.jpg','Parachuting into Vegas: rest and digest. From your slides.']] },
+  { n:11, name:'Accessory', type:'M', shape:'Two posts (washing line)', fn:'Turns the head, shrugs the shoulders',
+    mn:'Two tall posts lift the shoulders in a shrug and twist the head side to side, while the head says “No, I’m not an ACCESSORY to the crime!”',
+    demos:[['Shrug','shrug'],['Shake the head “no”','no']],
+    points:[
+      'Controls the sternocleidomastoid (turns the head) and the trapezius (shrugs the shoulders).',
+      'Pure movement nerve.',
+      'Partly spinal in origin, so some argue it isn’t a “true” cranial nerve.',
+      'Damage: weak shoulder shrug and trouble turning the head against resistance.'] },
+  { n:12, name:'Hypoglossal', type:'M', shape:'Clock', fn:'Tongue movement',
+    mn:'A clock at 12 o’clock with a small tongue instead of hands (HYPOGLOSSAL), ticking back and forth precisely.',
+    demos:[['Stick out the tongue','tongue'],['Damage on the left','tonguePalsy']],
+    points:[
+      'Controls the tongue’s muscles: fine, precise movement for speech and swallowing.',
+      'Motor only.',
+      'Damage: stick out your tongue and it points toward the damaged side ([[lick|“lick your wounds”]]).'] }
+];
+NERVES.forEach(v => { v.id = 'cn' + v.n; v.img = `img/cn/cn${v.n}.jpg`; v.color = TYPE[v.type][1]; });
+const NV = Object.fromEntries(NERVES.map(v => [v.id, v]));
+const ORDER = ['all', ...NERVES.map(v => v.id)];
+
+const FILTERS = [
+  ['Sensory: I, II, VIII', [1,2,8], '#7ad7ff'],
+  ['Motor: III, IV, VI, XI, XII', [3,4,6,11,12], '#ffb547'],
+  ['Mixed: V, VII, IX, X', [5,7,9,10], '#c49bff'],
+  ['Eye movers: III, IV, VI', [3,4,6], '#f4d27a'],
+  ['Taste: VII (front), IX (back)', [7,9], '#ff8fb0'],
+  ['Parasympathetic powerhouse: X', [10], '#5fe0a3'],
+  ['CNS exceptions: I, II', [1,2], '#ffd166']
+];
+
+const REFS = {
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (2021). Principles of Neural Science (6th ed.). McGraw Hill.',
+  purves:'Purves, D., et al. (2018). Neuroscience (6th ed.). Oxford University Press.',
+  wilson:'Wilson-Pauwels, L., Stewart, P. A., Akesson, E. J., & Spacey, S. D. (2010). Cranial Nerves: Function and Dysfunction (3rd ed.). People’s Medical Publishing House.',
+  goadsby:'Goadsby, P. J., et al. (2017). Pathophysiology of migraine: A disorder of sensory processing. Physiological Reviews, 97(2), 553–622.',
+  baugh:'Baugh, R. F., et al. (2013). Clinical practice guideline: Bell’s palsy. Otolaryngology–Head and Neck Surgery, 149(3 Suppl), S1–S27.'
+};
+const CARDS = {
+  cribriform:{title:'The cribriform plate', kicker:'CN I', body:['A thin, sieve-like plate of bone in the roof of the nose. Olfactory nerve fibers pass through its tiny holes to reach the olfactory bulb.','A hard blow to the face can fracture it and tear those fibers, causing a lasting loss of smell (anosmia).'], refs:['wilson']},
+  cnsexception:{title:'Why CN I and II count as CNS', kicker:'Big exam clue', body:['Cranial nerves III–XII are part of the peripheral nervous system: they connect the brain to muscles, glands and sense organs.','CN I (olfactory) and CN II (optic) are different: they develop as outgrowths of the brain itself. They’re myelinated by oligodendrocytes, not Schwann cells.','So they behave like CNS tissue. The optic nerve, for example, can get MS lesions (optic neuritis).'], refs:['kandel']},
+  chiasm:{title:'The optic chiasm', kicker:'CN II', body:['At the chiasm, fibers from the inner (nasal) half of each retina cross to the other side; fibers from the outer half stay on the same side.','Result: each side of the brain sees the opposite half of the visual world. Where the pathway is damaged decides which part of vision is lost.'], refs:['purves']},
+  palsy3:{title:'CN III palsy', kicker:'Damage to the oculomotor nerve', body:['With III out, only the trochlear (IV) and abducens (VI) still pull on the eye, so it rests “down and out.”','The upper lid droops (ptosis), and if the pupil fibers are affected, the pupil stays wide and doesn’t react to light.','A sudden CN III palsy with a dilated pupil can signal an aneurysm pressing on the nerve: a medical emergency.'], refs:['wilson']},
+  migraine:{title:'How the trigeminal nerve produces migraine pain', kicker:'CN V', body:['The brain tissue itself can’t feel pain, but its coverings (the meninges) can. Trigeminal fibers reach into these coverings and around their blood vessels.','During a migraine attack, these fibers fire and send pain signals to the brainstem, then the thalamus and cortex. Their endings release CGRP, a chemical messenger that amplifies pain signaling. Some newer migraine drugs block CGRP.','As the pathway becomes sensitized, even brushing the scalp can hurt. The trigeminal nerve is a major pain pathway in migraine, but migraine involves more than this one nerve.'], refs:['goadsby']},
+  bell:{title:'Bell’s palsy', kicker:'CN VII', body:['A sudden weakness of one side of the face from facial-nerve dysfunction, often with no clear cause.','The whole side droops: the forehead can’t wrinkle, the eye won’t fully close, and the mouth corner sags. Taste on the front of the tongue may change.','Most people recover within weeks to months; steroids given early help.'], refs:['baugh']},
+  vor:{title:'The vestibulo-ocular reflex', kicker:'CN VIII', body:['Turn your head while reading this sentence: the words stay steady. Your vestibular system senses the head turn, and the brainstem rotates your eyes the opposite way at the same speed.','It’s one of the fastest reflexes in the body. When the vestibular system is damaged, the world seems to jump or bounce whenever the head moves.'], refs:['purves']},
+  lick:{title:'“Lick your wounds”', kicker:'CN XII', body:['Each hypoglossal nerve pushes its half of the tongue forward. If one side is weak, the healthy side pushes harder, so the tongue swings toward the damaged side.','Memory hint: the tongue points toward the injury, as if to lick the wound.'], refs:['wilson']}
+};
+const QUIZ = [
+  {q:'Which nerve carries smell?', a:1}, {q:'You shine a light in one eye and both pupils shrink. Which nerve squeezes the pupils?', a:3},
+  {q:'Which nerve moves the eye straight outward?', a:6}, {q:'Taste from the FRONT two-thirds of the tongue?', a:7},
+  {q:'Taste from the BACK third of the tongue?', a:9}, {q:'Slows the heart and runs digestion?', a:10},
+  {q:'Feeling a touch on your cheek?', a:5}, {q:'Shrugging your shoulders?', a:11},
+  {q:'Sticking out your tongue?', a:12}, {q:'Keeping your balance on a tightrope?', a:8},
+  {q:'Looking down and in to read or take the stairs?', a:4}, {q:'Seeing color and motion?', a:2}
+];
+
+/* ============ Scene: glass head, brain, 12 nerves, 12 peg shapes on a clock ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; renderer.sortObjects = true; stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 100);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.5; controls.maxDistance = 22;
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x302848, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 0.85); sun.position.set(3, 6, 6); scene.add(sun);
+const rim = new THREE.DirectionalLight(0xbcd2ff, 0.45); rim.position.set(-5, 2, -5); scene.add(rim);
+const std = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:lin(c), roughness:0.55}, o));
+const tube = (pts, r, mat, seg=48, rs=8) => new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), seg, r, rs), mat);
+const at = (m, p) => (m.position.copy(p), m);
+const S = (x,y,z) => V(-x/80, (z-10)/80, (y+18)/80);
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
+
+const body = new THREE.Group(); scene.add(body);         // shoulders + torso (shrug moves shoulders)
+const head = new THREE.Group(); scene.add(head);         // everything that turns with the head
+const HEAD_PIVOT = V(0, -1.25, -0.2); head.position.copy(HEAD_PIVOT);
+const inHead = new THREE.Group(); inHead.position.copy(HEAD_PIVOT).negate(); head.add(inHead);
+
+/* ---- glass skin ---- */
+const zoneU = { uZone:{value:0}, uZoneA:{value:0} };
+function headGeo(){
+  const g = new THREE.SphereGeometry(1, 96, 72), P = g.attributes.position, zone = new Float32Array(P.count), d = V();
+  for (let i=0;i<P.count;i++){ d.fromBufferAttribute(P, i);
+    const low = Math.max(0, -d.y - 0.2);
+    const sx = 0.93*(1 - 0.42*Math.min(1, low/0.8)), sy = d.y > 0 ? 1.0 : 1.45, sz = d.z > 0 ? 1.15 + 0.28*Math.max(0, -d.y) : 1.2;
+    const p = V(d.x*sx, d.y*sy - 0.05, d.z*sz - 0.08);
+    if (d.z > 0.55 && d.y < 0.25 && d.y > -0.9) p.z -= 0.04*Math.cos((d.y + 0.3)*3);
+    P.setXYZ(i, p.x, p.y, p.z);
+    let zn = 0; if (d.z > 0.15){ if (p.y > -0.38) zn = 1; else if (p.y > -0.92) zn = 2; else zn = 3; } if (p.y > 0.55 && d.z < 0.5) zn = 0; if (Math.abs(p.x) > 0.75 && p.y > -0.9) zn = zn === 3 ? 3 : (p.y > -0.38 ? 1 : 0);
+    zone[i] = zn; }
+  g.setAttribute('zone', new THREE.BufferAttribute(zone, 1)); g.computeVertexNormals(); return g; }
+const skinMat = new THREE.MeshStandardMaterial({color:lin('#a9c8ff'), roughness:0.25, metalness:0.05, transparent:true, opacity:0.13, depthWrite:false, side:THREE.FrontSide});
+skinMat.onBeforeCompile = sh => { Object.assign(sh.uniforms, zoneU);
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float zone; varying float vZone; varying vec3 vN2; varying vec3 vV2;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\nvZone = zone;').replace('#include <project_vertex>', '#include <project_vertex>\nvN2 = normalize(normalMatrix*normal); vV2 = normalize(-mvPosition.xyz);');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uZone; uniform float uZoneA; varying float vZone; varying vec3 vN2; varying vec3 vV2;')
+    .replace('vec4 diffuseColor = vec4( diffuse, opacity );', `
+      float fr = pow(1.0 - abs(dot(vN2, vV2)), 2.0);
+      bool zon = uZoneA > 0.0 && vZone > 0.5 && (uZone < 0.5 || abs(vZone - uZone) < 0.5);
+      vec3 zc = vZone < 1.5 ? vec3(1.0,0.82,0.4) : vZone < 2.5 ? vec3(1.0,0.55,0.75) : vec3(0.55,0.85,1.0);
+      vec4 diffuseColor = vec4(zon ? mix(diffuse, zc, 0.85) : diffuse, zon ? 0.55*uZoneA + opacity : opacity + 0.35*fr);`); };
+skinMat.customProgramCacheKey = () => 'skin';
+const skin = new THREE.Mesh(headGeo(), skinMat); skin.renderOrder = 10; inHead.add(skin);
+const neckMat = new THREE.MeshStandardMaterial({color:lin('#a9c8ff'), roughness:0.25, transparent:true, opacity:0.1, depthWrite:false});
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.42, 1.25, 32, 1, true), neckMat); neck.position.set(0, -1.85, -0.22); body.add(neck);
+const shoulders = new THREE.Group(); body.add(shoulders);
+const torsoMat = neckMat.clone(); torsoMat.opacity = 0.08;
+const shoulderBar = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 2.4, 10, 24), torsoMat); shoulderBar.rotation.z = Math.PI/2; shoulderBar.position.set(0, -2.55, -0.25); shoulders.add(shoulderBar);
+const torso = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.0, 2.2, 36, 1, true), torsoMat); torso.position.set(0, -3.75, -0.2); body.add(torso);
+// muscles for XI: sternocleidomastoid + trapezius
+const muscleMat = std('#e07a7a', {transparent:true, opacity:0.55, emissive:lin('#ff4040'), emissiveIntensity:0});
+const scm = tube([V(0.42,-1.45,-0.25), V(0.32,-1.95,0.05), V(0.1,-2.4,0.22)], 0.07, muscleMat, 20, 8); body.add(scm);
+const trap = tube([V(0.12,-1.5,-0.5), V(0.55,-2.25,-0.45), V(1.15,-2.5,-0.3)], 0.09, muscleMat, 20, 8); shoulders.add(trap);
+// heart + gut for X
+const heartMat = std('#d94b5a', {emissive:lin('#ff2040'), emissiveIntensity:0.1});
+const heart = new THREE.Mesh(new THREE.SphereGeometry(0.26, 24, 18), heartMat); heart.scale.set(1, 1.15, 0.9); heart.position.set(0.18, -3.25, 0.05); body.add(heart);
+const gutMat = std('#e98aa6', {emissive:lin('#ff6f9a'), emissiveIntensity:0});
+const gutPts = []; for (let i=0;i<30;i++){ const a = i*0.8; gutPts.push(V(Math.cos(a)*(0.22 + 0.1*Math.sin(i*0.4)), -4.05 - i*0.012, 0.05 + Math.sin(a)*0.18)); }
+const gut = tube(gutPts, 0.06, gutMat, 160, 8); body.add(gut);
+
+/* ---- brain (loaded) + brainstem ---- */
+const brainMat = std('#d9b2a4', {roughness:0.62, transparent:true, opacity:1});
+let cortex = [];
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer, n = 32492, f = 64980; let off = 0;
+  for (let h=0; h<2; h++){ const pos = new Int16Array(buf, off, n*3); off += n*6; const idx = new Uint16Array(buf, off, f*3); off += f*6; off += n*2;
+    const P = new Float32Array(n*3); for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x*0.97; P[i*3+1]=v.y*0.97 + 0.02; P[i*3+2]=v.z*0.97; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, brainMat); inHead.add(m); cortex.push(m); } }
+const cb = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), std('#cfa597')); cb.scale.set(0.5, 0.22, 0.3); cb.position.copy(S(0,-62,-33)); inHead.add(cb);
+const stemMat = std('#e3c2b4');
+const stem = tube([V(0,-0.3,0.02), V(0,-0.6,-0.1), V(0,-0.95,-0.2), V(0,-1.5,-0.28)], 0.12, stemMat, 30, 16); inHead.add(stem);
+const cord = tube([V(0,-1.45,-0.28), V(0,-2.2,-0.32), V(0,-3.0,-0.4)], 0.07, stemMat, 20, 10); body.add(cord);
+
+/* ---- face features ---- */
+const EYE = [V(0.34,-0.5,0.84), V(-0.34,-0.5,0.84)]; // [left (+x), right]
+const eyes = EYE.map(p => { const g = new THREE.Group(); g.position.copy(p); inHead.add(g);
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.12, 32, 24), std('#f6f3ee', {roughness:0.3})); g.add(ball);
+  const iris = new THREE.Mesh(new THREE.CircleGeometry(0.056, 32), std('#4f86c6', {roughness:0.4})); iris.position.z = 0.1195; g.add(iris);
+  const pupil = new THREE.Mesh(new THREE.CircleGeometry(0.028, 24), std('#08090c')); pupil.position.z = 0.121; g.add(pupil);
+  const lid = new THREE.Mesh(new THREE.SphereGeometry(0.127, 28, 16, 0, Math.PI*2, 0, Math.PI*0.5), std('#c9a48c', {transparent:true, opacity:0.85, side:THREE.DoubleSide}));
+  const lidPivot = new THREE.Group(); lidPivot.add(lid); lid.rotation.x = -Math.PI*0.5 + 0.0; inHead.add(lidPivot); lidPivot.position.copy(p);
+  return {g, pupil, lidPivot, lid}; });
+const nose = new THREE.Mesh(new THREE.ConeGeometry(0.085, 0.32, 18), std('#d7b8a2', {transparent:true, opacity:0.55})); nose.position.set(0, -0.75, 1.13); nose.rotation.x = -1.25; inHead.add(nose);
+const ears = [1, -1].map(s => { const e = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.04, 10, 24), std('#d7b8a2', {transparent:true, opacity:0.6})); e.position.set(s*0.84, -0.58, -0.08); e.rotation.y = Math.PI/2; e.scale.set(1, 1.5, 1); inHead.add(e); return e; });
+const cochlea = new THREE.Mesh(new THREE.TorusKnotGeometry(0.05, 0.015, 48, 8, 2, 3), std('#ffe38a')); cochlea.position.set(0.66, -0.6, -0.05); inHead.add(cochlea);
+// mouth (rebuilt when the expression changes), brows, jaw, tongue
+const lipMat = std('#c96f72'); let mouth = null, brows = [];
+function mouthPts(smile, droopL){ const pts = []; for (let i=0;i<=8;i++){ const t = i/8 - 0.5, x = t*0.44;
+    let y = -1.06 + smile*0.09*(4*t*t) - (t > 0 ? droopL*0.12*(2*t) : 0); pts.push(V(x, y, 0.93 - Math.abs(t)*0.12)); } return pts; }
+function setFace(smile, droopL){ if (mouth) inHead.remove(mouth); mouth = tube(mouthPts(smile, droopL), 0.02, lipMat, 24, 6); inHead.add(mouth);
+  brows.forEach(b => inHead.remove(b)); brows = [1, -1].map(s => { const dy = s > 0 ? -droopL*0.08 : 0; return tube([V(s*0.2,-0.3+dy,1.0), V(s*0.36,-0.26+dy+smile*0.02,1.0), V(s*0.5,-0.3+dy,0.95)], 0.018, std('#6b4a3a'), 12, 6); }); brows.forEach(b => inHead.add(b)); }
+setFace(0.2, 0);
+const jaw = new THREE.Group(); jaw.position.set(0, -0.62, -0.05); inHead.add(jaw);
+const mandible = tube([V(0.7,-0.05,0.0), V(0.62,-0.55,0.35), V(0.3,-0.68,0.82), V(0,-0.7,0.9), V(-0.3,-0.68,0.82), V(-0.62,-0.55,0.35), V(-0.7,-0.05,0.0)], 0.035, std('#efe6d4', {transparent:true, opacity:0.6}), 60, 8); jaw.add(mandible);
+const tongueMat = std('#e46f88', {emissive:lin('#ff4f7a'), emissiveIntensity:0});
+const tongueG = new THREE.Group(); tongueG.position.set(0, -1.08, 0.55); inHead.add(tongueG);
+const tongue = new THREE.Mesh(new THREE.SphereGeometry(0.2, 28, 16), tongueMat); tongue.scale.set(0.95, 0.35, 1.6); tongue.position.z = 0.1; tongueG.add(tongue);
+const tasteFront = sprite('#ffd166', 0.3), tasteBack = sprite('#ff8fb0', 0.3); tasteFront.position.set(0, -1.02, 0.85); tasteBack.position.set(0, -1.03, 0.5); tasteFront.visible = tasteBack.visible = false; inHead.add(tasteFront); inHead.add(tasteBack);
+
+/* ---- the 12 nerves (drawn on the left side, facing the camera) ---- */
+const L = 1; // +x = subject's left
+const PATHS = {
+  1:[[V(0.08,-0.33,0.55), V(0.09,-0.4,0.72), V(0.06,-0.45,0.92), V(0.02,-0.62,1.07)]],
+  2:[[V(0,-0.32,0.3), V(0.18,-0.4,0.55), V(0.33,-0.48,0.72)], [V(0,-0.32,0.3), V(-0.18,-0.4,0.55), V(-0.33,-0.48,0.72)], [V(0,-0.32,0.3), V(0.22,-0.3,0.0), V(0.32,-0.12,-0.6), V(0.25,0.0,-0.95)]],
+  3:[[V(0.05,-0.38,0.05), V(0.16,-0.45,0.35), V(0.3,-0.5,0.62), V(0.33,-0.58,0.74)]],
+  4:[[V(0.07,-0.25,-0.18), V(0.22,-0.3,-0.05), V(0.26,-0.36,0.35), V(0.4,-0.38,0.72)]],
+  5:[[V(0.13,-0.56,-0.05), V(0.3,-0.58,0.25)], [V(0.3,-0.58,0.25), V(0.42,-0.35,0.65), V(0.4,-0.1,0.98)], [V(0.3,-0.58,0.25), V(0.5,-0.68,0.6), V(0.48,-0.78,0.92)], [V(0.3,-0.58,0.25), V(0.5,-0.85,0.45), V(0.42,-1.15,0.78)]],
+  6:[[V(0.04,-0.7,0.0), V(0.12,-0.62,0.3), V(0.36,-0.52,0.6), V(0.48,-0.5,0.76)]],
+  7:[[V(0.12,-0.7,-0.08), V(0.45,-0.68,-0.02), V(0.7,-0.78,0.1)], [V(0.7,-0.78,0.1), V(0.7,-0.35,0.6), V(0.55,-0.15,0.9)], [V(0.7,-0.78,0.1), V(0.68,-0.55,0.7), V(0.55,-0.5,0.92)], [V(0.7,-0.78,0.1), V(0.62,-0.85,0.7), V(0.45,-0.88,1.0)], [V(0.7,-0.78,0.1), V(0.5,-1.05,0.7), V(0.22,-1.1,0.95)], [V(0.7,-0.78,0.1), V(0.55,-1.3,0.6), V(0.3,-1.3,0.85)]],
+  8:[[V(0.13,-0.72,-0.12), V(0.4,-0.66,-0.1), V(0.64,-0.6,-0.05)]],
+  9:[[V(0.1,-0.86,-0.16), V(0.25,-0.95,0.05), V(0.18,-1.05,0.35), V(0.08,-1.05,0.5)]],
+  10:[[V(0.1,-0.9,-0.18), V(0.28,-1.2,-0.15), V(0.24,-1.7,0.0), V(0.3,-2.3,0.1), V(0.24,-2.9,0.05), V(0.2,-3.15,0.05)], [V(0.24,-2.9,0.05), V(0.1,-3.5,0.1), V(0.12,-3.95,0.1)]],
+  11:[[V(0.08,-1.15,-0.28), V(0.25,-1.4,-0.35), V(0.34,-1.85,-0.2), V(0.3,-2.0,0.0)], [V(0.34,-1.85,-0.2), V(0.6,-2.25,-0.42), V(0.95,-2.42,-0.32)]],
+  12:[[V(0.05,-0.93,-0.1), V(0.15,-1.05,0.05), V(0.12,-1.12,0.35), V(0.05,-1.1,0.55)]]
+};
+const BODY_NERVES = { 10:true, 11:true };
+const nerveMeshes = {}, nerveCurves = {};
+NERVES.forEach(v => { const c = lin(v.color); nerveMeshes[v.n] = []; nerveCurves[v.n] = [];
+  PATHS[v.n].forEach(pts => { const curve = new THREE.CatmullRomCurve3(pts);
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 60, v.n === 10 ? 0.026 : 0.02, 8), new THREE.MeshStandardMaterial({color:c, emissive:c, emissiveIntensity:0.25, roughness:0.4, transparent:true, opacity:0.9}));
+    m.userData.n = v.n; (BODY_NERVES[v.n] && pts[pts.length - 1].y < -1.6 ? body : inHead).add(m); nerveMeshes[v.n].push(m); nerveCurves[v.n].push(curve); }); });
+// optic tract continues to the occipital lobe (drawn as part of II); olfactory bulb
+const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 10), std('#7ad7ff', {emissive:lin('#7ad7ff'), emissiveIntensity:0.3})); bulb.scale.set(0.8, 0.6, 1.6); bulb.position.set(0.08,-0.4,0.7); inHead.add(bulb);
+const gang = new THREE.Mesh(new THREE.SphereGeometry(0.06, 14, 10), std('#c49bff', {emissive:lin('#c49bff'), emissiveIntensity:0.3})); gang.scale.set(1.6, 0.8, 1); gang.position.set(0.3,-0.58,0.25); inHead.add(gang);
+
+/* ---- 12 peg shapes on a clock around the head ---- */
+const CLOCK_C = V(0, -0.85, 0.2), CLOCK_R = 2.75;
+const pegPos = n => { const a = Math.PI/2 - (n % 12)*Math.PI/6; return CLOCK_C.clone().add(V(Math.cos(a)*CLOCK_R*1.12, Math.sin(a)*CLOCK_R, -0.2)); };
+const pegs = {};
+const P = {
+  1(){ const g = new THREE.Group(); g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.12, 0.45, 20), std('#f3e6c8')), V(0,-0.05,0)));
+    const fl = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.16, 12), std('#ffb547', {emissive:lin('#ff9a2a'), emissiveIntensity:1})); fl.position.y = 0.27; g.add(fl); g.userData.flame = fl; return g; },
+  2(){ const g = new THREE.Group(), w = std('#ffffff', {roughness:0.4}); const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 12), w); b.scale.set(1.5, 0.75, 0.9); g.add(b);
+    g.add(tube([V(0.22,0.05,0), V(0.3,0.26,0), V(0.22,0.45,0), V(0.3,0.56,0)], 0.04, w, 16, 6)); const h = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), w); h.position.set(0.32, 0.57, 0); g.add(h);
+    [0.045, -0.045].forEach(z => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 10), std('#4f86c6')); e.position.set(0.35, 0.6, z); g.add(e); });
+    const bk = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.1, 8), std('#ff8a2a')); bk.rotation.z = -Math.PI/2; bk.position.set(0.42, 0.56, 0); g.add(bk); return g; },
+  3(){ const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.02, 0.36, 8), std('#2b2018')));
+    [[1,0.12,0.18],[1,-0.1,0.13]].forEach(([s, y, r]) => [1, -1].forEach(side => { const wing = new THREE.Mesh(new THREE.CircleGeometry(r, 20), std(y > 0 ? '#ff8a2a' : '#ffb547', {side:THREE.DoubleSide})); wing.position.set(side*r*0.9, y, 0); wing.scale.set(1, 0.75, 1);
+      const e = new THREE.Mesh(new THREE.CircleGeometry(r*0.35, 16), std('#f6f3ee', {side:THREE.DoubleSide})); e.position.z = 0.002; wing.add(e); const p = new THREE.Mesh(new THREE.CircleGeometry(r*0.15, 12), std('#111', {side:THREE.DoubleSide})); p.position.z = 0.004; wing.add(p);
+      const piv = new THREE.Group(); piv.add(wing); piv.userData.side = side; g.add(piv); (g.userData.wings = g.userData.wings || []).push(piv); })); return g; },
+  4(){ const g = new THREE.Group(); const hull = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.18, 0.12, 4, 1), std('#8a5a32')); hull.rotation.y = Math.PI/4; hull.scale.set(1.4, 1, 0.5); g.add(hull);
+    g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.6, 6), std('#5a3a20')), V(0,0.33,0)));
+    const sg = new THREE.BufferGeometry().setFromPoints([V(0.02,0.6,0), V(0.02,0.12,0), V(0.3,0.12,0)]); sg.setIndex([0,1,2]); sg.computeVertexNormals(); g.add(new THREE.Mesh(sg, std('#f6f0e2', {side:THREE.DoubleSide}))); return g; },
+  5(){ const g = new THREE.Group(), m = std('#9c7bc8', {metalness:0.6, roughness:0.3}); g.add(tube([V(0,-0.4,0), V(0,0.05,0)], 0.025, m, 6, 6));
+    [-0.15, 0, 0.15].forEach(x => g.add(tube([V(x*0.3,0.05,0), V(x,0.12,0), V(x,0.32,0), V(x*0.6,0.38,0)], 0.02, m, 12, 6))); g.add(tube([V(-0.15,0.06,0), V(0.15,0.06,0)], 0.022, m, 6, 6)); return g; },
+  6(){ const g = new THREE.Group(); g.add(tube([V(-0.05,0.4,0), V(0.05,-0.25,0)], 0.018, std('#c9ced8', {metalness:0.7}), 6, 6));
+    const hd = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.06, 0.06), std('#3a3f4a', {metalness:0.5})); hd.position.set(0.11,-0.27,0); g.add(hd);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 12), std('#ffffff')); ball.position.set(0.3,-0.27,0); g.add(ball); g.userData.ball = ball; return g; },
+  7(){ const g = new THREE.Group(), r = std('#8d7b68', {roughness:0.95}); const a = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.45, 0.3), r); a.position.set(-0.05,-0.05,0); g.add(a);
+    const top = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.32), std('#5aa05a')); top.position.set(-0.05, 0.2, 0); g.add(top);
+    const face = tube([V(0.12,-0.12,0.16), V(0.0,-0.18,0.16), V(-0.12,-0.12,0.16)], 0.015, std('#3a2a20'), 8, 4); g.add(face); return g; },
+  8(){ const g = new THREE.Group(), gl = std('#cfe8ff', {transparent:true, opacity:0.55, roughness:0.1}); const a = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.25, 20), gl); a.position.y = 0.13; a.rotation.x = Math.PI; g.add(a);
+    const b = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.25, 20), gl); b.position.y = -0.13; g.add(b);
+    const sand = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.12, 16), std('#e8c06a')); sand.position.y = -0.19; g.add(sand);
+    [0.27, -0.27].forEach(y => g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.04, 20), std('#7a5230')), V(0,y,0)))); return g; },
+  9(){ const g = new THREE.Group(), m = std('#d9e6f2', {transparent:true, opacity:0.8, roughness:0.15}); const rim = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.02, 8, 32), m); rim.scale.set(0.8, 1.05, 1); rim.position.y = 0.12; g.add(rim);
+    for (let i=-2;i<=2;i++){ g.add(tube([V(i*0.05,-0.05,0), V(i*0.05,0.29,0)], 0.004, std('#ffffff'), 2, 3)); g.add(tube([V(-0.13,0.12 + i*0.06,0), V(0.13,0.12 + i*0.06,0)], 0.004, std('#ffffff'), 2, 3)); }
+    g.add(tube([V(0,-0.06,0), V(0,-0.4,0)], 0.025, std('#3a3f4a'), 4, 6)); return g; },
+  10(){ const g = new THREE.Group(); const plate = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 0.04, 32), std('#f6f3ee')); plate.rotation.x = 1.2; g.add(plate);
+    const food = new THREE.Mesh(new THREE.SphereGeometry(0.1, 14, 10), std('#d98a3a')); food.scale.set(1, 0.5, 1); food.position.set(0.02, 0.03, 0.06); g.add(food);
+    const fork = new THREE.Group(); fork.position.set(0.3, 0.05, 0.05); fork.rotation.z = -0.3; g.add(fork); const sil = std('#c9ced8', {metalness:0.8, roughness:0.25});
+    fork.add(tube([V(0,-0.3,0), V(0,0.1,0)], 0.012, sil, 4, 6)); [-0.03,-0.01,0.01,0.03].forEach(x => fork.add(tube([V(x,0.1,0), V(x,0.22,0)], 0.006, sil, 3, 4))); fork.add(tube([V(-0.035,0.1,0), V(0.035,0.1,0)], 0.01, sil, 3, 4)); return g; },
+  11(){ const g = new THREE.Group(), w = std('#8a5a32'); [-0.2, 0.2].forEach(x => g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.7, 8), w), V(x,0,0))));
+    g.add(tube([V(-0.2,0.28,0), V(0,0.22,0), V(0.2,0.28,0)], 0.006, std('#eeeeee'), 10, 4));
+    [-0.07, 0.07].forEach((x, i) => { const cl = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.12), std(i ? '#5fe0a3' : '#ff8fb0', {side:THREE.DoubleSide})); cl.position.set(x, 0.17, 0); g.add(cl); }); return g; },
+  12(){ const g = new THREE.Group(); const face = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.05, 40), std('#f3e6c8')); face.rotation.x = Math.PI/2; g.add(face);
+    const rimm = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.025, 8, 40), std('#8a5a32')); g.add(rimm);
+    for (let i=0;i<12;i++){ const a = i*Math.PI/6; const t = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.01), std('#3a2a20')); t.position.set(Math.sin(a)*0.23, Math.cos(a)*0.23, 0.03); t.rotation.z = -a; g.add(t); }
+    const tg = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 10), std('#e46f88')); tg.scale.set(0.8, 3.2, 0.4); tg.position.set(0, 0.11, 0.04); const hand = new THREE.Group(); hand.add(tg); hand.position.z = 0.02; g.add(hand); g.userData.hand = hand; return g; }
+};
+NERVES.forEach(v => { const g = P[v.n](); g.position.copy(pegPos(v.n)); g.scale.setScalar(1.15); g.userData.n = v.n; scene.add(g); pegs[v.n] = g;
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.46, 0.5, 48), new THREE.MeshBasicMaterial({color:lin(v.color), transparent:true, opacity:0.5, side:THREE.DoubleSide, depthWrite:false})); ring.position.copy(g.position).add(V(0,0,-0.15)); scene.add(ring); g.userData.ring = ring; });
+const clockRing = new THREE.Mesh(new THREE.TorusGeometry(1, 0.006, 6, 160), new THREE.MeshBasicMaterial({color:0x3a4258, transparent:true, opacity:0.6})); clockRing.scale.set(CLOCK_R*1.12, CLOCK_R, 1); clockRing.position.copy(CLOCK_C).add(V(0,0,-0.35)); scene.add(clockRing);
+
+/* ---- pulses ---- */
+const PULSES = [];
+function pulse(curve, color, dur, parent, cb, size=0.16, delay=0, reverse=false){ const sp = sprite(color, size); sp.visible = false; parent.add(sp); PULSES.push({curve, sp, t:-delay, dur, cb, reverse}); }
+function updPulses(dt){ for (let i=PULSES.length-1;i>=0;i--){ const p = PULSES[i]; p.t += dt; const k = p.t/p.dur; if (k < 0) continue; p.sp.visible = true;
+  if (k >= 1){ p.sp.parent.remove(p.sp); PULSES.splice(i,1); if (p.cb) p.cb(); continue; } p.sp.position.copy(p.curve.getPointAt(p.reverse ? 1 - k : k)); } }
+
+/* ============ State ============ */
+const state = { n:'all', filter:null, quiz:0, quizPick:null };
+let T = 0, hudMsg = '', ROUTE = null, HUDMODE = null;
+const FACE = { smile:0.2, droop:0, tS:0.2, tD:0, key:'' };
+const GAZE = { x:0, y:0, conv:0, seq:null, t:0, palsy:null, pupil:1, pupilT:1, lidL:-1.15, lidR:-1.15 };
+const ANIM = { chew:-1, shrug:-1, no:-1, vor:-1, tongue:0, tongueT:0, tongueYaw:0, hr:72, hrT:72, gut:0, smell:-1, hear:-1, light:-1 };
+eyes.forEach(e => { e.lid.rotation.x = 0; });
+const setRoute = (steps, color) => { ROUTE = {steps, color, k:0}; HUDMODE = 'route'; };
+const rk = v => { if (ROUTE) ROUTE.k = Math.max(ROUTE.k, v); };
+const curveOf = (n, i=0) => nerveCurves[n][i];
+const parentOf = (n, i=0) => nerveMeshes[n][i].parent;
+
+/* ============ Labels ============ */
+function mkTag(html, world, show, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = html; labelsEl.appendChild(el); return {el, world, show}; }
+const W = (obj, p) => () => obj.localToWorld(p.clone());
+const sel = n => () => state.n === 'cn' + n;
+const TAGS = [];
+NERVES.forEach(v => {
+  TAGS.push(mkTag(`<b>${v.n}</b> · ${esc(v.shape)} · ${esc(v.name)}`, () => pegs[v.n].position.clone().add(V(0, -0.62, 0)), () => true, 'plabel peg'));
+  const c = curveOf(v.n, 0), mid = c.getPoint(v.n === 10 ? 0.25 : 0.6);
+  TAGS.push(mkTag(`CN ${ROMAN[v.n]} ${esc(v.name)}`, W(parentOf(v.n), mid.add(V(0, 0.08, 0))), sel(v.n), 'plabel hot'));
+});
+[[1,'Olfactory bulb',bulb,V()],[1,'Cribriform plate',inHead,V(0.05,-0.47,0.9)],[2,'Optic chiasm',inHead,V(0,-0.32,0.3)],[2,'To the occipital lobe',inHead,V(0.28,0.02,-0.9)],
+ [5,'V1 Ophthalmic',inHead,V(0.42,-0.05,1.0)],[5,'V2 Maxillary',inHead,V(0.55,-0.72,0.95)],[5,'V3 Mandibular',inHead,V(0.45,-1.2,0.85)],[5,'Trigeminal ganglion',gang,V()],
+ [8,'Cochlea (hearing) + balance organs',cochlea,V()],[10,'Heart',heart,V(0.3,0,0)],[10,'Gut',gut,V(0.3,-4.0,0.1)],[11,'Sternocleidomastoid',scm,V(0.32,-1.95,0.1)],[11,'Trapezius',trap,V(0.8,-2.4,-0.4)],
+ [7,'Front ⅔ of tongue (taste)',inHead,V(0,-1.0,0.88)],[9,'Back ⅓ of tongue (taste)',inHead,V(0,-1.0,0.48)],[12,'Tongue',tongueG,V(0,0.06,0.3)],
+ [3,'Pupil + eyelid',eyes[0].g,V(0,0.18,0.15)],[0,'Brainstem: where most cranial nerves exit',inHead,V(-0.12,-0.7,-0.15)]]
+ .forEach(([n, t, obj, p]) => TAGS.push(mkTag(t, W(obj, p), n ? sel(n) : () => state.n === 'all', n ? 'plabel' : 'plabel')));
+const _v = V();
+function placeTags(){ const w = innerWidth, h = innerHeight; TAGS.forEach(t => { const on = t.show(); if (!on){ t.el.style.opacity = 0; return; }
+  _v.copy(t.world()).project(camera); if (_v.z > 1){ t.el.style.opacity = 0; return; }
+  const pn = t.el.classList.contains('peg') ? +t.el.textContent.split(' ')[0] : 0; if (pn && state.n !== 'all' && state.n !== 'cn' + pn){ t.el.style.opacity = 0; return; }
+  const dim = pn && state.filter && !state.filter.includes(pn);
+  t.el.style.opacity = dim ? 0.35 : 1; t.el.style.transform = `translate(${(_v.x*0.5+0.5)*w}px, ${(-_v.y*0.5+0.5)*h}px) translate(-50%, ${t.el.classList.contains('peg') ? '0%' : '-140%'})`; }); }
+
+/* ============ Views ============ */
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+const VIEW = { all:[V(0,-0.85,0), 12.5, V(0.32,0.1,1)],
+  1:[V(0.05,-0.5,0.8), 3.4, V(0.9,0.25,1)], 2:[V(0,-0.4,0.3), 4.2, V(0.7,0.6,1)], 3:[V(0.25,-0.5,0.6), 3.2, V(0.55,0.15,1)], 4:[V(0.25,-0.4,0.4), 3.4, V(0.8,0.5,1)],
+  5:[V(0.35,-0.65,0.6), 4.0, V(0.85,0.1,1)], 6:[V(0.25,-0.5,0.6), 3.2, V(0.55,0.15,1)], 7:[V(0.35,-0.75,0.6), 4.0, V(0.6,0.05,1)], 8:[V(0.4,-0.62,0), 3.6, V(1,0.15,0.35)],
+  9:[V(0.1,-0.95,0.3), 3.4, V(1,0.05,0.7)], 10:[V(0.15,-2.2,0), 7.2, V(0.9,0.1,1)], 11:[V(0.4,-1.9,-0.2), 5.0, V(1,0.15,0.55)], 12:[V(0.05,-1.0,0.5), 3.2, V(0.7,0.05,1)] };
+function fly(key){ const [T0, d, dir] = VIEW[key]; const P = T0.clone().add(dir.clone().normalize().multiplyScalar(d*(isNarrow() ? 1.35 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:T0.clone(), t0:performance.now(), dur:1200}; }
+controls.addEventListener('start', () => { tween = null; });
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.22), w, h); else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), Math.round(h*0.03), w, h);
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+/* ============ Demos ============ */
+const nv = () => NV[state.n];
+const ACT = {
+  smell: () => { ANIM.smell = 0; setRoute(['Odor molecules','Through the cribriform plate','Olfactory bulb','Smell cortex + memory'], '#7ad7ff');
+    hudMsg = '<b>Smell:</b> scent from the candle drifts into the nose, crosses the cribriform plate and reaches the olfactory bulb, then the smell cortex and limbic system.'; },
+  see: () => { ANIM.light = 0; setRoute(['Light hits the retina','Optic nerves','Optic chiasm (partial crossing)','Occipital lobe'], '#7ad7ff');
+    [0,1].forEach(i => pulse(curveOf(2, i), '#7ad7ff', 1.2, parentOf(2), () => { if (i === 0){ rk(0.66); pulse(curveOf(2, 2), '#7ad7ff', 1.4, parentOf(2), () => rk(1)); } }, 0.18, 0.2, true));
+    hudMsg = '<b>Vision:</b> light hits the retina and the optic nerves carry the image back. Fibers partly cross at the chiasm and travel to the occipital lobe.'; },
+  eyes3: () => { GAZE.seq = [[0,1,0],[0,-1,0],[0,0,1],[0,0,0]]; GAZE.t = 0; GAZE.palsy = null; hudMsg = '<b>Oculomotor:</b> most eye movements: up, down and in (toward the nose). It also lifts the eyelid.'; },
+  eyes4: () => { GAZE.seq = [[0,-0.9,0.7],[0,0,0],[0,-0.9,0.7],[0,0,0]]; GAZE.t = 0; GAZE.palsy = null; hudMsg = '<b>Trochlear:</b> the superior oblique pulls the eye <b>down and in</b>, like reading or looking down stairs.'; },
+  eyes6: () => { GAZE.seq = [[1,0,0],[-1,0,0],[1,0,0],[0,0,0]]; GAZE.t = 0; GAZE.palsy = null; hudMsg = '<b>Abducens:</b> the lateral rectus swings each eye straight outward: left eye left, right eye right.'; },
+  pupil: () => { ANIM.light = 0; GAZE.pupilT = 0.55; setRoute(['Light in (CN II)','Brainstem','Out on CN III','Both pupils constrict'], '#ffb547');
+    pulse(curveOf(2, 0), '#7ad7ff', 1.0, parentOf(2), () => { rk(0.5); pulse(curveOf(3), '#ffb547', 1.0, parentOf(3), () => rk(1), 0.2); }, 0.18, 0, true);
+    setTimeout(() => { GAZE.pupilT = 1; }, 4000); hudMsg = '<b>Pupil light reflex:</b> CN II brings the light signal in, and CN III (parasympathetic fibers) constricts the pupils.'; },
+  palsy3: () => { GAZE.palsy = GAZE.palsy === 3 ? null : 3; GAZE.seq = null; hudMsg = GAZE.palsy ? '<b>Left CN III palsy:</b> the left eye rests down and out, the eyelid droops, and the pupil is wide.' : 'Healthy again.'; },
+  palsy6: () => { GAZE.palsy = GAZE.palsy === 6 ? null : 6; GAZE.seq = GAZE.palsy ? [[1,0,0],[0,0,0],[1,0,0],[0,0,0]] : null; GAZE.t = 0; hudMsg = GAZE.palsy ? '<b>Left CN VI palsy:</b> look to the left and the left eye can’t turn outward. The eyes misalign, so you see double.' : 'Healthy again.'; },
+  v1: () => vZone(1), v2: () => vZone(2), v3: () => vZone(3),
+  chew: () => { ANIM.chew = 0; zoneU.uZone.value = 3; zoneU.uZoneA.value = 0.6; pulse(curveOf(5, 3), '#c49bff', 0.9, parentOf(5), null, 0.18); hudMsg = '<b>Chewing:</b> the mandibular branch (V3) also powers the jaw muscles. That’s why V is mixed.'; },
+  smile: () => { FACE.tS = FACE.tS > 0.6 ? 0.2 : 1; FACE.tD = 0; [1,2,3,4,5].forEach(i => pulse(curveOf(7, i), '#c49bff', 0.9, parentOf(7), null, 0.15, 0.4)); pulse(curveOf(7, 0), '#c49bff', 0.6, parentOf(7), null, 0.15);
+    hudMsg = '<b>Facial expression:</b> CN VII fans out across the face to every expression muscle.'; },
+  bell: () => { FACE.tD = FACE.tD > 0.5 ? 0 : 1; FACE.tS = 1; hudMsg = FACE.tD ? '<b>Bell’s palsy (left):</b> the whole left side droops: brow, eyelid and the corner of the mouth. Try smiling and only the right side lifts.' : 'Healthy again.'; },
+  taste7: () => { tasteFront.visible = true; setTimeout(() => tasteFront.visible = false, 3000); pulse(curveOf(7, 4), '#ffd166', 1.0, parentOf(7), () => pulse(curveOf(7, 0), '#ffd166', 0.8, parentOf(7), null, 0.18, 0, true), 0.18, 0, true);
+    hudMsg = '<b>Taste, front ⅔:</b> carried by the facial nerve (VII).'; },
+  taste9: () => { tasteBack.visible = true; setTimeout(() => tasteBack.visible = false, 3000); pulse(curveOf(9), '#ff8fb0', 1.2, parentOf(9), null, 0.18, 0, true);
+    hudMsg = '<b>Taste, back ⅓:</b> carried by the glossopharyngeal nerve (IX), which also triggers swallowing and the gag reflex.'; },
+  ah: () => { HUDMODE = 'ah'; ROUTE = null; ANIM.ah = 0; hudMsg = '<b>Say “Ah”:</b> with the left IX/X damaged, the left side of the soft palate doesn’t lift, so the uvula is pulled <b>toward the healthy (right) side</b>.'; },
+  hear: () => { ANIM.hear = 0; setRoute(['Sound waves','Cochlea','CN VIII','Brainstem → auditory cortex'], '#7ad7ff'); hudMsg = '<b>Hearing:</b> the cochlear branch of VIII carries sound from the inner ear to the brainstem.'; },
+  vor: () => { ANIM.vor = 0; hudMsg = '<b>Vestibulo-ocular reflex:</b> the head turns, the vestibular branch senses it, and the eyes counter-rotate so your view stays steady.'; },
+  vagusHeart: () => { ANIM.hrT = 56; HUDMODE = 'heart'; ROUTE = null; for (let i=0;i<3;i++){ pulse(curveOf(10, 0), '#5fe0a3', 1.6, parentOf(10, 0), null, 0.22, i*0.5); }
+    hudMsg = '<b>Rest and digest:</b> vagus signals slow the heart.'; setTimeout(() => { ANIM.hrT = 72; }, 9000); },
+  vagusGut: () => { ANIM.gut = 4; pulse(curveOf(10, 0), '#5fe0a3', 1.4, parentOf(10, 0), () => pulse(curveOf(10, 1), '#5fe0a3', 0.9, parentOf(10, 1), null, 0.22), 0.22); hudMsg = '<b>Digestion on:</b> the vagus wanders down to the gut and turns on digestion.'; },
+  shrug: () => { ANIM.shrug = 0; pulse(curveOf(11, 1), '#ffb547', 0.9, parentOf(11, 1), null, 0.2, 0.2); hudMsg = '<b>Shrug:</b> CN XI drives the trapezius.'; },
+  no: () => { ANIM.no = 0; pulse(curveOf(11, 0), '#ffb547', 0.9, parentOf(11, 0), null, 0.2); hudMsg = '<b>“No, I’m not an ACCESSORY to the crime!”</b> The sternocleidomastoid turns the head.'; },
+  tongue: () => { ANIM.tongueT = ANIM.tongueT ? 0 : 1; ANIM.tongueYaw = 0; pulse(curveOf(12), '#ffb547', 0.9, parentOf(12), null, 0.18); hudMsg = '<b>Hypoglossal:</b> tongue movement for speech and swallowing.'; },
+  tonguePalsy: () => { ANIM.tongueT = 1; ANIM.tongueYaw = ANIM.tongueYaw ? 0 : 0.4; hudMsg = ANIM.tongueYaw ? '<b>Left XII damaged:</b> the tongue points <b>toward the damaged side</b>. Lick your wounds.' : 'Healthy again.'; }
+};
+function vZone(k){ zoneU.uZone.value = k; zoneU.uZoneA.value = 1; const nm = ['','Ophthalmic (V1): forehead and eye area','Maxillary (V2): cheek, upper lip, upper teeth','Mandibular (V3): jaw, lower lip, chin'][k];
+  pulse(curveOf(5, k), '#c49bff', 0.9, parentOf(5), () => pulse(curveOf(5, 0), '#c49bff', 0.7, parentOf(5), null, 0.18, 0, true), 0.18, 0, true);
+  hudMsg = `<b>${nm}.</b> Touch here and the signal travels along this branch to the trigeminal ganglion and into the pons.`; }
+const TOGGLES = { palsy3:() => GAZE.palsy === 3, palsy6:() => GAZE.palsy === 6, bell:() => FACE.tD > 0.5, smile:() => FACE.tS > 0.6, tongue:() => ANIM.tongueT > 0, tonguePalsy:() => ANIM.tongueYaw > 0 };
+function refreshTries(){ document.querySelectorAll('.try[data-act]').forEach(b => { const f = TOGGLES[b.dataset.act]; if (f) b.setAttribute('aria-pressed', String(!!f())); }); }
+function resetDemos(){ ROUTE = null; HUDMODE = null; hudMsg = ''; GAZE.seq = null; GAZE.palsy = null; GAZE.x = GAZE.y = GAZE.conv = 0; GAZE.pupilT = 1; FACE.tS = 0.2; FACE.tD = 0;
+  zoneU.uZoneA.value = 0; ANIM.tongueT = 0; ANIM.tongueYaw = 0; ANIM.hrT = 72; tasteFront.visible = tasteBack.visible = false; }
+function selectNode(id){ state.n = id; resetDemos(); fly(id === 'all' ? 'all' : NV[id].n); renderPanel(); panel.scrollTop = 0; }
+
+/* ============ HUD ============ */
+const hud = $('#hudCanvas'), hx = hud.getContext('2d'), HW = hud.width, HH = hud.height, hudTitle = $('#hudTitle'), hudText = $('#hudText');
+function chips(){ const st = ROUTE.steps, n = st.length, k = ROUTE.k, x0 = 70, x1 = HW - 70, y = 92;
+  hx.strokeStyle = '#283044'; hx.lineWidth = 6; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x1, y); hx.stroke();
+  hx.strokeStyle = ROUTE.color; hx.beginPath(); hx.moveTo(x0, y); hx.lineTo(x0 + (x1 - x0)*k, y); hx.stroke();
+  st.forEach((s, i) => { const x = x0 + (x1 - x0)*i/(n-1), on = k >= i/(n-1) - 0.001;
+    hx.fillStyle = on ? ROUTE.color : '#1a2030'; hx.strokeStyle = on ? ROUTE.color : '#3a4258'; hx.lineWidth = 3; hx.beginPath(); hx.arc(x, y, 14, 0, 7); hx.fill(); hx.stroke();
+    hx.fillStyle = on ? '#eceef4' : '#6e7689'; hx.font = '700 17px "Atkinson Hyperlegible", system-ui'; hx.textAlign = 'center';
+    const words = s.split(' '), lines = []; let cur = ''; words.forEach(w => { if ((cur + ' ' + w).trim().length > 16){ lines.push(cur.trim()); cur = w; } else cur += ' ' + w; }); lines.push(cur.trim());
+    lines.forEach((l, j) => hx.fillText(l, x, y + 44 + j*21)); }); hx.textAlign = 'left'; }
+function drawAh(){ const cx = HW/2, cy = 115; hx.fillStyle = '#3a1520'; hx.beginPath(); hx.ellipse(cx, cy, 200, 95, 0, 0, 7); hx.fill();
+  hx.fillStyle = '#c96f72'; hx.beginPath(); hx.ellipse(cx, cy + 70, 150, 35, 0, Math.PI, 0, true); hx.fill();
+  const k = clamp((ANIM.ah || 0)/1.2, 0, 1), dev = 34*k; // uvula pulled toward the healthy right side (viewer's left when facing the patient)
+  hx.strokeStyle = '#e8a0a6'; hx.lineWidth = 16; hx.lineCap = 'round'; hx.beginPath(); hx.moveTo(cx - 150, cy - 40); hx.quadraticCurveTo(cx - 70, cy - 78 - 10*k, cx - dev*0.4, cy - 62); hx.quadraticCurveTo(cx + 70, cy - 70 + 18*k, cx + 150, cy - 40); hx.stroke();
+  hx.fillStyle = '#e8a0a6'; hx.beginPath(); hx.ellipse(cx - dev, cy - 30, 12, 26, -k*0.35, 0, 7); hx.fill();
+  hx.fillStyle = '#a3abbc'; hx.font = '600 16px "Atkinson Hyperlegible", system-ui'; hx.textAlign = 'center';
+  hx.fillText('Patient’s RIGHT (healthy)', cx - 300, 40); hx.fillText('Patient’s LEFT (damaged)', cx + 300, 40); hx.fillText('You’re facing the patient', cx, 228); hx.textAlign = 'left'; }
+function drawHeart(){ const beat = Math.pow(Math.max(0, Math.sin(T*Math.PI*ANIM.hr/60)), 8), x = 160, y = 110, s = 60 + 12*beat;
+  hx.fillStyle = '#ff6b6b'; hx.beginPath(); hx.moveTo(x, y + s*0.35); hx.bezierCurveTo(x - s*1.1, y - s*0.35, x - s*0.45, y - s*1.05, x, y - s*0.45); hx.bezierCurveTo(x + s*0.45, y - s*1.05, x + s*1.1, y - s*0.35, x, y + s*0.35); hx.fill();
+  hx.fillStyle = '#eceef4'; hx.font = '800 54px "Bricolage Grotesque", system-ui'; hx.fillText(Math.round(ANIM.hr) + ' bpm', 290, 120);
+  hx.fillStyle = '#a3abbc'; hx.font = '600 18px "Atkinson Hyperlegible", system-ui'; hx.fillText(ANIM.hr < 64 ? 'Vagus active: rest and digest' : 'Resting heart rate', 290, 160); }
+function drawHud(){ const v = nv(); let mode = HUDMODE; hud.hidden = !mode; hx.clearRect(0, 0, HW, HH);
+  if (mode === 'route'){ chips(); hudTitle.textContent = 'Signal route'; }
+  else if (mode === 'ah'){ drawAh(); hudTitle.textContent = 'Say “Ah”'; }
+  else if (mode === 'heart'){ drawHeart(); hudTitle.textContent = 'Vagus and the heart'; }
+  else hudTitle.textContent = v ? `CN ${ROMAN[v.n]} · ${v.name} · ${TYPE[v.type][0]}` : 'The 12 cranial nerves';
+  const msg = hudMsg || (v ? `<b>${esc(v.n + ' = ' + v.shape)}.</b> ${esc(v.fn)}.` : 'Each number has a shape, arranged like a clock. Tap a shape or a nerve, or pick one from the list.');
+  if (hudText.innerHTML !== msg) hudText.innerHTML = msg; }
+
+/* ============ Update ============ */
+const _q = new THREE.Quaternion();
+function updScene(dt){
+  // nerve emphasis
+  const focus = state.n === 'all' ? null : NV[state.n].n;
+  NERVES.forEach(v => { const on = focus ? v.n === focus : (!state.filter || state.filter.includes(v.n));
+    nerveMeshes[v.n].forEach(m => { m.material.opacity += ((on ? 0.95 : 0.12) - m.material.opacity)*Math.min(1, dt*5); m.material.emissiveIntensity = on && focus ? 0.55 + 0.25*Math.sin(T*4) : on ? 0.3 : 0.05; });
+    const p = pegs[v.n], big = focus === v.n ? 1.55 : (on ? 1.15 : 0.9); p.scale.setScalar(p.scale.x + (big - p.scale.x)*Math.min(1, dt*5));
+    p.userData.ring.material.opacity = on ? (focus === v.n ? 0.95 : 0.5) : 0.12; p.visible = p.userData.ring.visible = !focus || focus === v.n; p.rotation.y = Math.sin(T*0.6 + v.n)*0.35; });
+  brainMat.opacity = focus ? 0.5 : 0.85; brainMat.depthWrite = !focus;
+  // peg idle animations
+  pegs[1].userData.flame.scale.set(1 + 0.15*Math.sin(T*17), 1 + 0.25*Math.sin(T*11), 1);
+  pegs[3].userData.wings.forEach(w => w.rotation.y = w.userData.side*(0.2 + 0.6*Math.abs(Math.sin(T*5))));
+  pegs[12].userData.hand.rotation.z = Math.sin(T*2)*0.5;
+  pegs[2].position.y = pegPos(2).y + 0.05*Math.sin(T*1.5);
+  // face
+  FACE.smile += (FACE.tS - FACE.smile)*Math.min(1, dt*4); FACE.droop += (FACE.tD - FACE.droop)*Math.min(1, dt*4);
+  const fk = (Math.round(FACE.smile*20)/20) + ':' + (Math.round(FACE.droop*20)/20); if (fk !== FACE.key){ FACE.key = fk; setFace(FACE.smile, FACE.droop); }
+  // gaze
+  let gx = 0, gy = 0, cv = 0; if (GAZE.seq){ GAZE.t += dt; const i = Math.floor(GAZE.t/1.1); if (i >= GAZE.seq.length) GAZE.seq = null; else [gx, gy, cv] = GAZE.seq[i]; }
+  GAZE.x += (gx - GAZE.x)*Math.min(1, dt*6); GAZE.y += (gy - GAZE.y)*Math.min(1, dt*6); GAZE.conv += (cv - GAZE.conv)*Math.min(1, dt*6);
+  let vorYaw = 0; if (ANIM.vor >= 0){ ANIM.vor += dt; vorYaw = 0.45*Math.sin(ANIM.vor*2.4); if (ANIM.vor > 5.2){ ANIM.vor = -1; vorYaw = 0; } }
+  eyes.forEach((e, i) => { const side = i === 0 ? 1 : -1; // side: +1 = left eye (+x)
+    let yaw = GAZE.x*0.5 - side*GAZE.conv*0.35 - vorYaw, pitch = -GAZE.y*0.4;
+    if (i === 0 && GAZE.palsy === 3){ yaw = 0.45; pitch = 0.3; }
+    if (i === 0 && GAZE.palsy === 6) yaw = Math.min(yaw, 0.02);
+    e.g.rotation.y += (yaw - e.g.rotation.y)*Math.min(1, dt*8); e.g.rotation.x += (pitch - e.g.rotation.x)*Math.min(1, dt*8);
+    const pt = (i === 0 && GAZE.palsy === 3) ? 1.8 : GAZE.pupilT; e.pupil.scale.setScalar(e.pupil.scale.x + (pt - e.pupil.scale.x)*Math.min(1, dt*3));
+    const lidT = (i === 0 && GAZE.palsy === 3) ? -0.25 : (i === 0 && FACE.droop > 0.5 ? -0.7 : -1.15) + (Math.sin(T*0.7 + i) > 0.985 ? 1.0 : 0);
+    e.lidPivot.rotation.x += (lidT - e.lidPivot.rotation.x)*Math.min(1, dt*10); });
+  head.rotation.y = vorYaw;
+  if (ANIM.no >= 0){ ANIM.no += dt; head.rotation.y = 0.5*Math.sin(ANIM.no*4.5)*Math.max(0, 1 - ANIM.no/2.6); if (ANIM.no > 2.6){ ANIM.no = -1; head.rotation.y = 0; } }
+  if (ANIM.shrug >= 0){ ANIM.shrug += dt; const k = ANIM.shrug < 0.5 ? ANIM.shrug/0.5 : ANIM.shrug < 1.4 ? 1 : Math.max(0, 1 - (ANIM.shrug - 1.4)/0.5); shoulders.position.y = 0.18*k; if (ANIM.shrug > 2.4) ANIM.shrug = -1; }
+  muscleMat.emissiveIntensity = (ANIM.shrug >= 0 || ANIM.no >= 0) ? 0.6 : (focus === 11 ? 0.2 : 0);
+  if (ANIM.chew >= 0){ ANIM.chew += dt; jaw.rotation.x = 0.12*Math.abs(Math.sin(ANIM.chew*6)); if (ANIM.chew > 3){ ANIM.chew = -1; jaw.rotation.x = 0; } }
+  ANIM.tongue += (ANIM.tongueT - ANIM.tongue)*Math.min(1, dt*4); tongueG.position.z = 0.55 + 0.28*ANIM.tongue; tongueG.position.y = -1.08 - 0.02*ANIM.tongue; tongueG.rotation.y += (ANIM.tongueYaw - tongueG.rotation.y)*Math.min(1, dt*4); jaw.rotation.x = Math.max(jaw.rotation.x, 0.1*ANIM.tongue);
+  tongueMat.emissiveIntensity = focus === 12 ? 0.25 : 0;
+  // smell, hearing, light
+  if (ANIM.smell >= 0){ ANIM.smell += dt; const k = ANIM.smell;
+    SMOKE.forEach((s, i) => { const u = clamp((k - i*0.12)/1.6, 0, 1); s.visible = u > 0 && u < 1; s.position.lerpVectors(pegs[1].position.clone().add(V(0,0.4,0)), inHead.localToWorld(V(0.02,-0.72,1.18)), u); s.position.y += Math.sin(u*Math.PI)*0.6; });
+    if (k > 1.8 && !ANIM.smellSent){ ANIM.smellSent = true; rk(0.33); pulse(curveOf(1), '#7ad7ff', 1.0, parentOf(1), () => { rk(1); bulb.material.emissiveIntensity = 1.2; }, 0.18, 0, true); }
+    if (k > 4){ ANIM.smell = -1; ANIM.smellSent = false; SMOKE.forEach(s => s.visible = false); } }
+  bulb.material.emissiveIntensity += (0.3 - bulb.material.emissiveIntensity)*Math.min(1, dt*1.5);
+  if (ANIM.hear >= 0){ ANIM.hear += dt; WAVES.forEach((w, i) => { const u = ((ANIM.hear - i*0.3) % 1.2)/1.2; w.visible = ANIM.hear > i*0.3 && ANIM.hear < 2.6; w.scale.setScalar(1.6 - u*1.3); w.material.opacity = u*0.8; });
+    if (ANIM.hear > 1.2 && !ANIM.hearSent){ ANIM.hearSent = true; rk(0.5); pulse(curveOf(8), '#7ad7ff', 1.0, parentOf(8), () => rk(1), 0.2, 0, true); }
+    if (ANIM.hear > 2.8){ ANIM.hear = -1; ANIM.hearSent = false; WAVES.forEach(w => w.visible = false); } }
+  if (ANIM.light >= 0){ ANIM.light += dt; flash.visible = ANIM.light < 2.5; flash.material.opacity = 0.8 + 0.2*Math.sin(T*20); if (ANIM.light > 0.3) rk(0.25); if (ANIM.light > 2.5) ANIM.light = -1; } else flash.visible = false;
+  if (ANIM.ah >= 0) ANIM.ah += dt;
+  // heart + gut
+  ANIM.hr += clamp(ANIM.hrT - ANIM.hr, -dt*5, dt*5); const beat = Math.pow(Math.max(0, Math.sin(T*Math.PI*ANIM.hr/60)), 8); heart.scale.set(1 + 0.08*beat, 1.15 + 0.08*beat, 0.9);
+  heartMat.emissiveIntensity = 0.1 + 0.5*beat*(focus === 10 ? 1 : 0.3);
+  ANIM.gut = Math.max(0, ANIM.gut - dt); gutMat.emissiveIntensity = ANIM.gut > 0 ? 0.3 + 0.3*Math.sin(T*8) : 0; gut.rotation.y = ANIM.gut > 0 ? 0.08*Math.sin(T*4) : 0;
+  if (zoneU.uZoneA.value > 0 && ANIM.chew < 0 && state.n !== 'cn5') zoneU.uZoneA.value = 0;
+}
+const SMOKE = Array.from({length:12}, () => { const s = sprite('#d9c7ff', 0.35); s.visible = false; scene.add(s); return s; });
+const WAVES = Array.from({length:3}, () => { const w = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.012, 6, 40), new THREE.MeshBasicMaterial({color:0x7ad7ff, transparent:true, opacity:0})); w.rotation.y = Math.PI/2; w.position.set(1.3, -0.58, -0.08); w.visible = false; inHead.add(w); return w; });
+const flash = sprite('#fff6c8', 1.4); flash.position.set(0, -0.5, 2.1); flash.visible = false; inHead.add(flash);
+
+/* ============ Picking ============ */
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+function pickAt(e){ const r = renderer.domElement.getBoundingClientRect(); mouse.set(((e.clientX - r.left)/r.width)*2 - 1, -((e.clientY - r.top)/r.height)*2 + 1);
+  camera.updateMatrixWorld(); ray.setFromCamera(mouse, camera);
+  const objs = [...Object.values(pegs), ...Object.values(nerveMeshes).flat(), tongue, ...eyes.map(e => e.g), heart, gut, scm, trap, ...ears, nose];
+  const hit = ray.intersectObjects(objs, true)[0]; if (!hit) return null; let o = hit.object;
+  if (o.userData.n) return 'cn' + o.userData.n; if (o === tongue) return 'cn12'; if (o === heart || o === gut) return 'cn10'; if (o === scm || o === trap) return 'cn11'; if (ears.includes(o)) return 'cn8'; if (o === nose) return 'cn1';
+  while (o){ if (o.userData && o.userData.n) return 'cn' + o.userData.n; if (eyes.some(e => e.g === o)) return 'cn2'; o = o.parent; } return null; }
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const id = pickAt(e); if (id && id !== state.n) selectNode(id); });
+let hoverT = 0; renderer.domElement.addEventListener('pointermove', e => { if (e.buttons || performance.now() - hoverT < 80) return; hoverT = performance.now(); renderer.domElement.classList.toggle('hovering', !!pickAt(e)); });
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/&lt;(\/?)b&gt;/g, '<$1b>').replace(/\[\[(\w+)\|([^\]]+)\]\]/g, (m, k, t) => `<button class="term" data-card="${k}">${t}</button>`);
+const badge = t => `<span class="rw" style="--k:${TYPE[t][1]}">${TYPE[t][0]}</span>`;
+function renderPanel(){
+  const v = NV[state.n];
+  if (!v){
+    panel.style.setProperty('--c', '#f4d27a');
+    const q = QUIZ[state.quiz % QUIZ.length];
+    panel.innerHTML = `
+      <div><div class="eyebrow">Unit 6 · Cranial nerves</div><h2>The 12 cranial nerves</h2></div>
+      <div class="mem-line">Number → shape → what the object is doing → what the nerve does</div>
+      <p class="lead">Twelve pairs of nerves leave the brain directly, mostly from the brainstem. Each number has a shape, and each shape is doing something that locks in the nerve’s job. They sit around the head like a clock, with 12 at the top.</p>
+      <figure class="video" data-yt="SNqKgNrlOOM" data-title="Professor Freed explains the 12 cranial nerves"><div class="video-frame"><a class="yt-card" href="https://youtu.be/SNqKgNrlOOM" target="_blank" rel="noopener"><span class="yt-play">▶</span><span class="yt-t">Watch on YouTube</span></a></div><figcaption><b>Watch first:</b> Professor Freed explains the 12 cranial nerves. <a href="https://youtu.be/SNqKgNrlOOM" target="_blank" rel="noopener">Open on YouTube ↗</a></figcaption></figure>
+      <figure class="figure narrow"><img src="img/cn/pegs.jpg" alt="Number–shape chart: 1 candle, 2 swan, 3 butterfly, 4 sailboat, 5 hook, 6 golf club, 7 cliff edge, 8 hourglass, 9 tennis racket, 10 fork and plate, 11 washing line posts, 12 clock" data-zoom><figcaption>Your number–shape pegs. Tap to enlarge.</figcaption></figure>
+      <div class="filters">${FILTERS.map(([l, ns, c], i) => `<button class="chip" data-f="${i}" style="--c:${c}" aria-pressed="${state.filter === ns}"><span class="dot"></span>${esc(l)}</button>`).join('')}</div>
+      <ol class="cnlist">${NERVES.map(n => `<li><button class="cnrow" data-n="${n.id}" style="--c:${n.color}"><span class="num">${n.n}</span><img src="${n.img}" alt=""><span><b>${esc(n.name)}</b> ${badge(n.type)}<span class="shape">${esc(n.shape)}</span><span class="fn">${esc(n.fn)}</span></span></button></li>`).join('')}</ol>
+      <div class="qa"><div class="q">Cranial nerves are part of the PNS… mostly</div><div class="a">III–XII are peripheral nerves. The exceptions are CN I and CN II: they’re really extensions of the brain, myelinated by oligodendrocytes, so they can get MS lesions. <button class="term" data-card="cnsexception">More</button></div></div>
+      <section class="quiz" id="quiz" aria-label="Which nerve?">
+        <div class="eyebrow">Which nerve? · ${state.quiz % QUIZ.length + 1} of ${QUIZ.length}</div>
+        <p class="q">${esc(q.q)}</p>
+        <div class="qopts nums">${NERVES.map(n => `<button class="qopt" data-a="${n.n}" ${state.quizPick ? 'disabled' : ''} aria-pressed="${state.quizPick == n.n}">${ROMAN[n.n]}</button>`).join('')}</div>
+        ${state.quizPick ? (() => { const a = NV['cn' + q.a]; return `<p class="qfb ${state.quizPick == q.a ? 'ok' : 'bad'}">${state.quizPick == q.a ? 'Right.' : 'Not quite.'} It’s CN ${ROMAN[a.n]}, ${esc(a.name)}: ${a.n} = ${esc(a.shape)}.</p><button class="btn small primary" id="qnext">Next question →</button>`; })() : ''}
+      </section>
+      <figure class="figure"><img src="img/cn/overview.jpg" alt="Diagram of the cranial nerves leaving the base of the brain and their targets" data-zoom><figcaption>Where each nerve leaves the brain and what it reaches. From your slides.</figcaption></figure>`;
+    panel.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { const ns = FILTERS[+b.dataset.f][1]; state.filter = state.filter === ns ? null : ns; renderPanel(); });
+  } else {
+    panel.style.setProperty('--c', v.color);
+    const i = v.n, prev = NV['cn' + (i - 1)], next = NV['cn' + (i + 1)];
+    panel.innerHTML = `
+      <button class="back" id="toAll">← All 12 nerves</button>
+      <div class="topic-head"><div class="eyebrow">CN ${ROMAN[v.n]} · ${TYPE[v.type][0]}${v.n <= 2 ? ' · really CNS' : ''}</div><h2><span class="bignum">${v.n}</span> ${esc(v.name)}</h2></div>
+      <div class="mem-line">${v.n} = ${esc(v.shape)}</div>
+      <p class="lead">${esc(v.mn)}</p>
+      ${v.hint ? `<div class="hint">Memory hint: <b>${esc(v.hint)}</b></div>` : ''}
+      <figure class="figure narrow poster"><img src="${v.img}" alt="Mimage poster for cranial nerve ${v.n}, ${esc(v.name)}" data-zoom><figcaption>Your Mimage. Tap to enlarge.</figcaption></figure>
+      <dl class="pairs specs"><div><dt>Function</dt><dd>${esc(v.fn)}</dd></div><div><dt>Type</dt><dd>${badge(v.type)}</dd></div></dl>
+      ${v.demos ? `<div class="tries">${v.demos.map(([l, a]) => `<button class="try" data-act="${a}">▶ ${esc(l)}</button>`).join('')}</div>` : ''}
+      <ul class="blist">${v.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul>
+      ${(v.extra || []).map(([s, c]) => `<figure class="figure narrow"><img src="${s}" alt="${esc(c)}" data-zoom><figcaption>${esc(c)}</figcaption></figure>`).join('')}
+      <div class="pager"><button class="btn" id="prevN">${prev ? '← ' + prev.n + ' ' + esc(prev.name) : '← All nerves'}</button><button class="btn primary" id="nextN">${next ? next.n + ' ' + esc(next.name) + ' →' : 'All nerves'}</button></div>`;
+    $('#toAll').onclick = () => selectNode('all'); $('#prevN').onclick = () => selectNode(prev ? prev.id : 'all'); $('#nextN').onclick = () => selectNode(next ? next.id : 'all');
+  }
+  panel.querySelectorAll('[data-n]').forEach(b => b.onclick = () => selectNode(b.dataset.n));
+  panel.querySelectorAll('.try').forEach(b => b.onclick = () => { ACT[b.dataset.act](); refreshTries(); });
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quizPick = +b.dataset.a; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); });
+  const qn = $('#qnext'); if (qn) qn.onclick = () => { state.quiz++; state.quizPick = null; renderPanel(); $('#quiz').scrollIntoView({block:'nearest'}); };
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  bindTerms(panel); refreshTries();
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card'), lb = $('#lightbox'); let lastFocus = null;
+lb.onclick = () => { lb.hidden = true; };
+function openCard(key){
+  const c = CARDS[key]; if (!c) return; lastFocus = document.activeElement;
+  const sheet = cardEl.querySelector('.card-sheet'); sheet.style.setProperty('--c', NV[state.n] ? NV[state.n].color : '#f4d27a');
+  sheet.innerHTML = `<div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div><button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${c.body.map(p => `<p>${esc(p)}</p>`).join('')}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}</ol></details></div>`;
+  cardEl.hidden = false; sheet.scrollTop = 0; sheet.querySelector('.close').onclick = closeCard; sheet.querySelector('.close').focus(); }
+function closeCard(){ cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term,[data-card]').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (!cardEl.hidden) closeCard(); else if (state.n !== 'all') selectNode('all'); }
+  if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && cardEl.hidden && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ const i = NV[state.n] ? NV[state.n].n : 0, j = clamp(i + (e.key === 'ArrowRight' ? 1 : -1), 0, 12); selectNode(j ? 'cn' + j : 'all'); } });
+
+/* ============ Loop ============ */
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt;
+  if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = k < 0.5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2)/2;
+    camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
+  controls.update(); updScene(dt); updPulses(dt); drawHud(); renderer.render(scene, camera); placeTags();
+  requestAnimationFrame(frame); }
+resize(); renderPanel();
+{ const [t0, d0, dir0] = VIEW.all; camera.position.copy(t0.clone().add(dir0.clone().normalize().multiplyScalar(d0*(isNarrow() ? 1.35 : 1)))); controls.target.copy(t0); }
+loadCortex().catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
+requestAnimationFrame(frame);
+
+</script>
+<script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
+hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+</body></html>

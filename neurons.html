@@ -1,0 +1,1391 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neuron Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 3D neuron stage on the left with lab instruments floating over it; study notes docked on the right; bottom sheet on phones. Single dark look, matching the neuroanatomy unit. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.video{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000}
+.video-frame{position:relative;aspect-ratio:16/9}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video figcaption{background:var(--raise);padding:9px 12px;font-size:13px;color:var(--muted)}
+.video figcaption b{color:var(--fg)}
+.yt-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at center,#2a1420 0%,#0b0e14 75%)}
+.yt-card .yt-play{width:74px;height:52px;border-radius:14px;background:#ff0033;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 30px rgba(255,0,51,.35)}
+.yt-card .yt-t{font-weight:700;font-size:14px}.yt-card:hover .yt-play{transform:scale(1.06)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the neuron…</div>
+<div id="labels"></div>
+
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Neuron Lab</h1>
+</header>
+
+<div class="chips lab-only" role="toolbar" aria-label="Lab settings">
+  <div class="seg" role="group" aria-label="Axon type">
+    <button id="mMyel" aria-pressed="true">Myelinated</button><button id="mUnmyel" aria-pressed="false">Unmyelinated</button>
+  </div>
+  <button class="chip" id="cMS" aria-pressed="false" style="--c:#ff8f8f"><span class="dot"></span>Multiple sclerosis</button>
+  <div class="seg" id="msSev" hidden role="group" aria-label="MS severity"><button id="sevMild" aria-pressed="true">Mild</button><button id="sevSevere" aria-pressed="false">Severe</button></div>
+  <button class="chip" id="cOpto" aria-pressed="false" style="--c:var(--light)"><span class="dot"></span>Optogenetics</button>
+  <button class="chip" id="cTTX" aria-pressed="false" style="--c:#ff7a59"><span class="dot"></span>TTX toxin</button>
+  <button class="chip" id="cZoom" aria-pressed="false" style="--c:var(--nt)"><span class="dot"></span>Synapse close-up</button>
+  <button class="chip" id="cLabels" aria-pressed="true" style="--c:#7ea6ff"><span class="dot"></span>Labels</button>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<section class="lab lab-only" aria-label="Voltage controls">
+  <div class="lab-top">
+    <div><div class="eyebrow">Axon hillock voltage</div><div class="readout" id="readout">−70<small>mV</small></div></div>
+    <button class="btn primary" id="fire">Fire</button>
+  </div>
+  <div class="phase" id="phase"><b>Resting.</b> K⁺ leak channels keep the inside negative.</div>
+  <div class="slider-row"><span class="eyebrow">−90</span><input type="range" id="vslider" min="-90" max="-40" step="1" value="-70" aria-label="Set the membrane voltage at the axon hillock"><span class="eyebrow">−40</span></div>
+  <div class="states"><span class="eyebrow">Na⁺ channels</span><span class="state closed on" id="sClosed">Closed</span><span class="state open" id="sOpen">Open</span><span class="state inact" id="sInact">Inactivated</span><span class="eyebrow" style="margin-left:6px">K⁺</span><span class="state k" id="sK">Open</span></div>
+  <canvas id="trace" width="800" height="240" aria-label="Voltage trace over time"></canvas>
+  <div class="legend"><span><i style="background:var(--na)"></i>Na⁺</span><span><i style="background:var(--k)"></i>K⁺</span><span><i style="background:var(--ca)"></i>Ca²⁺</span><span><i style="background:var(--nt)"></i>Neurotransmitter</span><span style="margin-left:auto">slowed ~1,000×</span></div>
+</section>
+
+<section class="mimage lab-only" aria-label="Memory image">
+  <div class="eyebrow" id="mimEyebrow">Mimage · myelinated</div>
+  <h4 id="mimTitle">A skipping stone</h4>
+  <canvas id="mimCanvas" width="560" height="200"></canvas>
+  <div class="cap" id="mimCap">The signal touches down only at the nodes and skips the stretches between.</div>
+</section>
+
+<section class="lab scene-hud" id="memHud" aria-label="Membrane controls">
+  <div class="lab-top"><div><div class="eyebrow">Inside vs. outside the cell</div><div class="readout" id="memV">−70<small>mV</small></div></div></div>
+  <div class="phase" id="memState"></div>
+  <div class="hud-row"><button class="hud-btn" id="memK" aria-pressed="false" style="--c:#a58bff">Open more K⁺ channels</button><button class="hud-btn" id="memNa" aria-pressed="false" style="--c:#ffb547">Open Na⁺ channel</button><button class="hud-btn" id="memCl" aria-pressed="false" style="--c:#9be38f">Open Cl⁻ channel</button></div>
+  <div class="hud-row"><button class="hud-btn" id="memThrowB">Throw Na⁺ at the wall</button><button class="hud-btn" id="memResetB">Reset</button></div>
+  <div class="legend"><span><i style="background:var(--na)"></i>Na⁺</span><span><i style="background:var(--k)"></i>K⁺</span><span><i style="background:#9be38f"></i>Cl⁻</span><span><i style="background:#6f86b8"></i>Large anions (A⁻)</span><span><i style="background:#e9eef7"></i>O₂ / CO₂</span></div>
+</section>
+<section class="lab scene-hud" id="bumpHud" aria-label="Neuron shapes">
+  <div class="eyebrow">BUMP · tap a shape</div>
+  <div class="bump-pick">
+    <button data-pick="B" style="--c:#7ad7ff" aria-pressed="false"><b>B</b><span>Bipolar</span></button>
+    <button data-pick="U" style="--c:#a3abbc" aria-pressed="false"><b>U</b><span>Unipolar</span></button>
+    <button data-pick="M" style="--c:#ffd166" aria-pressed="false"><b>M</b><span>Multipolar</span></button>
+    <button data-pick="P" style="--c:#ff8f6b" aria-pressed="false"><b>P</b><span>Pseudo&shy;unipolar</span></button>
+  </div>
+  <div class="phase">Glowing dots show which way the signal travels in each shape. In pseudounipolar neurons it skips the cell body entirely.</div>
+</section>
+<aside id="panel" aria-live="polite"></aside>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<div id="lightbox" hidden><img alt=""></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Study topics (from Professor Freed's “Neurons” deck) ============
+   Block types: {p}, {img, cap}, {list:[...]}, {mn:{title, rows:[[letter, word, memory, detail]]}}, {try:[[label, action]]},
+   {case:{title, text, card}}, {parts:true}, {pairs:[[term, text]]}, {qa:{q, a}}.  [[card|text]] makes a tappable term. */
+const TOPICS = [
+  { id:'parts', kicker:'Topic 1', title:'Parts of a neuron', color:'#7ea6ff',
+    blocks:[
+      {p:'Your brain has only two kinds of cells: neurons and [[glia|glia]]. This unit is about neurons. From the activity of these little cells comes your conscious experience, your memories, your mind and your relationships.'},
+      {p:'Tap a part to light it up on the 3D neuron. Be able to label a diagram like this: at minimum the cell body, axon, dendrites, axon hillock and synaptic terminals.'},
+      {parts:true},
+      {img:'img/neuro/strawberry.jpg', cap:'Professor Freed’s Mimage: think of the cell body as a strawberry. The red skin is the cell membrane; the seeds are the protein channels, spread all over a 3D surface. A neuron is a 3D object covered in machinery, with inputs everywhere and one main output.', narrow:true},
+      {img:'img/neuro/neuron-diagram.jpg', cap:'Labeled neuron. Blausen.com staff (2014), Medical gallery of Blausen Medical, WikiJournal of Medicine. CC BY 3.0.'},
+      {img:'img/neuro/chalk-neuron.jpg', cap:'Professor Freed’s board drawing of the neuron.'},
+      {p:'Want to see how much is packed into a tiny piece of brain? Read about the [[h01|one-cubic-millimeter map of human cortex]].'}
+    ]},
+  { id:'bump', kicker:'Topic 2', title:'Neuron shapes: BUMP', color:'#f0a43a',
+    blocks:[
+      {p:'The 3D view now shows the four basic shapes side by side. Glowing dots show which way the signal travels in each one. Tap a shape, or a row below, to fly to it.'},
+      {mn:{title:'BUMP', hint:'Tap a row to find that shape in 3D.', rows:[
+        ['B','Bipolar','“Behold and Breathe”','One dendrite and one axon on opposite ends of the cell body. Special senses: vision and smell, plus hearing and balance. Examples: retinal bipolar cells, olfactory receptor neurons.','B'],
+        ['U','Unipolar','“Uncommon in Us”','One undivided process. True unipolar neurons are rare in adult humans; they’re common in invertebrates. Nothing important to memorize for human function.','U'],
+        ['M','Multipolar','“Most common, Movement and Mental processing”','Many dendrites and one axon. The most common shape in your nervous system: motor neurons, pyramidal neurons, Purkinje cells and many interneurons.','M'],
+        ['P','Pseudounipolar','“Pain from the Periphery”','One process leaves the cell body and splits into a peripheral and a central branch. Carries pain, pressure, touch, temperature and body position from your body to your spinal cord (dorsal root ganglia). The signal skips the cell body, which sits off to the side.','P']]}},
+      {img:'img/neuro/bump.jpg', cap:'The four basic neuron shapes.'},
+      {p:'The cerebellum has its own cast of neurons. Remember PBS:'},
+      {mn:{title:'PBS · cerebellar cortex', rows:[
+        ['P','Purkinje','Principal output and Precision','The final output of the cerebellar cortex.'],
+        ['B','Basket','Big Brake at the Body','Strongly inhibits the Purkinje cell body.'],
+        ['S','Stellate','Subtle Shaping in the dendrites','Gently shapes input arriving on Purkinje dendrites.']]}}
+    ]},
+  { id:'membrane', kicker:'Topic 3', title:'The membrane and ions', color:'#36c3a5',
+    blocks:[
+      {p:'The 3D view now shows a patch of membrane, with the outside of the cell on top and the inside below. Use the buttons to open channels and watch what the ions do.'},
+      {try:[['Open more K⁺ channels','memK'],['Open Na⁺ channels','memNa'],['Open Cl⁻ channels','memCl'],['Throw Na⁺ at the wall','memThrow'],['Reset the membrane','memReset']]},
+      {go:['membrane.html','Membrane Lab: leaks, gates, metabotropic receptors and pumps, each with a 3D demo','Next: the 4 “holes”']},
+      {p:'The cell membrane is a phospholipid bilayer: think of it as a wall of fat. It is [[permeable|selectively permeable]], with protein “holes” that let some ions through and not others.'},
+      {img:'img/neuro/membrane.jpg', cap:'Diffusion across the plasma membrane. Blausen.com staff (2014), WikiJournal of Medicine. CC BY 3.0.'},
+      {p:'Why it matters, step by step:'},
+      {list:['Ions (charged particles) move into and out of the neuron through channels, gates and pumps.',
+             'That movement changes the voltage across the membrane.',
+             'When the voltage moves far enough in the positive direction, you get an [[ap|action potential]]: a jolt of electricity down the neuron.',
+             'The action potential releases neurotransmitters stored at the end of the neuron.',
+             'Neurotransmitters are how neurons talk to each other: how you learn, remember and so on.']},
+      {mn:{title:'Ions', rows:[
+        ['+','Cation','CAT-ion is PAW-sitive','An atom that lost electrons, so protons outnumber electrons: positive. Na⁺, K⁺, Ca²⁺.'],
+        ['−','Anion','AN-ion is Negative (“an” sounds like “anti” or “no”)','An atom that gained electrons: negative. Cl⁻.']]}},
+      {pairs:[['How many channel types?','A neuron may have 10 or more kinds of ion channels, in different parts of its membrane.'],
+              ['How many channels?','Millions per neuron.'],
+              ['How fast?','Up to 100 million ions can pass through one open channel every second.'],
+              ['How selective?','By size and charge. Ions must shed their [[hydration|hydration shell]] to squeeze through the narrowest part of the channel.']]}
+    ]},
+  { id:'ap', kicker:'Topic 4', title:'The action potential', color:'#ffd166',
+    blocks:[
+      {p:'Use the lab on the left: drag the voltage slider up from −70 mV, or press “Fire”. Watch the trace, the sodium channel’s state, and the ions.'},
+      {try:[['Fire one action potential','fire'],['Reset to −70 mV','rest']]},
+      {list:['[[resting|Resting]] at about −70 mV: K⁺ leak channels and the pump’s gradients keep the inside negative.',
+             'Inputs nudge the voltage up (graded potentials). Below [[threshold|−55 mV]], nothing fires; the change just fades.',
+             'At −55 mV, voltage-gated Na⁺ channels open. Na⁺ floods in and the voltage shoots to about +40 mV.',
+             'Na⁺ channels inactivate, and voltage-gated K⁺ channels let K⁺ flow out. The voltage falls.',
+             'It overshoots below rest (hyperpolarization, about −80 mV) before settling back.',
+             'During the refractory period the Na⁺ channels must reset before the neuron can fire again.']},
+      {p:'It’s all-or-none: a bigger push past threshold doesn’t make a bigger spike. Neurons signal “stronger” by firing more often.'},
+      {p:'Assignment from class: write down what [[volts|watts, voltage and amps]] are.'}
+    ]},
+  { id:'myelin', kicker:'Topic 5', title:'Myelin and conduction', color:'#f3e5c8',
+    blocks:[
+      {p:'Myelin is a fatty wrapping around the axon, made by oligodendrocytes in your brain and spinal cord and Schwann cells in your body. The small gaps between wraps are the nodes of Ranvier.'},
+      {mn:{title:'Professor Freed’s Mimages', rows:[
+        ['▮','Unmyelinated','Dominoes','Every patch of membrane has to fire to trigger the next one, all the way down. Steady but slow.'],
+        ['◦','Myelinated','A skipping stone','The signal only touches down at the nodes and skips the stretches in between. Much faster: [[saltatory|saltatory conduction]].']]}},
+      {try:[['Show an unmyelinated axon','unmyelinated'],['Show a myelinated axon','myelinated']]},
+      {p:'Speeds: thin unmyelinated fibers conduct at about 0.5–2 m/s; thick myelinated fibers reach about 120 m/s. The lab is slowed way down so you can see it.'},
+      {p:'When myelin is damaged, signals slow down or fail. That’s what happens in [[ms|multiple sclerosis]].'},
+      {try:[['Add multiple sclerosis','ms']]}
+    ]},
+  { id:'synapse', kicker:'Topic 6', title:'The synapse and transmitter release', color:'#ff6fa5',
+    blocks:[
+      {p:'Get this now: an electrical pulse (the action potential) causes the release of chemicals (neurotransmitters) into the synapse, the gap between neurons.'},
+      {try:[['Zoom into the synapse','zoom'],['Fire one action potential','fire']]},
+      {list:['The action potential reaches the synaptic terminal.',
+             'Voltage-gated calcium channels open and Ca²⁺ rushes in.',
+             'Calcium triggers [[snare|SNARE proteins]] to zip the vesicle against the membrane.',
+             'The vesicle fuses and spills neurotransmitter into the synaptic cleft.',
+             'Transmitter binds receptors on the next neuron: ionotropic (fast) or metabotropic (slow).']},
+      {img:'img/neuro/chalk-terminal.jpg', cap:'Professor Freed’s board drawing of the terminal: action potential → voltage-gated calcium channels → vesicles release neurotransmitter.'},
+      {p:'The two big ones: [[gaba-glu|glutamate excites and GABA inhibits]]. Excitation often opens cation channels (Na⁺ in); inhibition often opens Cl⁻ or K⁺ channels.'},
+      {pairs:[['GABA / glutamate','Excitation and inhibition'],['Dopamine','Reward, motivation, salience'],['Norepinephrine','Arousal, stress'],['Serotonin','Mood and behavioral regulation']]},
+      {p:'Tiny molecular changes can become enormous behavioral changes. One example: [[botox|botulinum toxin]] cuts SNARE proteins.'}
+    ]},
+  { id:'tools', kicker:'Topic 7', title:'Controlling neurons with light', color:'#7ad7ff',
+    blocks:[
+      {p:'[[optogenetics|Optogenetics]] lets scientists turn specific neurons on or off with light. They add a gene for a light-sensitive channel from algae, channelrhodopsin, to chosen neurons. Blue light opens the channel, positive ions rush in, and the neuron fires.'},
+      {try:[['Turn on optogenetics','opto']]},
+      {p:'Other light-driven proteins, such as halorhodopsin, do the opposite and silence neurons. That lets researchers test whether a group of cells is necessary for a behavior or memory.'}
+    ]},
+  { id:'cases', kicker:'Topic 8', title:'Case files', color:'#ff8f6b',
+    blocks:[
+      {p:'From the activity of these cells comes fear, anger, impulse control, judgment, memory, perception, planning, aggression, empathy, hallucinations and intent: exactly the mental states forensic psychologists and courts try to reconstruct.'},
+      {case:{title:'Case file: the neurons stop firing', card:'ttx', text:'A person is alert, then rapidly weak, unable to move, then unable to breathe, with no injury. What could stop every signal? (Columbo, “Murder Under Glass,” 1978.)'}},
+      {try:[['Try TTX in the lab','ttx']]},
+      {case:{title:'Barium: corking the K⁺ leak', card:'barium', text:'Ba²⁺ lodges in potassium channels like a microscopic cork.'}},
+      {case:{title:'Case study: “Devil’s Breath”', card:'scopolamine', text:'Could a drug make someone look awake, follow simple directions, and later remember almost nothing?'}},
+      {case:{title:'Blocking the pump: digoxin and the “Good Nurse”', card:'digoxin', text:'From foxglove to a hospital murder case.'}},
+      {case:{title:'When the pump is broken from birth', card:'fhm2', text:'Familial hemiplegic migraine type 2.'}},
+      {qa:{q:'Forensic question: if a drug changes someone’s brain enough to change their behavior, how should that affect our judgment of their intent or responsibility?', a:'There’s no single right answer. Drugs and toxins can change inhibition, arousal, perception, memory, reward, fear and impulse control, so a person may behave very differently depending on what is happening at the synapse. Courts weigh whether the person chose to take the substance, what they knew, and whether they could still understand or control what they did.'}}
+    ]}
+];
+
+/* the 3D parts students can light up */
+const PARTS = [
+  ['dendrites','Dendrites','Branched projections that receive signals from other neurons.'],
+  ['soma','Cell body (soma)','Contains the nucleus and other organelles; runs the neuron’s metabolism.'],
+  ['hillock','Axon hillock','Where the axon leaves the cell body. Action potentials usually start here.'],
+  ['axon','Axon','A long, slender projection that carries impulses away from the cell body.'],
+  ['myelin','Myelin sheath','Fatty insulation that speeds up conduction.'],
+  ['nodes','Nodes of Ranvier','Gaps in the myelin where the membrane is exposed. The signal is regenerated here.'],
+  ['terminals','Synaptic terminals','The ends of the axon, where it forms synapses with other cells.'],
+  ['vesicles','Synaptic vesicles','Small sacs in the terminal that hold neurotransmitters.'],
+  ['synapse','Synapse','The junction where information passes from one neuron to the next.']
+];
+
+const REFS = {
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (Eds.). (2021). Principles of neural science (6th ed.). McGraw Hill.',
+  alberts:'Alberts, B., et al. (2002). Molecular biology of the cell (4th ed.), “Ion channels and the electrical properties of membranes.” Garland Science. https://www.ncbi.nlm.nih.gov/books/NBK26910/',
+  purves:'Purves, D., et al. (Eds.). (2001). Neuroscience (2nd ed.). Sinauer Associates. https://www.ncbi.nlm.nih.gov/books/NBK10857/',
+  hh:'Hodgkin, A. L., & Huxley, A. F. (1952). A quantitative description of membrane current and its application to conduction and excitation in nerve. Journal of Physiology, 117(4), 500–544.',
+  huxley49:'Huxley, A. F., & Stämpfli, R. (1949). Evidence for saltatory conduction in peripheral myelinated nerve fibres. Journal of Physiology, 108(3), 315–339.',
+  reich:'Reich, D. S., Lucchinetti, C. F., & Calabresi, P. A. (2018). Multiple sclerosis. New England Journal of Medicine, 378(2), 169–180.',
+  boyden:'Boyden, E. S., Zhang, F., Bamberg, E., Nagel, G., & Deisseroth, K. (2005). Millisecond-timescale, genetically targeted optical control of neural activity. Nature Neuroscience, 8(9), 1263–1268.',
+  sollner:'Söllner, T., et al. (1993). SNAP receptors implicated in vesicle targeting and fusion. Nature, 362(6418), 318–324.',
+  schiavo:'Schiavo, G., et al. (1992). Tetanus and botulinum-B neurotoxins block neurotransmitter release by proteolytic cleavage of synaptobrevin. Nature, 359(6398), 832–835.',
+  narahashi:'Narahashi, T., Moore, J. W., & Scott, W. R. (1964). Tetrodotoxin blockage of sodium conductance increase in lobster giant axons. Journal of General Physiology, 47(5), 965–974.',
+  skou:'Skou, J. C. (1957). The influence of some cations on an adenosine triphosphatase from peripheral nerves. Biochimica et Biophysica Acta, 23, 394–401.',
+  defusco:'De Fusco, M., et al. (2003). Haploinsufficiency of ATP1A2 encoding the Na⁺/K⁺ pump α2 subunit associated with familial hemiplegic migraine type 2. Nature Genetics, 33(2), 192–196.',
+  shapson:'Shapson-Coe, A., et al. (2024). A petavoxel fragment of human cerebral cortex reconstructed at nanoscale resolution. Science, 384(6696), eadk4858.',
+  sciam:'Scientific American (2024). A cubic millimeter of a human brain has been mapped in spectacular detail. https://www.scientificamerican.com/article/a-cubic-millimeter-of-a-human-brain-has-been-mapped-in-spectacular-detail/',
+  ardila:'Ardila, A., & Moreno, C. (1991). Scopolamine intoxication as a model of transient global amnesia. Brain and Cognition, 15(2), 236–245.',
+  cdc:'Centers for Disease Control and Prevention. (1995). Jimson weed poisoning: Texas, New York, and California, 1994. MMWR, 44(3), 41–44.',
+  dailymed:'DailyMed. Scopolamine transdermal system: mechanism of action. U.S. National Library of Medicine.',
+  graeber:'Graeber, C. (2013). The good nurse: A true story of medicine, madness, and murder. Twelve.',
+  doyle:'Doyle, D. A., et al. (1998). The structure of the potassium channel: Molecular basis of K⁺ conduction and selectivity. Science, 280(5360), 69–77.',
+  rosenbaum:'Rosenbaum, D. M., Rasmussen, S. G. F., & Kobilka, B. K. (2009). The structure and function of G-protein-coupled receptors. Nature, 459(7245), 356–363.'
+};
+
+const CARDS = {
+  glia:{kicker:'Cells', title:'Glia', body:['Glia are the brain’s other cell type. They don’t fire action potentials, but you can’t think without them. Oligodendrocytes and Schwann cells make myelin; astrocytes feed neurons, mop up neurotransmitters and help control blood flow; microglia are the brain’s immune cells.','You’ll study glia later in the course.'], refs:['kandel']},
+  h01:{kicker:'Methods', title:'One cubic millimeter of cortex', body:['In 2024 a team from Google and Harvard published a 3D map of a tiny piece of human cortex, removed during epilepsy surgery from a 45-year-old woman. It’s about one cubic millimeter, one-millionth of a whole brain, yet holds roughly 57,000 cells and 150 million synapses: 1.4 petabytes of data.','How did they get the images? They cut the sample into about 5,000 slices, each 34 nanometers thick, imaged them with electron microscopes, and used AI to stitch them back into 3D. They found surprises, including neurons that connected to each other up to 50 times, when usually you’d see a couple of connections at most.'], refs:['shapson','sciam']},
+  permeable:{kicker:'Membrane', title:'Selectively permeable', body:['The membrane lets some things through and not others. Fats and gases slip through the fatty bilayer; ions can’t, because their charge keeps them out of the fat. Ions can only cross through protein channels, gates and pumps, and each one is picky about which ions it passes.'], refs:['alberts']},
+  hydration:{kicker:'Membrane', title:'Hydration shells and selectivity', body:['In water, every ion is wrapped in a shell of water molecules. To pass through a channel, the ion has to shed most of that shell, which costs energy. Selective channels line their narrowest part, the selectivity filter, with atoms placed exactly where the water used to be, so only the right size and charge of ion fits.','That’s how a potassium channel lets K⁺ through but blocks the smaller Na⁺: sodium doesn’t fit the filter snugly enough to give up its water.'], refs:['alberts','doyle']},
+  resting:{kicker:'Action potential', title:'Resting potential (−70 mV)', body:['At rest, the inside of a neuron is about 70 millivolts more negative than the outside. The main reason is potassium leak channels: K⁺ is concentrated inside, so it leaks out and leaves negative charge behind.','The sodium–potassium pump keeps those concentration differences in place. Its own direct contribution to the voltage is small, only a few millivolts.'], refs:['kandel','purves']},
+  threshold:{kicker:'Action potential', title:'Threshold (−55 mV)', body:['Threshold is the voltage at which enough voltage-gated sodium channels open that the inflow of Na⁺ becomes self-reinforcing: more Na⁺ in, more depolarization, more channels open. From there the action potential runs on its own.','Below threshold, a change in voltage just fades away. Try it in the lab: stop the slider at −60 mV, then push past −55.'], refs:['hh','kandel']},
+  ap:{kicker:'Action potential', title:'Action potential', body:['A rapid, temporary reversal of the electrical polarization of a neuron’s membrane that travels down the axon to carry information. Inside goes from about −70 mV to about +40 mV and back in roughly 1–2 milliseconds.','Hodgkin and Huxley worked out the sodium and potassium currents behind it in squid giant axons and won the 1963 Nobel Prize.'], refs:['hh','kandel']},
+  'na-states':{kicker:'Channels', title:'The sodium channel’s three states', body:['Closed: the resting shape. Na⁺ can’t enter, but the channel is ready to open.','Open: a voltage change at threshold flips the channel open and Na⁺ floods in, driving the rising phase.','Inactivated: within about a millisecond, part of the protein swings in and plugs the pore from the inside (often drawn as a “ball and chain”). It can’t reopen until the membrane repolarizes and resets it to closed. That’s the reason for the refractory period, and why action potentials only travel forward.'], v:[{img:'img/neuro/na-states.jpg', cap:'Wikimedia Commons.'}], refs:['hh','kandel']},
+  gpcr:{kicker:'Receptors', title:'G protein–coupled receptors', body:['GPCRs are receptors with no ion pore. Humans have more than 800 kinds. A neurotransmitter binds, the receptor changes shape and activates a G protein inside the cell, and the G protein swaps GDP for GTP (that’s where the “G” comes from).','The active G protein can open or close ion channels, switch on enzymes and second messengers, or even change which genes are expressed. Slower than ionotropic receptors, but longer-lasting.','Example: adrenaline binds adrenergic GPCRs to speed your heart, open your airways and release sugar from your liver. You feel jittery after a scare because the signal takes time to shut off.'], refs:['rosenbaum','kandel']},
+  pump:{kicker:'Pumps', title:'The sodium–potassium pump', body:['Each cycle uses one ATP to push 3 Na⁺ out and pull 2 K⁺ in, a net loss of one positive charge from inside. A neuron has millions of these pumps, packed most densely where activity is highest, such as the axon hillock.','Its direct effect on voltage is small (about −2 to −5 mV). Its real job is to recharge the battery: keeping K⁺ high inside and Na⁺ high outside so that leak channels and action potentials can work. That job takes up a large share of the brain’s energy.'], v:[{img:'img/neuro/pump.jpg', cap:'OpenStax Biology, CC BY 4.0.'}], refs:['skou','purves']},
+  volts:{kicker:'Physics', title:'Volts, amps and watts', body:['Voltage (volts) is electrical pressure: the difference in charge between two places that pushes charge to move. Your neuron’s −70 mV is a voltage.','Current (amps) is the flow: how much charge actually moves per second. Ions moving through channels are a current.','Power (watts) is the rate of energy use: volts × amps. A water analogy: voltage is water pressure, current is how much water flows, and power is how much work the flow can do.'], refs:['kandel']},
+  saltatory:{kicker:'Myelin', title:'Saltatory conduction', body:['“Saltatory” comes from the Latin saltare, “to jump.” Under the myelin, current spreads very quickly along the inside of the axon without leaking out. At each node of Ranvier, dense voltage-gated sodium channels regenerate a full action potential.','So the signal seems to hop from node to node. Nothing physically jumps: the spike is rebuilt at every node, which is what your skipping stone touching the water stands for.'], refs:['huxley49','kandel']},
+  ms:{kicker:'Disease', title:'Multiple sclerosis', body:['In MS the immune system attacks myelin in the brain and spinal cord. Where myelin is thin or gone, the signal leaks away between nodes. Conduction slows, becomes unreliable, or fails completely.','Symptoms depend on where the damage is: blurred or double vision, numbness or tingling, weakness, fatigue and problems with balance. Try both levels in the lab: mild slows the signal; severe blocks it.'], refs:['reich']},
+  optogenetics:{kicker:'Methods', title:'Optogenetics', body:['Scientists insert the gene for channelrhodopsin-2, a light-gated ion channel from green algae, into a chosen type of neuron. When blue light (about 470 nm) shines on those cells, the channel opens, positive ions rush in, and the neuron fires within milliseconds.','In 2005 Ed Boyden, Karl Deisseroth and colleagues showed this could control neurons with millisecond precision. Now it’s used to test which cells drive behaviors like fear, memory and reward.'], refs:['boyden']},
+  snare:{kicker:'Synapse', title:'SNARE proteins', body:['SNAREs are the zipper that fuses vesicles with the membrane. One SNARE sits on the vesicle (synaptobrevin) and two on the terminal membrane (syntaxin and SNAP-25). They twist together like a rope, pulling the vesicle tight against the membrane.','When Ca²⁺ arrives, the zipper finishes closing, the two membranes merge, and the vesicle dumps its neurotransmitter into the cleft.'], refs:['sollner','kandel']},
+  botox:{kicker:'Synapse', title:'Botulinum toxin', body:['Botulinum toxin, the most potent toxin known, cuts SNARE proteins. Vesicles can’t fuse, so acetylcholine isn’t released at the junction between nerve and muscle and the muscle goes limp.','Tiny doses are used medically (Botox) to relax overactive muscles and smooth wrinkles; food poisoning by the bacterium causes botulism, which can paralyze the breathing muscles.'], refs:['schiavo']},
+  'gaba-glu':{kicker:'Neurotransmitters', title:'Glutamate and GABA', body:['Glutamate is the brain’s main excitatory transmitter. It opens cation channels such as AMPA and NMDA receptors, letting Na⁺ in and pushing the next neuron toward threshold.','GABA is the main inhibitory transmitter. GABA-A receptors let Cl⁻ in, which keeps the next neuron away from threshold. Much of what the brain does is a balance between these two.'], refs:['kandel']},
+  ttx:{kicker:'Case file', title:'The neurons stop firing: tetrodotoxin', v:[], body:['Certain toxins block voltage-gated sodium channels. Tetrodotoxin (TTX), from pufferfish (fugu), plugs the outside of the channel.','No Na⁺ influx → no depolarization → no action potential → no neural signal → paralysis, and potentially death when the breathing muscles stop. The victim can stay awake throughout, because TTX doesn’t cross into the brain easily.','In the Columbo episode “Murder Under Glass” (1978), a restaurant critic poisons a restaurant owner with fugu toxin. Try TTX in the lab: push the voltage past threshold and nothing fires.'], refs:['narahashi','kandel']},
+  barium:{kicker:'Case file', title:'Barium: corking the K⁺ leak', body:['Ba²⁺ can lodge in a K⁺ channel’s selectivity filter and block it like a microscopic cork. With less K⁺ leaking out, the inside becomes less negative (depolarized).','A small depolarization can make the cell more excitable. A sustained one can inactivate Na⁺ channels and prevent action potentials. Barium poisoning can cause profound weakness, paralysis and dangerous heart rhythms. (Neither barium nor quinine blocks every leak channel; the background K⁺ current comes from several channel families.)'], refs:['kandel']},
+  scopolamine:{kicker:'Case study', title:'“Devil’s Breath” (scopolamine)', v:[{img:'img/neuro/datura.jpg', cap:'Teaching illustration (AI-generated), not an identification guide.'}], body:['Scopolamine is a real drug: patches prevent motion sickness and nausea after surgery. It comes from plants like Datura, crosses into the brain, and blocks muscarinic acetylcholine receptors (metabotropic). It does not block nicotinic receptors.','Acetylcholine normally supports attention and the encoding of new memories. Block it, and attention degrades and hippocampal memory encoding fails: the main effect is anterograde amnesia, not erasing the past.','In overdose it causes anticholinergic delirium: confusion, hallucinations, poor judgment, dilated pupils, dry mouth, hot dry skin, rapid heart rate and overheating.','Can someone just blow it in your face? Possible in principle, but poorly established. Most criminal reports involve ingestion, and a quick puff hasn’t been shown to produce instant, reliable obedience. Delirium can impair judgment, resistance and memory, which can look like compliance, but it doesn’t reliably erase free will.'], refs:['dailymed','ardila','cdc']},
+  digoxin:{kicker:'Case file', title:'Ouabain, digoxin and the “Good Nurse”', v:[{img:'img/neuro/foxglove.jpg', cap:'Foxglove, the source of digoxin. Teaching illustration.'}], body:['Ouabain (an African arrow poison) and digoxin (a heart medicine from foxglove) bind the Na⁺/K⁺ pump from outside and stop it.','At first only the pump’s small electrical contribution disappears; the resting potential doesn’t collapse instantly. Over time Na⁺ builds up inside, the gradients fade, the membrane depolarizes, signaling fails, and water follows Na⁺ into the cell, causing swelling and injury.','In the heart, extra Na⁺ inside slows the Na⁺/Ca²⁺ exchanger, so Ca²⁺ rises and contractions strengthen. That’s why digoxin is a medicine, but its safety margin is narrow and toxic doses cause dangerous arrhythmias. Nurse Charles Cullen used digoxin overdoses to murder hospital patients; his case inspired The Good Nurse.'], refs:['skou','graeber']},
+  fhm2:{kicker:'Case file', title:'Familial hemiplegic migraine type 2', body:['A rare inherited migraine disorder caused by mutations in the ATP1A2 gene, which builds a Na⁺/K⁺ pump used especially by astrocytes.','With weaker pumps, astrocytes clear K⁺ and glutamate less well, which makes cortical spreading depression more likely: a slow wave of silenced neurons. People get migraines with visual disturbances and temporary weakness on one side of the body.'], refs:['defusco']}
+};
+
+/* ============ Small helpers ============ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const sm = t => { t = clamp(t,0,1); return t*t*(3-2*t); };
+const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+let seed = 11; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============ Geometry constants (scene units, neuron along x) ============ */
+const SOMA = new THREE.Vector3(-3.1, 0, 0), SOMA_R = 0.55;
+const X_HILL0 = -2.66, X_AX0 = -2.2, X_AX1 = 3.8, AX_R = 0.085;
+const N_INT = 8, GAP = 0.1, X_MY0 = -1.9;
+const INT_L = (X_AX1 - X_MY0 - N_INT*GAP) / N_INT;
+const internodes = Array.from({length:N_INT}, (_,k) => { const a = X_MY0 + k*(INT_L+GAP); return [a, a+INT_L]; });
+const NODES_X = [(X_AX0 + X_MY0)/2, ...internodes.map(([a,b]) => b + GAP/2)]; // AIS + 8 nodes
+const BOUTON = new THREE.Vector3(4.52, 0, 0), BOUTON_R = 0.22;
+const POST_X = 5.0, POST_R = 0.2;
+
+/* ============ Renderer ============ */
+const stage = $('#stage'), panel = $('#panel');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 60);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
+controls.minDistance = 0.35; controls.maxDistance = 34;
+scene.add(new THREE.HemisphereLight(0xe8eeff, 0x251a24, 0.75));
+const key = new THREE.DirectionalLight(0xffffff, 0.95); camera.add(key); key.position.set(1.5, 2.5, 1.5); scene.add(camera);
+const rim = new THREE.DirectionalLight(0x9db4ff, 0.5); rim.position.set(-4, 2, -5); scene.add(rim);
+
+/* voltage → membrane colour */
+const C_UNDER = lin('#6a3fb0'), C_REST = lin('#3c6fb8'), C_SUB = lin('#5aa0d8'), C_PEAK = lin('#fff0b0'), C_MID = lin('#ffb547');
+function vColor(V, out){
+  if (V <= -70) return out.copy(C_UNDER).lerp(C_REST, clamp((V+82)/12,0,1));
+  if (V <= -55) return out.copy(C_REST).lerp(C_SUB, (V+70)/15);
+  if (V <= 0)   return out.copy(C_SUB).lerp(C_MID, (V+55)/55);
+  return out.copy(C_MID).lerp(C_PEAK, clamp(V/40,0,1));
+}
+
+/* materials per part (so parts can be highlighted) */
+const mat = {
+  dendrites: new THREE.MeshStandardMaterial({color:0x3c6fb8, roughness:0.55}),
+  soma: new THREE.MeshStandardMaterial({color:0x3c6fb8, roughness:0.5, transparent:true}),
+  hillock: new THREE.MeshStandardMaterial({color:0x3c6fb8, roughness:0.5}),
+  axon: new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.45}),
+  nodes: new THREE.MeshStandardMaterial({color:0xffb547, emissive:0xffb547, emissiveIntensity:0, roughness:0.4}),
+  terminals: new THREE.MeshStandardMaterial({color:0x3c6fb8, roughness:0.5, transparent:true}),
+  post: new THREE.MeshStandardMaterial({color:0x7f6a8f, roughness:0.6, transparent:true, opacity:0.85}),
+  nucleus: new THREE.MeshStandardMaterial({color:0x22305a, roughness:0.7})
+};
+const myelinMats = internodes.map(() => new THREE.MeshStandardMaterial({color:0xf1e6cf, roughness:0.55, transparent:true}));
+const partMeshes = {dendrites:[], soma:[], hillock:[], axon:[], myelin:[], nodes:[], terminals:[], vesicles:[], synapse:[]};
+
+/* ---- soma ---- */
+(function(){
+  const g = new THREE.SphereGeometry(SOMA_R, 64, 48), p = g.attributes.position, v = new THREE.Vector3();
+  for (let i=0;i<p.count;i++){
+    v.fromBufferAttribute(p,i); const n = v.clone().normalize();
+    const pull = Math.max(0, n.x); // stretch toward the axon
+    v.multiplyScalar(1 + 0.25*pull*pull + 0.04*Math.sin(n.y*7+n.z*5));
+    p.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, mat.soma); m.position.copy(SOMA); scene.add(m); partMeshes.soma.push(m);
+  const nuc = new THREE.Mesh(new THREE.SphereGeometry(0.2, 32, 24), mat.nucleus); nuc.position.copy(SOMA); scene.add(nuc); nuc.visible = false;
+  partMeshes.nucleus = nuc;
+})();
+
+/* ---- dendrites: tapered recursive branches ---- */
+function taperedTube(points, r0, r1, radial=10){
+  const curve = new THREE.CatmullRomCurve3(points);
+  const seg = Math.max(8, Math.round(curve.getLength()*24));
+  const g = new THREE.TubeGeometry(curve, seg, 1, radial, false);
+  const pos = g.attributes.position, t = new THREE.Vector3();
+  for (let i=0;i<pos.count;i++){
+    const u = Math.floor(i/(radial+1))/seg, c = curve.getPointAt(Math.min(1,u));
+    t.fromBufferAttribute(pos,i).sub(c).multiplyScalar(lerp(r0,r1,u)).add(c);
+    pos.setXYZ(i, t.x, t.y, t.z);
+  }
+  g.computeVertexNormals(); return {g, curve};
+}
+function branch(start, dir, len, r, depth){
+  const pts = [start.clone()]; let p = start.clone(), d = dir.clone();
+  for (let i=0;i<4;i++){
+    d.add(new THREE.Vector3((rnd()-0.5)*0.6, (rnd()-0.5)*0.6, (rnd()-0.5)*0.6)).normalize();
+    p = p.clone().add(d.clone().multiplyScalar(len/4)); pts.push(p);
+  }
+  const {g} = taperedTube(pts, r, r*0.55);
+  const m = new THREE.Mesh(g, mat.dendrites); scene.add(m); partMeshes.dendrites.push(m);
+  if (depth > 0){
+    for (let k=0;k<2;k++){
+      const nd = d.clone().add(new THREE.Vector3((rnd()-0.5)*1.2, (rnd()-0.5)*1.2, (rnd()-0.5)*1.2)).normalize();
+      branch(p, nd, len*0.7, r*0.55, depth-1);
+    }
+  }
+}
+(function(){
+  const dirs = [[-1,0.2,0],[-0.8,0.8,0.2],[-0.6,-0.8,-0.1],[-0.3,1,-0.4],[-0.4,-1,0.5],[-0.9,0.1,0.8],[-0.9,-0.1,-0.8],[0.1,1,0.3],[0.1,-1,-0.3]];
+  dirs.forEach(d => {
+    const dir = new THREE.Vector3(...d).normalize();
+    const start = SOMA.clone().add(dir.clone().multiplyScalar(SOMA_R*0.92));
+    branch(start, dir, 1.0 + rnd()*0.4, 0.075, 2);
+  });
+})();
+
+/* ---- hillock (cone into the axon) ---- */
+(function(){
+  const pts = []; for (let i=0;i<=16;i++){ const u = i/16; pts.push(new THREE.Vector2(lerp(0.3, AX_R, sm(u)), lerp(0, X_AX0 - X_HILL0 + 0.02, u))); }
+  const g = new THREE.LatheGeometry(pts, 40); g.rotateZ(-Math.PI/2); g.translate(X_HILL0, 0, 0);
+  const m = new THREE.Mesh(g, mat.hillock); scene.add(m); partMeshes.hillock.push(m);
+})();
+
+/* ---- axon with per-vertex voltage colour ---- */
+const AX_SEG = 360;
+const axonGeo = new THREE.CylinderGeometry(AX_R, AX_R, X_AX1 - X_AX0, 24, AX_SEG, true);
+axonGeo.rotateZ(-Math.PI/2); axonGeo.translate((X_AX0 + X_AX1)/2, 0, 0);
+const axColors = new Float32Array(axonGeo.attributes.position.count*3);
+axonGeo.setAttribute('color', new THREE.BufferAttribute(axColors, 3));
+const axonX = Array.from({length:axonGeo.attributes.position.count}, (_,i) => axonGeo.attributes.position.getX(i));
+const axon = new THREE.Mesh(axonGeo, mat.axon); scene.add(axon); partMeshes.axon.push(axon);
+
+/* ---- myelin ---- */
+const myelin = internodes.map(([a,b], k) => {
+  const L = b - a, pts = [];
+  for (let i=0;i<=20;i++){ const u = i/20, edge = Math.min(u, 1-u)*L; pts.push(new THREE.Vector2(AX_R + (0.2-AX_R)*sm(edge/0.07), u*L)); }
+  const g = new THREE.LatheGeometry(pts, 40); g.rotateZ(-Math.PI/2); g.translate(a, 0, 0);
+  const m = new THREE.Mesh(g, myelinMats[k]); scene.add(m); partMeshes.myelin.push(m);
+  m.userData.base = {x:a, L};
+  return m;
+});
+/* node rings */
+const nodeRings = NODES_X.slice(1).map(x => {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(AX_R + 0.012, 0.016, 10, 40), mat.nodes.clone());
+  m.rotation.y = Math.PI/2; m.position.set(x, 0, 0); scene.add(m); partMeshes.nodes.push(m); return m;
+});
+
+/* ---- terminals and the next neuron ---- */
+(function(){
+  const mk = (to, r) => {
+    const {g} = taperedTube([new THREE.Vector3(X_AX1-0.02,0,0), new THREE.Vector3(X_AX1+0.25, to.y*0.4, to.z*0.4), to.clone().add(new THREE.Vector3(-0.12,0,0))], AX_R*0.9, 0.05, 10);
+    const t = new THREE.Mesh(g, mat.terminals); scene.add(t); partMeshes.terminals.push(t);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 30), mat.terminals); b.position.copy(to); scene.add(b); partMeshes.terminals.push(b);
+    return b;
+  };
+  mk(new THREE.Vector3(4.3, 0.55, 0.15), 0.12); mk(new THREE.Vector3(4.3, -0.55, -0.15), 0.12);
+  const main = mk(BOUTON.clone(), BOUTON_R); main.userData.main = true;
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(POST_R, POST_R, 2.6, 40), mat.post);
+  post.position.set(POST_X, -0.1, 0); post.rotation.z = 0.08; scene.add(post); partMeshes.synapse.push(post);
+})();
+
+/* ---- synapse close-up parts (inside the main bouton) ---- */
+const syn = {vesicles:[], docked:[], snare:[], ca:[], nt:[], receptors:[]};
+const vesMat = new THREE.MeshStandardMaterial({color:0xffe3ef, emissive:0xff6fa5, emissiveIntensity:0.12, roughness:0.3, transparent:true, opacity:0.38, depthWrite:false});
+const ntDotGeo = new THREE.SphereGeometry(0.0055, 8, 6), ntDotMat = new THREE.MeshBasicMaterial({color:lin('#ff3d8b')});
+function fillVesicle(v){ for (let k=0;k<6;k++){ const d = new THREE.Mesh(ntDotGeo, ntDotMat); d.position.set((rnd()-0.5)*0.03, (rnd()-0.5)*0.03, (rnd()-0.5)*0.03); v.add(d); } }
+const FRONT = BOUTON.x + BOUTON_R; // inner face of the presynaptic membrane toward the cleft
+for (let i=0;i<20;i++){
+  const v = new THREE.Mesh(new THREE.SphereGeometry(0.028, 16, 12), vesMat);
+  const d = new THREE.Vector3(rnd()-0.6, rnd()-0.5, rnd()-0.5).normalize().multiplyScalar(0.06 + rnd()*0.09);
+  v.position.copy(BOUTON).add(d); fillVesicle(v); scene.add(v); syn.vesicles.push(v); partMeshes.vesicles.push(v);
+}
+const dockSpots = [[0.07,0.05],[-0.06,0.03],[0.0,-0.07]];
+dockSpots.forEach(([y,z]) => {
+  const home = new THREE.Vector3(FRONT - 0.075, y, z);
+  const v = new THREE.Mesh(new THREE.SphereGeometry(0.03, 20, 14), vesMat.clone()); v.position.copy(home); fillVesicle(v); scene.add(v);
+  partMeshes.vesicles.push(v);
+  const mkLine = col => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(40*3),3));
+    const l = new THREE.Line(g, new THREE.LineBasicMaterial({color:col})); scene.add(l); return l; };
+  syn.docked.push({mesh:v, home, a:mkLine(0xffb547), b:mkLine(0x7ad7ff), c:mkLine(0x9dffb0)});
+});
+const ionGeo = new THREE.SphereGeometry(1, 10, 8);
+const caMesh = new THREE.InstancedMesh(ionGeo, new THREE.MeshBasicMaterial({color:lin('#5fe0a3')}), 14); scene.add(caMesh);
+const ntMesh = new THREE.InstancedMesh(ionGeo, new THREE.MeshBasicMaterial({color:lin('#ff6fa5')}), 60); scene.add(ntMesh);
+const recMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.009, 0.009, 0.022, 8), new THREE.MeshStandardMaterial({color:0x9c8bd6, emissive:0xff6fa5, emissiveIntensity:0}), 9);
+scene.add(recMesh);
+const recPos = [];
+(function(){ const m = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), Math.PI/2); let k=0;
+  for (let a=-1;a<=1;a++) for (let b=-1;b<=1;b++){ const p = new THREE.Vector3(POST_X - POST_R + 0.01, a*0.06 - 0.005, b*0.06); recPos.push(p); m.compose(p, q, new THREE.Vector3(1,1,1)); recMesh.setMatrixAt(k++, m); }
+})();
+const caSeeds = Array.from({length:14}, () => [rnd()*Math.PI*2, (rnd()-0.5)*0.14, rnd()]);
+const ntSeeds = Array.from({length:60}, () => [rnd()-0.5, rnd()-0.5, rnd(), Math.floor(rnd()*3)]);
+
+/* ---- Na⁺ / K⁺ ions around active sites ---- */
+const NA_PER = 12, K_PER = 7;
+const UNMY_SITES = Array.from({length:14}, (_,i) => lerp(X_AX0 + 0.15, X_AX1 - 0.15, i/13));
+const MAX_SITES = Math.max(NODES_X.length, UNMY_SITES.length) + 1;
+const naMesh = new THREE.InstancedMesh(ionGeo, new THREE.MeshBasicMaterial({color:lin('#ffb547')}), MAX_SITES*NA_PER); scene.add(naMesh);
+const kMesh = new THREE.InstancedMesh(ionGeo, new THREE.MeshBasicMaterial({color:lin('#a58bff')}), MAX_SITES*K_PER); scene.add(kMesh);
+const ionSeeds = Array.from({length:MAX_SITES*NA_PER}, () => [rnd()*Math.PI*2, (rnd()-0.5)*0.12, rnd()]);
+
+/* ---- optogenetics light ---- */
+const lightCone = new THREE.Mesh(new THREE.ConeGeometry(0.75, 2.6, 40, 1, true),
+  new THREE.MeshBasicMaterial({color:lin('#7ad7ff'), transparent:true, opacity:0, side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending}));
+lightCone.position.set(SOMA.x, 1.55, 0); scene.add(lightCone);
+const chr2 = new THREE.InstancedMesh(new THREE.SphereGeometry(0.022, 8, 6), new THREE.MeshBasicMaterial({color:lin('#7ad7ff')}), 40); scene.add(chr2);
+(function(){ const m = new THREE.Matrix4(); for (let i=0;i<40;i++){ const n = new THREE.Vector3(rnd()-0.5, rnd()*0.9+0.1, rnd()-0.5).normalize();
+  m.makeTranslation(SOMA.x + n.x*SOMA_R*1.02, n.y*SOMA_R*1.02, n.z*SOMA_R*1.02); chr2.setMatrixAt(i, m); } chr2.visible = false; })();
+
+/* ============ Simulation ============ */
+const S = { t:0, base:-70, stim:0, aps:[], lastAP:-99, myelin:true, ms:false, sev:'mild', opto:false, ttx:false, zoom:false, labels:true, nextOpto:0, part:null, trace:[] };
+const DAMAGED = [2, 5]; // internodes hit by MS
+const HOP = 0.11, UNMY_SPEED = (X_AX1 - X_AX0) / 3.2;
+
+function apV(phi, base){
+  if (phi < 0) return base;
+  if (phi < 0.22) return -55 + 95*sm(phi/0.22);
+  if (phi < 0.7) return 40 - 120*sm((phi-0.22)/0.48);
+  if (phi < 1.6){ const u = (phi-0.7)/0.9; return -80 + (base+80)*(1-Math.exp(-4*u))/(1-Math.exp(-4)); }
+  return base;
+}
+function makeArrivals(cfg){
+  // arrival time (s after hillock spike) at each node, or Infinity if blocked
+  const arr = [0]; let blocked = false;
+  for (let k=0;k<N_INT;k++){
+    let hop = HOP;
+    if (cfg.ms && DAMAGED.includes(k)){ if (cfg.sev === 'severe' && k === DAMAGED[1]) blocked = true; else hop = 0.6; }
+    arr.push(blocked ? Infinity : arr[k] + hop);
+  }
+  return arr;
+}
+function arrivalAt(x, ap){
+  if (x <= X_AX0 + 0.02) return 0;
+  if (!ap.cfg.myelin) return (x - X_AX0) / UNMY_SPEED;
+  if (x <= NODES_X[0]) return 0;
+  for (let k=0;k<N_INT;k++){
+    const x0 = NODES_X[k], x1 = NODES_X[k+1];
+    if (x <= x1){ const a0 = ap.arr[k], a1 = ap.arr[k+1]; if (!isFinite(a0)) return Infinity; if (!isFinite(a1)) return (x - x0) < 0.25*(x1-x0) ? a0 + 0.05 : Infinity; return a0 + (a1-a0)*(x-x0)/(x1-x0); }
+  }
+  return ap.arr[N_INT] + (x - NODES_X[N_INT]) / 4;
+}
+const terminalArrival = ap => ap.cfg.myelin ? (isFinite(ap.arr[N_INT]) ? ap.arr[N_INT] + 0.08 : Infinity) : (X_AX1 - X_AX0)/UNMY_SPEED + 0.08;
+function localV(x){
+  // voltage at axon position x from the most recent action potential that has reached it
+  let best = null, phiBest = 0;
+  for (const ap of S.aps){
+    const a = arrivalAt(x, ap); if (!isFinite(a)) continue;
+    const phi = S.t - ap.t0 - a;
+    if (phi > -0.08 && (best === null || ap.t0 > best.t0)){ best = ap; phiBest = phi; }
+  }
+  if (!best) return -70;
+  if (best.cfg.myelin && best.cfg.ms){
+    // in damaged stretches the current leaks away: weaker colour there
+  }
+  if (phiBest < 0) return -70 + 15*(1 + phiBest/0.08);
+  return apV(phiBest, -70);
+}
+function fire(){
+  if (S.ttx) return false;
+  S.aps.push({t0:S.t, cfg:{myelin:S.myelin, ms:S.ms, sev:S.sev}, arr:makeArrivals({myelin:S.myelin, ms:S.ms, sev:S.sev}), released:false});
+  S.lastAP = S.t;
+  if (S.aps.length > 6) S.aps.shift();
+  return true;
+}
+function hillockState(){
+  const phi = S.t - S.lastAP;
+  const base = S.base + S.stim;
+  if (phi >= 0 && phi < 1.6 && !S.ttx) return {V: apV(phi, base), phi};
+  return {V: base, phi: 99};
+}
+
+/* ============ Camera ============ */
+const VIEW = { home:{pos:[0.1, 2.2, 13.8], target:[0.1, -0.15, 0]},
+  dendrites:{pos:[-4.2,0.9,3.2], target:[-3.6,0,0]}, soma:{pos:[-3.0,0.6,2.2], target:[-3.1,0,0]}, hillock:{pos:[-2.4,0.4,1.4], target:[-2.45,0,0]},
+  axon:{pos:[0.6,1.0,5.6], target:[0.6,0,0]}, myelin:{pos:[0.2,0.5,1.9], target:[0.0,0,0]}, nodes:{pos:[1.1,0.3,1.0], target:[1.05,0,0]},
+  terminals:{pos:[4.3,0.6,2.2], target:[4.35,0,0]}, vesicles:{pos:[4.85,0.3,1.15], target:[4.6,0,0]}, synapse:{pos:[5.0,0.3,1.2], target:[4.72,0,0]},
+  zoom:{pos:[4.95,0.22,1.25], target:[4.74,0,0]}, opto:{pos:[-2.2,1.6,4.6], target:[-2.6,0.5,0]} };
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+function flyTo(name){
+  const v = VIEW[name]; const t = new THREE.Vector3(...v.target); const p = new THREE.Vector3(...v.pos);
+  if (isNarrow()) p.sub(t).multiplyScalar(name==='home' ? 2.1 : 1.25).add(t);
+  tween = {from:camera.position.clone(), to:p, tf:controls.target.clone(), tt:t, t0:performance.now(), dur:1200};
+}
+controls.addEventListener('start', () => { tween = null; });
+function resize(){
+  const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.3), w, h);
+  else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), Math.round(h*0.1), w, h);
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+/* ============ Labels on the neuron ============ */
+const labelsEl = $('#labels');
+const LABELS = [
+  ['dendrites','Dendrites',[-4.15,1.0,0]], ['soma','Cell body',[-3.1,0.78,0]], ['hillock','Axon hillock',[-2.42,0.32,0]],
+  ['myelin','Myelin',[internodes[1][0]+INT_L/2,0.3,0]], ['nodes','Node of Ranvier',[NODES_X[3],-0.24,0]], ['axon','Axon',[NODES_X[5],0.24,0]],
+  ['terminals','Synaptic terminals',[4.3,0.8,0]], ['synapse','Next neuron',[POST_X,1.2,0]]
+].map(([id,text,p]) => { const el = document.createElement('div'); el.className='plabel'; el.textContent=text; labelsEl.appendChild(el); return {id, el, world:new THREE.Vector3(...p)}; });
+const ZLABELS = [
+  ['Synaptic vesicles',[BOUTON.x-0.02,0.15,0]], ['SNARE proteins',[FRONT-0.04,-0.12,0]], ['Ca²⁺ enters',[FRONT+0.02,0.17,0]],
+  ['Synaptic cleft',[FRONT+0.04,-0.24,0]], ['Receptors',[POST_X-POST_R,0.2,0]]
+].map(([text,p]) => { const el = document.createElement('div'); el.className='plabel ion'; el.textContent=text; labelsEl.appendChild(el); return {el, world:new THREE.Vector3(...p)}; });
+function place(el, world){
+  const v = world.clone().project(camera);
+  el.style.transform = `translate(${((v.x+1)/2*innerWidth).toFixed(1)}px,${((1-v.y)/2*innerHeight).toFixed(1)}px) translate(-50%,-140%)`;
+  el.style.visibility = (v.z < 1 && v.z > -1) ? 'visible' : 'hidden';
+}
+
+/* ============ Picking parts ============ */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const meshToPart = new Map(); Object.entries(partMeshes).forEach(([k, arr]) => Array.isArray(arr) && arr.forEach(m => meshToPart.set(m, k)));
+function pickPart(ev){
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((ev.clientX-r.left)/r.width)*2-1, -((ev.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc, camera);
+  if (SCENE === 'bump'){ const h = ray.intersectObjects(bumpGroup.children, true)[0]; if (!h) return null; const id = Object.keys(bumpData).find(k => { let o = h.object; while (o){ if (o === bumpData[k].group) return true; o = o.parent; } return false; }); return id ? 'bump:'+id : null; }
+  if (SCENE !== 'lab') return null;
+  const hit = ray.intersectObjects([...meshToPart.keys()].filter(m => m.visible), false)[0];
+  return hit ? meshToPart.get(hit.object) : null;
+}
+let downAt = null;
+renderer.domElement.addEventListener('pointermove', ev => renderer.domElement.classList.toggle('hovering', !!pickPart(ev)));
+renderer.domElement.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+renderer.domElement.addEventListener('pointerup', ev => {
+  if (!downAt) return; const moved = Math.hypot(ev.clientX-downAt[0], ev.clientY-downAt[1]); downAt = null;
+  if (moved > 6) return;
+  const p = pickPart(ev); if (!p) return; if (p.startsWith('bump:')) selectBump(p.slice(5)); else selectPart(p, false);
+});
+function selectPart(id, fly=true){
+  S.part = S.part === id ? null : id;
+  if (S.part && fly) flyTo(id);
+  panel.querySelectorAll('.part').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.part === S.part)));
+  if (S.part && !panel.querySelector('.parts')) { state.topic = 'parts'; renderPanel(); }
+  if (S.part === 'vesicles' || S.part === 'synapse') setZoom(true, false);
+}
+
+/* ============ Lab controls ============ */
+const slider = $('#vslider');
+slider.addEventListener('input', () => { S.base = +slider.value; });
+$('#fire').onclick = () => { S.stim += 26; };
+function setPressed(el, on){ el.setAttribute('aria-pressed', String(!!on)); }
+function toast(title, text, card, color){
+  const t = $('#toast');
+  if (!title){ t.hidden = true; return; }
+  t.style.setProperty('--c', color || 'var(--chalk)');
+  t.innerHTML = `<b>${esc(title)}</b>${esc(text)}${card ? `<br><button class="term" data-card="${card}" style="--c:${color}">Learn more</button>` : ''}`;
+  t.hidden = false; bindTerms(t);
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => { t.hidden = true; }, 9000);
+}
+function setMyelin(on){
+  S.myelin = on; setPressed($('#mMyel'), on); setPressed($('#mUnmyel'), !on);
+  toast(on ? 'Myelinated axon' : 'Unmyelinated axon', on ? 'The signal is regenerated only at the nodes of Ranvier: your skipping stone.' : 'Every patch of membrane fires in turn, all the way down: your dominoes. Notice how much slower it is.', 'saltatory', '#f3e5c8');
+  updateMimageText();
+}
+function setMS(on){
+  S.ms = on; setPressed($('#cMS'), on); $('#msSev').hidden = !on;
+  if (on){ if (!S.myelin) setMyelin(true); toast('Multiple sclerosis', S.sev==='mild' ? 'Two stretches of myelin are damaged. The signal slows down where the insulation is thin.' : 'Damage is severe: the signal leaks away and fails before reaching the terminal.', 'ms', '#ff8f8f'); }
+  else toast(null);
+  updateMimageText();
+}
+function setSev(sev){ S.sev = sev; setPressed($('#sevMild'), sev==='mild'); setPressed($('#sevSevere'), sev==='severe'); setMS(true); }
+function setOpto(on){
+  S.opto = on; setPressed($('#cOpto'), on); S.nextOpto = S.t + 0.4;
+  if (on) toast('Optogenetics', 'Blue light pulses open channelrhodopsin on the cell body. Positive ions rush in, and the neuron fires every time the light flashes.', 'optogenetics', '#7ad7ff'); else toast(null);
+}
+function setTTX(on){
+  S.ttx = on; setPressed($('#cTTX'), on);
+  if (on) toast('Tetrodotoxin (TTX)', 'Pufferfish toxin blocks voltage-gated Na⁺ channels. Push the slider past −55 mV: nothing fires.', 'ttx', '#ff7a59'); else toast(null);
+}
+function setZoom(on, fly=true){
+  S.zoom = on; setPressed($('#cZoom'), on);
+  if (fly) flyTo(on ? 'zoom' : 'home');
+  if (on) toast('Synapse close-up', 'Press Fire and watch: the action potential arrives, Ca²⁺ enters, SNARE proteins zip a vesicle to the membrane, and neurotransmitter crosses the cleft.', 'snare', '#ff6fa5');
+}
+$('#mMyel').onclick = () => setMyelin(true);
+$('#mUnmyel').onclick = () => { setMyelin(false); if (S.ms) { S.ms = false; setPressed($('#cMS'), false); $('#msSev').hidden = true; } };
+$('#cMS').onclick = () => setMS(!S.ms);
+$('#sevMild').onclick = () => setSev('mild');
+$('#sevSevere').onclick = () => setSev('severe');
+$('#cOpto').onclick = () => setOpto(!S.opto);
+$('#cTTX').onclick = () => setTTX(!S.ttx);
+$('#cZoom').onclick = () => setZoom(!S.zoom);
+$('#cLabels').onclick = () => { S.labels = !S.labels; setPressed($('#cLabels'), S.labels); };
+const ACTIONS = {
+  fire: () => { S.stim += 26; },
+  rest: () => { S.base = -70; slider.value = -70; S.stim = 0; },
+  ttx: () => setTTX(true), myelinated: () => setMyelin(true), unmyelinated: () => setMyelin(false),
+  ms: () => setMS(true), zoom: () => setZoom(true), opto: () => setOpto(true),
+  memK: () => { MEM.kOpen = !MEM.kOpen; memHud(); }, memNa: () => { MEM.naOpen = !MEM.naOpen; memHud(); }, memCl: () => { MEM.clOpen = !MEM.clOpen; memHud(); },
+  memThrow: () => memThrow(), memReset: () => memReset(), lab: () => { state.topic = 'ap'; renderPanel(); }
+};
+
+/* ============ Trace ============ */
+const trace = $('#trace'), tctx = trace.getContext('2d');
+function drawTrace(){
+  const W = trace.width, H = trace.height, win = 6;
+  const y = v => H - 14 - (v + 90) / 140 * (H - 28);
+  tctx.clearRect(0,0,W,H); tctx.fillStyle = '#0b0e14'; tctx.fillRect(0,0,W,H);
+  tctx.font = '20px IBM Plex Mono, monospace'; tctx.textAlign = 'right';
+  [[40,'+40','#3a4560'],[0,'0','#2a3246'],[-55,'−55 threshold','#f4d27a'],[-70,'−70 rest','#3c6fb8']].forEach(([v,lab,col]) => {
+    tctx.strokeStyle = col; tctx.lineWidth = v===-55 ? 2 : 1.2; tctx.setLineDash(v===-55 ? [8,8] : []);
+    tctx.beginPath(); tctx.moveTo(0, y(v)); tctx.lineTo(W, y(v)); tctx.stroke();
+    tctx.fillStyle = col === '#2a3246' ? '#59627a' : col; tctx.fillText(lab, W-8, y(v)-6);
+  });
+  tctx.setLineDash([]);
+  const pts = S.trace; if (pts.length < 2) return;
+  tctx.lineWidth = 4; tctx.lineJoin = 'round'; tctx.strokeStyle = '#ffd166';
+  tctx.beginPath();
+  pts.forEach(([t,v],i) => { const x = W * (1 - (S.t - t)/win); i ? tctx.lineTo(x, y(v)) : tctx.moveTo(x, y(v)); });
+  tctx.stroke();
+}
+
+/* ============ Mimage strip: dominoes vs skipping stone ============ */
+const mim = $('#mimCanvas'), mctx = mim.getContext('2d');
+function updateMimageText(){
+  $('#mimEyebrow').textContent = `Mimage · ${S.myelin ? 'myelinated' : 'unmyelinated'}`;
+  $('#mimTitle').textContent = S.myelin ? 'A skipping stone' : 'Dominoes';
+  $('#mimCap').textContent = !S.myelin ? 'Every piece of membrane has to fire to knock over the next one. Steady, but slow.'
+    : S.ms ? (S.sev === 'severe' ? 'With severe MS the stone loses its energy over a damaged stretch and sinks.' : 'Over the damaged stretches the stone drags through the water: the signal slows.')
+    : 'The signal touches down only at the nodes and skips the stretches between.';
+}
+function latestAP(){ return S.aps.length ? S.aps[S.aps.length-1] : null; }
+function drawMimage(){
+  const W = mim.width, H = mim.height; mctx.clearRect(0,0,W,H);
+  const ap = latestAP(), e = ap ? S.t - ap.t0 : -1;
+  const xOf = x => 30 + (x - X_AX0) / (X_AX1 - X_AX0) * (W - 60);
+  if (!S.myelin || (ap && !ap.cfg.myelin && e < 4)){
+    // dominoes
+    mctx.fillStyle = '#1a2030'; mctx.fillRect(0, H-34, W, 34);
+    const N = 18, total = ap ? (X_AX1 - X_AX0)/UNMY_SPEED : 0;
+    for (let i=0;i<N;i++){
+      const x = X_AX0 + (i+0.5)/N*(X_AX1 - X_AX0), px = xOf(x);
+      let f = 0;
+      if (ap && !ap.cfg.myelin){ const a = arrivalAt(x, ap); f = clamp((e - a)/0.14, 0, 1); if (e > total + 1.4) f = clamp(1 - (e - total - 1.4)/0.5, 0, 1); }
+      mctx.save(); mctx.translate(px + 9, H-34); mctx.rotate(f * 1.25);
+      mctx.fillStyle = f > 0 && f < 1 ? '#ffd166' : '#efe7d6'; mctx.fillRect(-9, -64, 13, 64);
+      mctx.fillStyle = '#0b0e14'; mctx.beginPath(); mctx.arc(-2.5, -46, 2.4, 0, 7); mctx.arc(-2.5, -20, 2.4, 0, 7); mctx.fill();
+      mctx.restore();
+    }
+    return;
+  }
+  // skipping stone over water
+  const water = H - 46;
+  const grd = mctx.createLinearGradient(0, water, 0, H); grd.addColorStop(0, '#1d4f80'); grd.addColorStop(1, '#0d2238');
+  mctx.fillStyle = grd; mctx.fillRect(0, water, W, H - water);
+  const touchX = NODES_X.map(xOf);
+  // damaged stretches drawn as murky water
+  if (S.ms) DAMAGED.forEach(k => { mctx.fillStyle = 'rgba(255,143,143,.22)'; mctx.fillRect(touchX[k], water, touchX[k+1]-touchX[k], H-water); });
+  let sx = touchX[0], sy = water - 6, sunk = false;
+  if (ap && ap.cfg.myelin && e >= 0){
+    const arr = ap.arr; let k = 0;
+    while (k < N_INT && isFinite(arr[k+1]) && e >= arr[k+1]) k++;
+    if (k < N_INT && isFinite(arr[k+1])){
+      const u = clamp((e - arr[k]) / (arr[k+1] - arr[k]), 0, 1), slow = (arr[k+1]-arr[k]) > HOP*1.5;
+      sx = lerp(touchX[k], touchX[k+1], u); sy = water - 6 - (slow ? 10 : 44) * Math.sin(Math.PI*u);
+    } else if (k < N_INT){ // blocked: sink
+      const u = clamp((e - arr[k]) / 0.6, 0, 1);
+      sx = lerp(touchX[k], (touchX[k]+touchX[k+1])/2, u); sy = water - 6 - 30*Math.sin(Math.PI*Math.min(u,0.5)) + (u > 0.5 ? (u-0.5)*60 : 0); sunk = u > 0.6;
+    } else { sx = touchX[N_INT]; sy = water - 6; }
+    // ripples
+    for (let j=0;j<=N_INT;j++){ if (!isFinite(arr[j])) break; const age = e - arr[j]; if (age < 0 || age > 1.2) continue;
+      mctx.strokeStyle = `rgba(173,216,255,${(1-age/1.2).toFixed(2)})`; mctx.lineWidth = 2;
+      mctx.beginPath(); mctx.ellipse(touchX[j], water, 6 + age*30, 3 + age*7, 0, 0, Math.PI*2); mctx.stroke(); }
+    if (e > (isFinite(arr[N_INT]) ? arr[N_INT] : 3) + 1.6){ sx = touchX[0]; sy = water - 6; sunk = false; }
+  }
+  // node markers
+  touchX.forEach(x => { mctx.fillStyle = 'rgba(255,181,71,.55)'; mctx.fillRect(x-1, water-2, 2, 6); });
+  if (!sunk){ mctx.fillStyle = '#c8ccd6'; mctx.beginPath(); mctx.ellipse(sx, sy, 13, 6, -0.15, 0, Math.PI*2); mctx.fill(); }
+  mctx.fillStyle = '#6e7689'; mctx.font = '18px IBM Plex Mono, monospace'; mctx.textAlign = 'left'; mctx.fillText('nodes = touch points', 12, 24);
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card'); let lastFocus = null;
+function rich(text){
+  return esc(text).replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (m,k,t) => CARDS[k] ? `<button class="term" data-card="${k}">${t}</button>` : t);
+}
+function openCard(key){
+  const c = CARDS[key]; if (!c) return;
+  lastFocus = document.activeElement;
+  const col = (TOPICS.find(t => t.id === state.topic) || {color:'#f4d27a'}).color;
+  const sheet = cardEl.querySelector('.card-sheet'); sheet.style.setProperty('--c', col);
+  const vis = (c.v||[]).map(v => `<figure class="figure"><img src="${v.img}" alt="${esc(c.title)}" class="zoomable"><figcaption>${esc(v.cap||'')}</figcaption></figure>`);
+  const body = c.body.map(p => `<p>${esc(p)}</p>`);
+  sheet.innerHTML = `<div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div><button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${[body[0], ...vis, ...body.slice(1)].join('')}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}</ol></details></div>`;
+  cardEl.hidden = false; sheet.scrollTop = 0;
+  sheet.querySelector('.close').onclick = closeCard;
+  sheet.querySelectorAll('.zoomable').forEach(im => im.onclick = () => openLightbox(im.src, im.alt));
+  sheet.querySelector('.close').focus();
+}
+function closeCard(){ cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+function openLightbox(src, alt){ const lb = $('#lightbox'); lb.querySelector('img').src = src; lb.querySelector('img').alt = alt || ''; lb.hidden = false; }
+$('#lightbox').onclick = () => { $('#lightbox').hidden = true; };
+
+/* ============ Panel ============ */
+const state = { topic:null };
+function renderBlock(b){
+  if (b.p) return `<p>${rich(b.p)}</p>`;
+  if (b.img) return `<figure class="figure${b.narrow?' narrow':''}"><img src="${b.img}" alt="${esc(b.cap||'')}" class="zoomable"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
+  if (b.list) return `<ol class="blist">${b.list.map(x => `<li>${rich(x)}</li>`).join('')}</ol>`;
+  if (b.mn) return `<div class="mn"><div class="mn-title">${esc(b.mn.title)}</div>${b.mn.rows.map(([L,w,mem,det,pick]) => {
+      const row = `<div class="mn-row"><span class="L">${esc(L)}</span><div><b>${esc(w)}</b><span class="mem">${esc(mem)}</span><span class="det">${rich(det)}</span></div></div>`;
+      return pick ? `<button class="mn-pick" data-pick="${pick}" aria-pressed="${bumpSel===pick}">${row}</button>` : row; }).join('')}${b.mn.hint?`<div class="mn-hint">${esc(b.mn.hint)}</div>`:''}</div>`;
+  if (b.try) return `<div class="tries">${b.try.map(([l,a]) => `<button class="try" data-act="${a}">▶ ${esc(l)}</button>`).join('')}</div>`;
+  if (b.case) return `<button class="case" data-card="${b.case.card}"><span class="eyebrow">${esc(b.case.title)}</span><span>${esc(b.case.text)}</span><span class="case-go">Open the case →</span></button>`;
+  if (b.parts) return `<ul class="parts">${PARTS.map(([id,name,desc]) => `<li><button class="part" data-part="${id}" aria-pressed="${S.part===id}"><b>${esc(name)}</b><span>${esc(desc)}</span></button></li>`).join('')}</ul>`;
+  if (b.pairs) return `<dl class="pairs">${b.pairs.map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${rich(v)}</dd></div>`).join('')}</dl>`;
+  if (b.go) return `<a class="go-card" href="${b.go[0]}"><span class="eyebrow">${esc(b.go[2]||'Open')}</span><b>${esc(b.go[1])}</b><span class="case-go">Open →</span></a>`;
+  if (b.qa) return `<div class="qa"><div class="q">${esc(b.qa.q)}</div><button class="btn small reveal-a">Show a way to think about it</button><div class="a" hidden>${esc(b.qa.a)}</div></div>`;
+  return '';
+}
+function renderPanel(){
+  const i = TOPICS.findIndex(t => t.id === state.topic);
+  if (i < 0){
+    panel.style.setProperty('--c', '#f4d27a');
+    panel.innerHTML = `
+      <div><div class="eyebrow">Unit · Neurons</div><h2>How a neuron fires</h2></div>
+      <p class="lead">The Neuron Lab is a working neuron. Drag the voltage slider or press Fire, switch between myelinated and unmyelinated axons, add multiple sclerosis, shine light on it, poison it with pufferfish toxin, or zoom into the synapse.</p>
+      <p class="lead">Your study notes are below. Tap any underlined term for a card with the details and sources.</p>
+      <figure class="video" data-yt="EnBmWx7Tl1w" data-title="Professor Freed explains neurons"><div class="video-frame"><a class="yt-card" href="https://www.youtube.com/watch?v=EnBmWx7Tl1w" target="_blank" rel="noopener"><span class="yt-play">▶</span><span class="yt-t">Watch on YouTube</span></a></div><figcaption><b>Watch first:</b> Professor Freed explains neurons. <a href="https://www.youtube.com/watch?v=EnBmWx7Tl1w" target="_blank" rel="noopener">Open on YouTube ↗</a></figcaption></figure>
+      <ul class="topic-list">${TOPICS.map(t => `<li><button class="topic-btn" style="--c:${t.color}" data-t="${t.id}"><span class="k">${esc(t.kicker)}</span><b>${esc(t.title)}</b></button></li>`).join('')}</ul>
+      <p class="note">Tip: tap a part of the neuron itself to see what it is.</p>`;
+    panel.querySelectorAll('.topic-btn').forEach(b => b.onclick = () => { state.topic = b.dataset.t; renderPanel(); panel.scrollTop = 0; });
+    if (typeof setScene === 'function') setScene('lab');
+    return;
+  }
+  const T = TOPICS[i];
+  panel.style.setProperty('--c', T.color);
+  panel.innerHTML = `
+    <button class="back" id="back">← All topics</button>
+    <div class="topic-head"><div class="eyebrow">${esc(T.kicker)}</div><h2>${esc(T.title)}</h2></div>
+    ${T.blocks.map(renderBlock).join('')}
+    <div class="pager">
+      <button class="btn" id="prevT" ${i===0?'disabled':''}>← ${i>0?esc(TOPICS[i-1].title):'Back'}</button>
+      <button class="btn primary" id="nextT">${i<TOPICS.length-1?esc(TOPICS[i+1].title)+' →':'All topics'}</button>
+    </div>`;
+  $('#back').onclick = () => { state.topic = null; renderPanel(); panel.scrollTop = 0; };
+  $('#prevT').onclick = () => { if (i>0){ state.topic = TOPICS[i-1].id; renderPanel(); panel.scrollTop = 0; } };
+  $('#nextT').onclick = () => { state.topic = i<TOPICS.length-1 ? TOPICS[i+1].id : null; renderPanel(); panel.scrollTop = 0; };
+  panel.querySelectorAll('.try').forEach(b => b.onclick = () => ACTIONS[b.dataset.act] && ACTIONS[b.dataset.act]());
+  panel.querySelectorAll('.part').forEach(b => b.onclick = () => selectPart(b.dataset.part));
+  panel.querySelectorAll('.mn-pick').forEach(b => b.onclick = e => { if (e.target.closest('.term')) return; selectBump(b.dataset.pick); });
+  panel.querySelectorAll('.case').forEach(c => c.onclick = () => openCard(c.dataset.card));
+  panel.querySelectorAll('.zoomable').forEach(im => im.onclick = () => openLightbox(im.src, im.alt));
+  panel.querySelectorAll('.reveal-a').forEach(b => b.onclick = () => { b.nextElementSibling.hidden = false; b.hidden = true; });
+  bindTerms(panel);
+  if (typeof setScene === 'function') setScene(TOPIC_SCENE[T.id] || 'lab');
+}
+addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ if (!$('#lightbox').hidden) $('#lightbox').hidden = true; else if (!cardEl.hidden) closeCard(); else if (S.zoom) setZoom(false); }
+});
+
+/* ============ Frame update ============ */
+const tmpC = new THREE.Color(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), V3 = new THREE.Vector3(), SC = new THREE.Vector3();
+const ringOf = axonX.map(x => Math.round((x - X_AX0) / (X_AX1 - X_AX0) * AX_SEG));
+const ringV = new Float32Array(AX_SEG + 1);
+let optoFlash = 0, last = 0;
+const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+function setIon(mesh, i, pos, s){ M4.compose(pos, Q, SC.set(s,s,s)); mesh.setMatrixAt(i, M4); }
+function phaseAt(x){
+  let best = null, phi = 99;
+  for (const ap of S.aps){ const a = arrivalAt(x, ap); if (!isFinite(a)) continue; const p = S.t - ap.t0 - a; if (p > -0.06 && (!best || ap.t0 > best.t0)){ best = ap; phi = p; } }
+  return phi;
+}
+function frame(now){
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - (last||now))/1000); last = now;
+  S.t += dt;
+  if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = ease(k); camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
+  controls.update();
+
+  // inputs
+  S.stim *= Math.exp(-dt/0.35);
+  if (S.opto && S.t >= S.nextOpto){ S.stim += 24; S.nextOpto = S.t + 1.9; optoFlash = 1; }
+  optoFlash *= Math.exp(-dt/0.25);
+  if (!S.ttx && S.base + S.stim >= -55 && S.t - S.lastAP > 1.45) fire();
+  const H = hillockState();
+  S.trace.push([S.t, H.V]); while (S.trace.length && S.trace[0][0] < S.t - 6.2) S.trace.shift();
+
+  // membrane colours
+  vColor(H.V, tmpC); mat.soma.color.copy(tmpC); mat.hillock.color.copy(tmpC);
+  vColor(lerp(-70, H.V, 0.55), tmpC); mat.dendrites.color.copy(tmpC);
+  for (let r=0;r<=AX_SEG;r++) ringV[r] = r < 6 ? H.V : localV(X_AX0 + r/AX_SEG*(X_AX1-X_AX0));
+  for (let i=0;i<ringOf.length;i++){ vColor(ringV[ringOf[i]], tmpC); axColors[i*3]=tmpC.r; axColors[i*3+1]=tmpC.g; axColors[i*3+2]=tmpC.b; }
+  axonGeo.attributes.color.needsUpdate = true;
+  const ap = latestAP(), tArr = ap ? terminalArrival(ap) : Infinity, psi = ap ? S.t - ap.t0 - tArr : -1;
+  vColor(isFinite(tArr) && psi > -0.05 ? apV(psi, -70) : -70, tmpC); mat.terminals.color.copy(tmpC);
+
+  // myelin + MS
+  myelin.forEach((m,k) => {
+    m.visible = S.myelin;
+    const dmg = S.ms && DAMAGED.includes(k), severe = dmg && S.sev === 'severe' && k === DAMAGED[1];
+    const s = dmg ? (severe ? 0.62 : 0.8) : 1;
+    m.scale.y += (s - m.scale.y)*0.1; m.scale.z = m.scale.y;
+    myelinMats[k].color.set(dmg ? (severe ? 0x9b8f8f : 0xcfc0b5) : 0xf1e6cf);
+    myelinMats[k].opacity = dmg ? (severe ? 0.55 : 0.8) : 1;
+  });
+  nodeRings.forEach((r,k) => { r.visible = S.myelin; const phi = phaseAt(NODES_X[k+1]); r.material.emissiveIntensity = (phi >= 0 && phi < 0.3) ? 1.6*(1 - phi/0.3) : 0; });
+
+  // ions
+  const sites = [X_AX0 - 0.1, ...(S.myelin ? NODES_X.slice(1) : UNMY_SITES)];
+  let ni = 0, ki = 0;
+  sites.forEach((x, j) => {
+    const phi = j === 0 ? (S.ttx ? 99 : S.t - S.lastAP) : phaseAt(x);
+    const rOut = j === 0 ? 0.42 : 0.34, rIn = j === 0 ? 0.08 : AX_R*0.4;
+    for (let i=0;i<NA_PER;i++){
+      const [th, dx, rr] = ionSeeds[(j*NA_PER + i) % ionSeeds.length]; const ang = th + S.t*0.25;
+      let r = rOut + rr*0.08, s = 0.013;
+      if (phi >= -0.04 && phi < 0.26){ r = lerp(rOut + rr*0.08, rIn, sm((phi+0.04)/0.3)); }
+      else if (phi >= 0.26 && phi < 1.9){ s = 0; }
+      V3.set(x + dx, Math.cos(ang)*r, Math.sin(ang)*r); setIon(naMesh, ni++, V3, s);
+    }
+    for (let i=0;i<K_PER;i++){
+      const [th, dx] = ionSeeds[(j*NA_PER + i + 5) % ionSeeds.length]; const ang = th + 1.3;
+      let s = 0, r = rIn;
+      if (phi >= 0.18 && phi < 0.9){ const u = sm((phi-0.18)/0.6); r = lerp(rIn, rOut + 0.04, u); s = 0.015; }
+      V3.set(x + dx*0.8, Math.cos(ang)*r, Math.sin(ang)*r); setIon(kMesh, ki++, V3, s);
+    }
+  });
+  for (; ni < naMesh.count; ni++) setIon(naMesh, ni, V3.set(0,0,0), 0);
+  for (; ki < kMesh.count; ki++) setIon(kMesh, ki, V3.set(0,0,0), 0);
+  naMesh.instanceMatrix.needsUpdate = true; kMesh.instanceMatrix.needsUpdate = true;
+
+  // synapse
+  const zoomed = S.zoom || S.part === 'vesicles' || S.part === 'synapse';
+  mat.terminals.opacity += ((zoomed ? 0.2 : 1) - mat.terminals.opacity)*0.12; mat.terminals.depthWrite = mat.terminals.opacity > 0.9;
+  mat.post.opacity += ((zoomed ? 0.45 : 0.85) - mat.post.opacity)*0.12;
+  syn.vesicles.forEach(v => v.visible = zoomed);
+  const s1 = isFinite(tArr) ? psi : -1;
+  const zip = s1 < 0 ? 0.15 : s1 < 0.25 ? 0.15 : s1 < 0.65 ? lerp(0.15, 1, sm((s1-0.25)/0.4)) : s1 < 2.6 ? 1 : 0.15;
+  const fuse = s1 >= 0.6 && s1 < 2.6 ? sm((s1-0.6)/0.25) : 0;
+  syn.docked.forEach((d, i) => {
+    const target = new THREE.Vector3(FRONT - 0.035, d.home.y, d.home.z);
+    d.mesh.position.lerpVectors(d.home, target, i === 0 ? sm(zip) : sm(zip)*0.4);
+    const sc = i === 0 ? 1 - 0.85*fuse : 1; d.mesh.scale.setScalar(Math.max(0.05, sc));
+    d.mesh.visible = zoomed && sc > 0.1;
+    const A = d.mesh.position.clone().add(new THREE.Vector3(0.026,0,0)), B = new THREE.Vector3(FRONT, d.home.y, d.home.z);
+    const axis = B.clone().sub(A), n1 = new THREE.Vector3(0,1,0), n2 = new THREE.Vector3(0,0,1);
+    const rad = lerp(0.014, 0.004, (i === 0 ? zip : zip*0.4));
+    [[d.a,0],[d.b,Math.PI],[d.c,Math.PI/2]].forEach(([line, ph], li) => {
+      const arr = line.geometry.attributes.position.array;
+      for (let k=0;k<40;k++){ const u = k/39, w = 6*Math.PI*u + ph + S.t*0.5, rr = rad*(li===2?0.7:1);
+        const p = A.clone().addScaledVector(axis, u).addScaledVector(n1, Math.cos(w)*rr).addScaledVector(n2, Math.sin(w)*rr);
+        arr[k*3]=p.x; arr[k*3+1]=p.y; arr[k*3+2]=p.z; }
+      line.geometry.attributes.position.needsUpdate = true; line.visible = zoomed && !(i === 0 && fuse > 0.8);
+    });
+  });
+  caMesh.visible = ntMesh.visible = recMesh.visible = zoomed;
+  caSeeds.forEach(([th, dy, r], i) => {
+    const u = s1 >= 0 && s1 < 2.6 ? sm(s1/0.4) : 0;
+    const dir = V3.set(0.55 + 0.45*Math.cos(th), 0.6*Math.sin(th) + dy*2, 0.6*Math.cos(th*1.7) ).normalize();
+    const wob = 0.012*Math.sin(S.t*1.5 + i);
+    const rad = lerp(BOUTON_R + 0.045 + r*0.04 + wob, BOUTON_R - 0.06, u);
+    V3.copy(dir).multiplyScalar(rad).add(BOUTON);
+    setIon(caMesh, i, V3, (u > 0.98 && s1 > 1.6) ? 0 : 0.012);
+  });
+  caMesh.instanceMatrix.needsUpdate = true;
+  ntSeeds.forEach(([a, b, sp, rk], i) => {
+    const start = syn.docked[0].home, end = recPos[(rk*3 + i) % 9];
+    const u = s1 >= 0.7 && s1 < 3.2 ? sm((s1 - 0.7)/(0.5 + sp*0.6)) : 0;
+    V3.set(lerp(FRONT + 0.005, end.x - 0.012, u), lerp(start.y + a*0.03, end.y + a*0.02, u), lerp(start.z + b*0.03, end.z + b*0.02, u));
+    setIon(ntMesh, i, V3, (s1 >= 0.7 && s1 < 3.2) ? 0.011 : 0);
+  });
+  ntMesh.instanceMatrix.needsUpdate = true;
+  recMesh.material.emissiveIntensity = s1 >= 1.0 && s1 < 3.0 ? 1.2*(1 - (s1-1.0)/2.0) : 0;
+  if (S.aps.length > 1 && S.t - S.aps[0].t0 > 8) S.aps.shift();
+
+  // optogenetics
+  lightCone.material.opacity = S.opto ? 0.07 + 0.22*optoFlash : 0; lightCone.visible = S.opto;
+  chr2.visible = S.opto; chr2.material.color.copy(lin('#7ad7ff')).multiplyScalar(0.5 + 1.2*optoFlash);
+
+  // part highlight
+  const pulse = 0.35 + 0.25*Math.sin(now/180);
+  const hl = (m, on) => { if (!m.emissive) return; m.emissive.set(on ? 0xf4d27a : 0x000000); m.emissiveIntensity = on ? pulse : 0; };
+  ['dendrites','soma','hillock','axon','terminals'].forEach(k => hl(mat[k], S.part === k));
+  myelinMats.forEach(m => hl(m, S.part === 'myelin'));
+  hl(mat.post, S.part === 'synapse');
+  if (S.part === 'nodes') nodeRings.forEach(r => { r.material.emissiveIntensity = Math.max(r.material.emissiveIntensity, pulse*2); });
+  vesMat.emissiveIntensity = S.part === 'vesicles' ? pulse*2 : 0.25;
+  if (S.part === 'axon') myelinMats.forEach(m => { m.opacity = Math.min(m.opacity, 0.35); });
+
+  if (SCENE === 'bump') updateBump(S.t); else if (SCENE === 'membrane') updateMembrane(dt, S.t);
+  renderer.render(scene, camera);
+  Object.entries(sceneLabels).forEach(([k, arr]) => arr.forEach(l => { const on = SCENE === k; l.el.style.opacity = on ? 1 : 0; if (on) place(l.el, l.world); }));
+
+  // HUD
+  const V = H.V, phi = H.phi;
+  $('#readout').innerHTML = `${V < 0 ? '−' : '+'}${Math.abs(Math.round(V))}<small>mV</small>`;
+  let ph;
+  if (S.ttx && S.base + S.stim >= -55) ph = '<b>Blocked by TTX.</b> Past threshold, but the Na⁺ channels can’t open, so no action potential.';
+  else if (phi < 0.22) ph = '<b>Rising phase.</b> Na⁺ channels open and sodium floods in.';
+  else if (phi < 0.7) ph = '<b>Falling phase.</b> Na⁺ channels inactivate; K⁺ flows out.';
+  else if (phi < 1.25) ph = '<b>Undershoot.</b> Briefly below rest. Refractory: the Na⁺ channels are still resetting.';
+  else if (phi < 1.6) ph = '<b>Recovering</b> back toward the slider voltage.';
+  else if (V > -68) ph = '<b>Graded depolarization.</b> Not at −55 mV yet, so it just fades.';
+  else if (V < -72) ph = '<b>Hyperpolarized.</b> Further from threshold: harder to fire.';
+  else ph = '<b>Resting.</b> K⁺ leak channels keep the inside negative.';
+  if ($('#phase').innerHTML !== ph) $('#phase').innerHTML = ph;
+  const naOpen = phi < 0.22, naIn = phi >= 0.22 && phi < 1.25;
+  $('#sOpen').classList.toggle('on', naOpen); $('#sInact').classList.toggle('on', naIn); $('#sClosed').classList.toggle('on', !naOpen && !naIn);
+  $('#sK').classList.toggle('on', phi >= 0.18 && phi < 1.0);
+  drawTrace(); drawMimage();
+
+  const showLabels = S.labels && !zoomed && SCENE === 'lab';
+  LABELS.forEach(l => { const vis = showLabels || S.part === l.id; l.el.style.opacity = vis ? 1 : 0; l.el.classList.toggle('hot', S.part === l.id);
+    if (l.id === 'myelin' || l.id === 'nodes') l.el.style.opacity = vis && S.myelin ? 1 : 0; if (vis) place(l.el, l.world); });
+  LABELS.forEach(l => { if (SCENE !== 'lab' && S.part !== l.id) l.el.style.opacity = 0; });
+  ZLABELS.forEach(l => { l.el.style.opacity = zoomed && S.labels && SCENE === 'lab' ? 1 : 0; if (zoomed) place(l.el, l.world); });
+}
+
+
+/* ============ Scenes: lab · BUMP · membrane ============ */
+const labGroup = new THREE.Group();
+scene.children.slice().forEach(o => { if (o !== camera && !o.isLight) labGroup.add(o); });
+scene.add(labGroup);
+const bumpGroup = new THREE.Group(), memGroup = new THREE.Group();
+bumpGroup.visible = memGroup.visible = false; scene.add(bumpGroup); scene.add(memGroup);
+let SCENE = 'lab';
+const sceneLabels = {bump:[], membrane:[]};
+function mkLabel(sceneName, html, world, cls=''){
+  const el = document.createElement('div'); el.className = 'plabel ' + cls; el.innerHTML = html; labelsEl.appendChild(el);
+  el.style.opacity = 0; const l = {el, world}; sceneLabels[sceneName].push(l); return l;
+}
+
+/* ---------- BUMP: four neuron shapes ---------- */
+const BUMP_TYPES = [
+  {id:'B', name:'Bipolar', mem:'Behold and Breathe', color:'#7ad7ff', x:-7.6},
+  {id:'U', name:'Unipolar', mem:'Uncommon in Us', color:'#a3abbc', x:-2.55},
+  {id:'M', name:'Multipolar', mem:'Most common: Movement & Mental', color:'#ffd166', x:2.55},
+  {id:'P', name:'Pseudounipolar', mem:'Pain from the Periphery', color:'#ff8f6b', x:7.6}
+];
+const bumpData = {};
+const V = (x,y,z=0) => new THREE.Vector3(x,y,z);
+BUMP_TYPES.forEach(T => {
+  const g = new THREE.Group(); g.position.x = T.x; bumpGroup.add(g);
+  const m = new THREE.MeshStandardMaterial({color:lin(T.color), roughness:0.5, emissive:lin(T.color), emissiveIntensity:0.05});
+  const tube = (pts, r0, r1) => { const {g:geo, curve} = taperedTube(pts, r0, r1, 10); g.add(new THREE.Mesh(geo, m)); return curve; };
+  const soma = (p, r, sx=1) => { const s = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 30), m); s.position.copy(p); s.scale.x = sx; g.add(s); };
+  const bulb = p => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 14), m); b.position.copy(p); g.add(b); };
+  const tips = (from, list, r=0.03) => list.map(to => tube([from, from.clone().lerp(to,0.5).add(V(0,(to.y-from.y)*0.15,0)), to], r, r*0.5));
+  const flows = []; // each flow = list of curves travelled in order (a curve can be reversed)
+  if (T.id === 'B'){
+    soma(V(0,0), 0.3, 1.35);
+    const d = tube([V(-0.38,0),V(-1.0,0.06),V(-1.5,0.02)], 0.06, 0.04);
+    const dt = tips(V(-1.5,0.02), [V(-2.0,0.45),V(-2.1,0.02),V(-1.95,-0.4)]);
+    const a = tube([V(0.38,0),V(1.1,-0.05),V(1.6,0)], 0.05, 0.04);
+    const at = tips(V(1.6,0), [V(2.05,0.32),V(2.1,0),V(2.0,-0.3)], 0.03);
+    [V(2.05,0.32),V(2.1,0),V(2.0,-0.3)].forEach(bulb);
+    flows.push([[dt[0],-1],[d,-1],[a,1],[at[1],1]]);
+  } else if (T.id === 'U'){
+    soma(V(-1.7,0.55), 0.32);
+    const stem = tube([V(-1.5,0.33),V(-1.1,0.05),V(-0.5,0)], 0.06, 0.05);
+    const proc = tube([V(-0.5,0),V(0.6,0),V(1.6,0)], 0.05, 0.045);
+    const br = tips(V(-0.3,0), [V(-0.6,-0.6),V(0.1,-0.65)], 0.03).concat(tips(V(0.3,0), [V(0.5,0.6)], 0.03));
+    const at = tips(V(1.6,0), [V(2.05,0.3),V(2.1,0),V(2.0,-0.3)], 0.03);
+    [V(2.05,0.3),V(2.1,0),V(2.0,-0.3)].forEach(bulb);
+    flows.push([[br[0],-1],[proc,1],[at[1],1]]);
+  } else if (T.id === 'M'){
+    soma(V(-0.9,0), 0.4);
+    const dends = [[-1.6,0.9],[-2.1,0.2],[-1.9,-0.7],[-1.0,1.1],[-0.9,-1.1],[-1.6,-1.2],[-1.5,1.35]].map(([x,y]) => {
+      const to = V(x,y), from = V(-0.9,0).add(to.clone().sub(V(-0.9,0)).normalize().multiplyScalar(0.36));
+      const c = tube([from, from.clone().lerp(to,0.5).add(V(0.05,0.05,0.1)), to], 0.06, 0.035);
+      tips(to, [to.clone().add(V(-0.3,0.25)), to.clone().add(V(-0.2,-0.3))], 0.025); return c; });
+    const ax = tube([V(-0.5,0),V(0.6,-0.04),V(1.7,0)], 0.055, 0.045);
+    const at = tips(V(1.7,0), [V(2.15,0.32),V(2.2,0),V(2.1,-0.32)], 0.03);
+    [V(2.15,0.32),V(2.2,0),V(2.1,-0.32)].forEach(bulb);
+    flows.push([[dends[1],-1],[ax,1],[at[1],1]]); flows.push([[dends[0],-1],[ax,1],[at[0],1]]); flows.push([[dends[2],-1],[ax,1],[at[2],1]]);
+  } else {
+    soma(V(0,0.95), 0.32);
+    tube([V(0,0.63),V(0.02,0.3),V(0,0.02)], 0.06, 0.05);
+    const per = tube([V(0,0),V(-1.1,0.02),V(-1.9,0)], 0.05, 0.045);
+    const skin = tips(V(-1.9,0), [V(-2.3,0.35),V(-2.4,0),V(-2.25,-0.35)], 0.025);
+    const cen = tube([V(0,0),V(1.0,-0.02),V(1.75,0)], 0.05, 0.045);
+    const at = tips(V(1.75,0), [V(2.15,0.3),V(2.2,0),V(2.1,-0.3)], 0.03);
+    [V(2.15,0.3),V(2.2,0),V(2.1,-0.3)].forEach(bulb);
+    const skinBox = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.3, 0.8), new THREE.MeshStandardMaterial({color:0xd8a58f, roughness:0.8, transparent:true, opacity:0.5}));
+    skinBox.position.set(-2.55, 0, 0); g.add(skinBox);
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.6, 30), new THREE.MeshStandardMaterial({color:0x8e8aa6, roughness:0.7, transparent:true, opacity:0.35}));
+    cord.position.set(2.75, 0, 0); g.add(cord);
+    flows.push([[skin[1],-1],[per,-1],[cen,1],[at[1],1]]);
+  }
+  // signal pulses
+  const pulseMat = new THREE.MeshBasicMaterial({color:lin('#fff3c4')});
+  const pulses = flows.map(() => { const p = new THREE.Mesh(new THREE.SphereGeometry(0.075, 16, 12), pulseMat); g.add(p); return p; });
+  bumpData[T.id] = {group:g, mat:m, flows, pulses, T};
+  mkLabel('bump', `<span style="color:${T.color};font-family:var(--f-display);font-size:22px">${T.id}</span> ${esc(T.name)}`, V(T.x, 1.85), 'big');
+  mkLabel('bump', `“${esc(T.mem)}”`, V(T.x, -1.55), 'ion');
+});
+mkLabel('bump', 'skin', V(7.6-2.55, -0.85), 'ion'); mkLabel('bump', 'spinal cord', V(7.6+2.75, -1.0), 'ion');
+mkLabel('bump', 'cell body sits off to the side', V(7.6, 1.45), 'ion');
+let bumpSel = null;
+function curvePoint(curve, dir, u){ return curve.getPointAt(dir > 0 ? u : 1-u); }
+function updateBump(t){
+  Object.values(bumpData).forEach(d => {
+    const on = !bumpSel || bumpSel === d.T.id;
+    d.mat.emissiveIntensity = bumpSel === d.T.id ? 0.25 + 0.15*Math.sin(t*4) : 0.05;
+    d.mat.opacity = on ? 1 : 0.25; d.mat.transparent = !on;
+    d.flows.forEach((flow, fi) => {
+      const dur = flow.length * 0.6, u = ((t*0.9 + fi*0.7) % (dur + 0.6)) / dur;
+      const p = d.pulses[fi];
+      if (u > 1){ p.visible = false; return; }
+      p.visible = on; const seg = Math.min(flow.length-1, Math.floor(u*flow.length)), local = u*flow.length - seg;
+      p.position.copy(curvePoint(flow[seg][0], flow[seg][1], clamp(local,0,1)));
+    });
+  });
+}
+function selectBump(id){
+  bumpSel = bumpSel === id ? null : id;
+  if (bumpSel){ const x = bumpData[id].T.x; flyToPos([x+0.3, 1.0, 9.5], [x, 0, 0]); } else flyTo('bump');
+  panel.querySelectorAll('.mn-pick').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === bumpSel)));
+  document.querySelectorAll('#bumpHud [data-pick]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.pick === bumpSel)));
+}
+
+/* ---------- Membrane patch ---------- */
+const MEM = { V:-70, kOpen:false, naOpen:false, kOut:0, naIn:0, lastPass:0 };
+const KCH = V(-2.5, 0, 0.1), NACH = V(2.5, 0, 0.1), CLCH = V(0, 0, 0.1);
+(function(){
+  const headGeo = new THREE.SphereGeometry(0.13, 14, 10), tailGeo = new THREE.CylinderGeometry(0.028, 0.028, 0.3, 6);
+  const spots = [];
+  for (let i=0;i<26;i++) for (let j=0;j<9;j++){
+    const x = -4 + i*0.32 + (j%2)*0.16, z = -2.6 + j*0.32; // cutaway: only the back half, so the channels show in cross-section
+    if ([KCH, NACH, CLCH].some(c => Math.hypot(x-c.x, z-c.z) < 0.62)) continue;
+    spots.push([x, z]);
+  }
+  const heads = new THREE.InstancedMesh(headGeo, new THREE.MeshStandardMaterial({color:lin('#ff9a8f'), roughness:0.45}), spots.length*2);
+  const tails = new THREE.InstancedMesh(tailGeo, new THREE.MeshStandardMaterial({color:lin('#f3e5c8'), roughness:0.6}), spots.length*4);
+  const m = new THREE.Matrix4(); let h = 0, k = 0;
+  spots.forEach(([x,z]) => [1,-1].forEach(side => {
+    m.makeTranslation(x, side*0.48, z); heads.setMatrixAt(h++, m);
+    [-0.05, 0.05].forEach(dx => { m.makeTranslation(x+dx, side*0.24, z); tails.setMatrixAt(k++, m); });
+  }));
+  memGroup.add(heads); memGroup.add(tails);
+  const chan = (pos, col) => {
+    const grp = new THREE.Group(); grp.position.copy(pos); memGroup.add(grp);
+    const cm = new THREE.MeshStandardMaterial({color:lin(col), roughness:0.45, transparent:true, opacity:0.55, depthWrite:false});
+    for (let s=0;s<5;s++){ const a = s/5*Math.PI*2; const c = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 1.35, 20), cm); c.position.set(Math.cos(a)*0.4, 0, Math.sin(a)*0.4); grp.add(c); }
+    const gate = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.07, 24), new THREE.MeshStandardMaterial({color:lin(col), emissive:lin(col), emissiveIntensity:0.3, transparent:true, opacity:0.85})); gate.position.y = 0.72; grp.add(gate);
+    return {grp, gate};
+  };
+  MEM.k = chan(KCH, '#a58bff'); MEM.na = chan(NACH, '#ffb547'); MEM.cl = chan(CLCH, '#5ed37a');
+})();
+const memIons = [];
+(function(){
+  const add = (type, n, outside, color, r) => {
+    const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 12, 10), new THREE.MeshStandardMaterial({color:lin(color), emissive:lin(color), emissiveIntensity:0.25, roughness:0.4}), n);
+    memGroup.add(mesh);
+    const list = Array.from({length:n}, () => ({p:V((rnd()-0.5)*7.4, (outside?1:-1)*(0.85 + rnd()*1.6), (rnd()-0.5)*4.4), v:V(rnd()-0.5, rnd()-0.5, rnd()-0.5).multiplyScalar(0.6), side:outside?1:-1, home:outside?1:-1, cross:null}));
+    memIons.push({type, mesh, list, r});
+  };
+  add('Na', 40, true, '#ffb547', 0.1); add('Na', 4, false, '#ffb547', 0.1);
+  add('K', 34, false, '#a58bff', 0.1); add('K', 8, true, '#a58bff', 0.1);
+  add('Cl', 30, true, '#9be38f', 0.1); add('A', 12, false, '#6f86b8', 0.15);
+  add('gas', 12, true, '#e9eef7', 0.06);
+})();
+mkLabel('membrane', 'Outside the cell', V(-3.4, 1.7, 2.2), 'ion'); mkLabel('membrane', 'Inside the cell', V(-3.4, -1.7, 2.2), 'ion');
+mkLabel('membrane', 'Phospholipid bilayer: a wall of fat (cut away)', V(1.3, -1.6, 1.2));
+mkLabel('membrane', 'K⁺ channel', V(KCH.x, 1.2, KCH.z)); mkLabel('membrane', 'Cl⁻ channel', V(CLCH.x, 1.2, CLCH.z)); mkLabel('membrane', 'Na⁺ channel', V(NACH.x, 1.2, NACH.z));
+const memReadout = {el:document.createElement('div')};
+function memReset(){
+  MEM.kOpen = MEM.naOpen = MEM.clOpen = false; MEM.kOut = MEM.naIn = MEM.clIn = 0; MEM.V = -70;
+  memIons.forEach(g => g.list.forEach(o => { o.cross = null; o.side = o.home; o.p.set((rnd()-0.5)*7.4, o.side*(0.85 + rnd()*1.6), (rnd()-0.5)*4.4); }));
+  memHud();
+}
+function memThrow(){
+  memIons.filter(g => g.type==='Na' && g.list[0].home > 0).forEach(g => g.list.slice(0,8).forEach(o => { if (!o.cross) if (o.side > 0) o.v.set((rnd()-0.5)*0.4, -3.2, (rnd()-0.5)*0.4); }));
+  memToast('Bounced!', 'Ions are charged, so they can’t dissolve into the fatty middle of the membrane. They only cross through protein channels. Small uncharged molecules like O₂ and CO₂ slip right through.');
+}
+function memHud(){
+  const v = Math.round(MEM.V);
+  const ro = $('#memV'); if (ro) ro.innerHTML = `${v < 0 ? '−' : v > 0 ? '+' : ''}${Math.abs(v)}<small>mV</small>`;
+  const st = $('#memState'); if (!st) return;
+  st.innerHTML = MEM.clOpen && !MEM.naOpen ? '<b>Cl⁻ flows in.</b> Chloride (green) is crowded outside. When its channel opens, negative charge enters and the inside gets more negative, further from −55 mV. That’s inhibition: it’s how GABA calms a neuron down.'
+    : MEM.naOpen && MEM.clOpen ? '<b>Tug of war.</b> Na⁺ pushes the inside positive while Cl⁻ pulls it back negative. Open chloride channels make it harder for the neuron to reach threshold.'
+    : MEM.naOpen ? '<b>Na⁺ floods in.</b> Yellow Na⁺ rushes through the open channel. Positive charge enters and the inside swings toward +40 mV: the rising phase of an action potential.'
+    : MEM.kOpen ? '<b>Hyperpolarization.</b> With extra K⁺ channels open, more positive charge leaks out, so the inside drops below rest, toward about −90 mV. That makes the neuron harder to fire.'
+    : '<b>Resting at −70 mV.</b> K⁺ leak channels have already let some K⁺ out, leaving the inside negative. Na⁺ is crowded outside, K⁺ inside, and the fatty bilayer keeps them apart.';
+  $('#memK').setAttribute('aria-pressed', String(MEM.kOpen)); $('#memCl').setAttribute('aria-pressed', String(!!MEM.clOpen)); $('#memNa').setAttribute('aria-pressed', String(MEM.naOpen));
+}
+function memToast(title, text){ toast(title, text, 'permeable', '#36c3a5'); }
+function updateMembrane(dt, t){
+  // channel gates slide open
+  [[MEM.k, MEM.kOpen],[MEM.na, MEM.naOpen],[MEM.cl, MEM.clOpen]].forEach(([c, open]) => { c.gate.position.x += ((open ? 0.55 : 0) - c.gate.position.x)*0.12; c.gate.material.emissiveIntensity = open ? 0.9 : 0.3; });
+  const target = Math.min(40, -70 - 20*Math.min(1, MEM.kOut/10) - 15*Math.min(1, (MEM.clIn||0)/10) + 115*Math.min(1, MEM.naIn/16)*(MEM.clOpen ? 0.55 : 1));
+  MEM.V += (target - MEM.V)*Math.min(1, dt*3);
+  const M = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(1,1,1);
+  memIons.forEach(g => {
+    g.list.forEach((o, i) => {
+      if (o.cross){ // approach the mouth, pass through the pore, then drift away on the other side
+        o.cross.u += dt/1.5; const u = Math.min(1, o.cross.u), c = o.cross.c;
+        if (u < 0.4){ const k = sm(u/0.4); o.p.lerpVectors(o.cross.from, V(c.x, o.cross.y0, c.z), k); }
+        else if (u < 0.75){ const k = (u-0.4)/0.35; o.p.set(c.x + Math.sin(k*9)*0.05, lerp(o.cross.y0, o.cross.y1, k), c.z); }
+        else { const k = sm((u-0.75)/0.25); o.p.set(c.x + o.cross.dx*k, o.cross.y1 + Math.sign(o.cross.y1)*0.9*k, c.z + o.cross.dz*k); }
+        if (u >= 1){ o.side = Math.sign(o.cross.y1); o.v.set((rnd()-0.5)*0.5, o.side*0.4, (rnd()-0.5)*0.5); o.cross = null; }
+      } else {
+        o.v.add(V((rnd()-0.5)*1.4*dt, (rnd()-0.5)*1.4*dt, (rnd()-0.5)*1.4*dt)); o.v.clampLength(0, g.type==='gas' ? 0.7 : 0.9);
+        o.p.addScaledVector(o.v, dt);
+        if (g.type === 'gas'){ if (o.p.y > 2.6 || o.p.y < -2.6) o.v.y *= -1; }
+        else {
+          const lim = 0.68 + g.r;
+          if (o.side > 0 && o.p.y < lim){ o.p.y = lim; o.v.y = Math.abs(o.v.y)*0.9; }
+          if (o.side < 0 && o.p.y > -lim){ o.p.y = -lim; o.v.y = -Math.abs(o.v.y)*0.9; }
+          if (Math.abs(o.p.y) > 2.6){ o.v.y *= -1; o.p.y = Math.sign(o.p.y)*2.6; }
+        }
+        if (Math.abs(o.p.x) > 3.9){ o.v.x *= -1; o.p.x = Math.sign(o.p.x)*3.9; }
+        if (Math.abs(o.p.z) > 2.4){ o.v.z *= -1; o.p.z = Math.sign(o.p.z)*2.4; }
+        // channel passage
+        const mk = (c, y0, y1) => ({u:0, c, y0, y1, from:o.p.clone(), dx:(rnd()-0.5)*1.6, dz:(rnd()-0.5)*1.6});
+        if (g.type === 'K' && MEM.kOpen && o.side < 0 && MEM.kOut < 10 && t - (MEM.lastK||0) > 0.35 && Math.hypot(o.p.x-KCH.x, o.p.z-KCH.z) < 2.6){
+          o.cross = mk(KCH, -0.95, 0.95); MEM.kOut++; MEM.lastK = t; }
+        if (g.type === 'Cl' && MEM.clOpen && o.side > 0 && (MEM.clIn||0) < 12 && t - (MEM.lastCl||0) > 0.22 && Math.hypot(o.p.x-CLCH.x, o.p.z-CLCH.z) < 3.0){
+          o.cross = mk(CLCH, 0.95, -0.95); MEM.clIn = (MEM.clIn||0) + 1; MEM.lastCl = t; }
+        if (g.type === 'Na' && MEM.naOpen && o.side > 0 && MEM.naIn < 16 && t - (MEM.lastNa||0) > 0.16 && Math.hypot(o.p.x-NACH.x, o.p.z-NACH.z) < 3.2){
+          o.cross = mk(NACH, 0.95, -0.95); MEM.naIn++; MEM.lastNa = t; }
+      }
+      M.compose(o.p, q, sc); g.mesh.setMatrixAt(i, M);
+    });
+    g.mesh.instanceMatrix.needsUpdate = true;
+  });
+  if (Math.round(MEM.V) !== MEM.shown){ MEM.shown = Math.round(MEM.V); memHud(); }
+}
+
+/* ---------- scene switching ---------- */
+const TOPIC_SCENE = {bump:'bump', membrane:'membrane'};
+VIEW.bump = {pos:[0, 1.2, 31], target:[0, 0.1, 0]};
+VIEW.membrane = {pos:[3.2, 3.4, 13.5], target:[0, -0.2, 0]};
+function flyToPos(pos, target){
+  const t = new THREE.Vector3(...target), p = new THREE.Vector3(...pos);
+  if (isNarrow()) p.sub(t).multiplyScalar(1.6).add(t);
+  tween = {from:camera.position.clone(), to:p, tf:controls.target.clone(), tt:t, t0:performance.now(), dur:1200};
+}
+function setScene(name){
+  if (name === SCENE) return;
+  SCENE = name;
+  labGroup.visible = name === 'lab'; bumpGroup.visible = name === 'bump'; memGroup.visible = name === 'membrane';
+  document.body.dataset.scene = name;
+  toast(null); bumpSel = null;
+  flyTo(name === 'lab' ? 'home' : name);
+  if (name === 'membrane') memHud();
+}
+
+$('#memK').onclick = () => ACTIONS.memK(); $('#memNa').onclick = () => ACTIONS.memNa(); $('#memCl').onclick = () => ACTIONS.memCl();
+$('#memThrowB').onclick = () => memThrow(); $('#memResetB').onclick = () => memReset();
+document.querySelectorAll('#bumpHud [data-pick]').forEach(b => b.onclick = () => { selectBump(b.dataset.pick); document.querySelectorAll('#bumpHud [data-pick]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.pick === bumpSel))); });
+document.body.dataset.scene = 'lab';
+/* ============ Boot ============ */
+resize();
+const hv = VIEW.home; camera.position.set(...hv.pos); controls.target.set(...hv.target);
+if (isNarrow()) camera.position.sub(controls.target).multiplyScalar(2.1).add(controls.target);
+renderPanel(); updateMimageText();
+$('#loading').hidden = true;
+requestAnimationFrame(frame);
+</script>
+<script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
+hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+</body></html>

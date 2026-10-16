@@ -1,0 +1,1535 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neuroanatomy Part I</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+/* Layout: full-bleed 3D stage (lights-down lecture hall), docked lesson panel on the right; bottom sheet on phones. Single dark look, chosen for projectors. */
+:root{
+  color-scheme: dark;
+  --bg:#0c0f15; --bg-2:#171d2a; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 70% 70% at 36% 46%,var(--bg-2) 0%,var(--bg) 70%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+#loading{position:fixed;left:0;right:var(--panel-w);top:50%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 18px);left:20px;pointer-events:none;z-index:3}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand .eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+.dock{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);right:calc(var(--panel-w) + 20px);display:flex;flex-direction:column;gap:10px;z-index:3;pointer-events:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;pointer-events:auto}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:7px 12px 7px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.75);backdrop-filter:blur(6px);cursor:pointer;font-size:14px}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,rgba(17,21,30,.85))}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.hint{font-family:var(--f-mono);font-size:11.5px;color:var(--faint);letter-spacing:.02em}
+.hint kbd{font-family:inherit;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--muted)}
+.credit{font-size:10.5px;color:var(--faint);opacity:.8}
+
+/* floating labels + pins */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.lobe-label{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-family:var(--f-display);font-weight:800;font-size:15px;letter-spacing:.02em;padding:4px 10px;border-radius:999px;background:rgba(12,15,21,.72);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);color:var(--fg);pointer-events:auto;cursor:pointer;transition:opacity .25s;white-space:nowrap}
+.pin{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;background:none;border:0;padding:0;transition:opacity .25s}
+.pin .knob{position:absolute;left:0;top:0;transform:translate(-50%,-50%);min-width:26px;height:26px;padding:0 6px;border-radius:13px;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;font-weight:500;background:var(--bg);color:var(--fg);border:2px solid var(--c);box-shadow:0 2px 10px rgba(0,0,0,.5);white-space:nowrap}
+.pin .tag{width:max-content;position:absolute;left:18px;top:0;transform:translateY(-50%);white-space:nowrap;font-size:14px;font-weight:700;padding:4px 10px;border-radius:6px;background:rgba(12,15,21,.9);border:1px solid var(--line);opacity:0;transition:opacity .2s;pointer-events:none}
+.pin .tag small{font-weight:400;color:var(--muted);font-family:var(--f-mono);font-size:10.5px;margin-left:6px;text-transform:uppercase;letter-spacing:.08em}
+.pin:hover .tag,.pin.active .tag{opacity:1}
+.pin.active .knob{background:var(--c);color:#0c0f15;animation:pulse 1.6s ease-out infinite}
+.pin.hidden-side .knob{border-style:dashed;opacity:.55}
+.pin.hidden-side.active .knob{opacity:1}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--c) 70%,transparent)}100%{box-shadow:0 0 0 16px transparent}}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:4;padding:calc(env(safe-area-inset-top,0px) + 26px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:20px;overscroll-behavior:contain}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--muted);max-width:60ch}
+.lobe-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.lobe-btn{width:100%;display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.lobe-btn:hover{border-color:var(--c)}
+.lobe-btn .dot{width:14px;height:14px}
+.lobe-btn b{display:block;font-family:var(--f-display);font-weight:800;font-size:17px}
+.lobe-btn span{display:block;color:var(--muted);font-size:13.5px}
+.lobe-btn em{font-style:normal;font-family:var(--f-mono);font-size:11px;color:var(--faint)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{padding:10px 16px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#14110a;border-color:var(--chalk)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.small{padding:6px 11px;font-size:13px}
+.toggle{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-size:14px;color:var(--muted);user-select:none}
+.toggle input{appearance:none;width:34px;height:20px;border-radius:10px;background:var(--line);position:relative;cursor:pointer;margin:0;transition:background .2s;flex:none}
+.toggle input::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--fg);transition:transform .2s}
+.toggle input:checked{background:var(--chalk)}
+.toggle input:checked::after{transform:translateX(14px);background:#14110a}
+
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.lobe-head .eyebrow{color:var(--c)}
+.scene-img{display:block;width:100%;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;max-width:100%;background:var(--raise)}
+.acro{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:6px}
+.acro div{border:1px solid var(--line);border-radius:8px;padding:8px 4px 7px;text-align:center;background:var(--raise)}
+.acro b{display:block;font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1;color:var(--c)}
+.acro small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+.acro .masked small{filter:blur(5px)}
+
+.beats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.beat{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;padding:12px 12px 12px 10px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:background .2s,border-color .2s}
+.beat:hover{background:var(--raise)}
+.beat.active{background:color-mix(in srgb,var(--c) 12%,var(--raise));border-color:color-mix(in srgb,var(--c) 60%,transparent);cursor:default}
+.num{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;border:2px solid var(--c);color:var(--fg)}
+.beat.active .num{background:var(--c);color:#0c0f15}
+.hook{font-family:var(--f-display);font-weight:800;font-size:18px;line-height:1.15}
+.cue{color:var(--muted);font-size:14px;margin-top:2px}
+.answer{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:14.5px}
+.answer strong{color:var(--fg)}
+.answer .fn{color:var(--muted)}
+.answer.masked{filter:blur(6px);user-select:none}
+.tagx{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-left:6px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;white-space:nowrap}
+.more{margin-top:12px;display:flex;flex-direction:column;gap:12px}
+.more.masked{filter:blur(6px);user-select:none}
+.facts{margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--fg)}
+.facts li::marker{color:var(--c)}
+.facts b{color:var(--c);font-weight:700}
+.case{border-left:3px solid var(--c);padding:8px 12px;background:rgba(0,0,0,.18);border-radius:0 8px 8px 0;font-size:14px}
+.case .eyebrow{color:var(--c);margin-bottom:3px}
+.figure{border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:12px;display:flex;flex-direction:column;gap:8px}
+.figure svg{display:block;width:100%;height:auto;max-width:100%}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.span-out{font-family:var(--f-display);font-weight:800;font-size:44px;line-height:1.1;letter-spacing:.06em;text-align:center;min-height:56px;color:var(--fg);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.span-out.small{font-size:16px;letter-spacing:0;font-weight:600;color:var(--muted);font-family:var(--f-body)}
+.stepper{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.stepper button{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.note{font-size:12.5px;color:var(--faint)}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.pager .count{font-family:var(--f-mono);font-size:12px;color:var(--faint)}
+
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.92);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain}
+
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:54%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  #loading{right:0;top:22%}
+  .dock{display:none}
+  .brand h1{font-size:18px}
+}
+
+/* cards, terms, thumbnails, demos */
+.term{all:unset;cursor:pointer;color:inherit;font-weight:700;border-bottom:2px solid var(--c);padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c) 30%,transparent);outline:none}
+.term-sample{font-weight:700;border-bottom:2px solid var(--chalk);background:rgba(244,210,122,.14);padding:0 2px;color:var(--fg)}
+.beat{grid-template-columns:30px minmax(0,1fr) 64px}
+.beat .more{grid-column:1 / -1}
+.thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in;align-self:start;transition:width .2s,height .2s}
+.beat.active .thumb{width:64px;height:64px;border-color:var(--c)}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.2);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.pin .tag{display:flex;align-items:center;gap:8px}
+.pin .tag img{width:54px;height:54px;object-fit:cover;border-radius:5px}
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.close:hover{border-color:var(--muted)}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px;font-size:15px}
+.card-body p{margin:0;color:var(--fg);max-width:62ch}
+.card-body .figure img{display:block;width:100%;border-radius:8px;cursor:zoom-in}
+.brain-btn{align-self:flex-start}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.tabs{display:flex;gap:6px}
+.tab{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:none;cursor:pointer;font-size:13px}
+.tab.on{background:var(--c);color:#0c0f15;border-color:var(--c);font-weight:700}
+.cmp{width:100%;border-collapse:collapse;font-size:13.5px}
+.cmp th,.cmp td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp thead th{font-family:var(--f-display);font-size:14px}
+.cmp tbody th{color:var(--muted);font-weight:400;white-space:nowrap}
+.demo{display:flex;flex-direction:column;gap:10px}
+.demo-msg{font-size:13px;color:var(--muted)}
+.demo-msg.ok{color:#5fe0a3}.demo-msg.bad{color:#ff8f8f}
+.tol-wrap svg{width:100%;height:auto;display:block}
+.wcst-keys{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.wkey{all:unset;cursor:pointer;border-radius:8px;transition:transform .15s}
+.wkey:hover,.wkey:focus-visible{transform:translateY(-3px);outline:2px solid var(--chalk);outline-offset:2px}
+.wcst-card{display:flex;align-items:center;justify-content:center;gap:12px}
+.wcst-card svg,.wkey svg{width:auto!important;max-width:none}
+.wcst-stats{font-family:var(--f-mono);font-size:11.5px;color:var(--faint)}
+.gray-img{width:100%;border-radius:8px;transition:filter .6s}
+.gray-img.gray{filter:grayscale(1) contrast(.95)}
+.motion-canvas{width:100%;height:auto;border-radius:8px;display:block}
+.vor-text{font-size:17px!important;font-weight:700;text-align:center;padding:14px 4px}
+.vor-text.shake{animation:shake .09s linear infinite}
+@keyframes shake{0%{transform:translateX(-7px)}50%{transform:translateX(7px)}100%{transform:translateX(-7px)}}
+@media (max-width:820px){ #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none} }
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Loading brain…</div>
+<div id="labels"></div>
+
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Neuroanatomy Part I</h1>
+</header>
+
+<div class="dock">
+  <div class="chips" id="chips"></div>
+  <div class="hint">Drag to rotate · scroll to zoom · click a lobe · <kbd>←</kbd> <kbd>→</kbd> to step through parts · <kbd>Esc</kbd> for the whole brain</div>
+  <div class="credit">3D cortex: Conte69 human average surface (Van Essen et al.). MRI slices: MNI ICBM152 template. Cerebellum, brainstem and deep structures are schematic.</div>
+</div>
+
+<aside id="panel" aria-live="polite"></aside>
+<div id="card" hidden><div class="card-sheet" role="dialog" aria-modal="true" aria-labelledby="cardTitle"></div></div>
+<div id="lightbox" hidden><img alt=""></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Content (Professor Freed's Mimages + deeper facts) ============
+   Coordinates are MNI millimetres on the LEFT hemisphere (x < 0).
+   c = region centre, b = optional second point (makes a strip), r = radius in mm, v = camera view.
+   In facts, [[card|text]] makes a tappable term that opens a card. */
+const LOBES = [
+  { id:'frontal', name:'Frontal Lobe', scene:'Front Office for a Sports Team', img:'img/frontal.jpg', color:'#5b8cff',
+    cam:{pos:[2.7,0.9,2.7], target:[0.25,0.05,0.45]}, anchor:[-40,40,30],
+    pins:{ exec:{c:[-28,52,20], r:16, v:'front'}, wm:{c:[-45,28,32], r:14, v:'lateral'}, broca:{c:[-50,18,8], r:13, v:'lateral'},
+           motor:{c:[-22,-22,70], b:[-56,-6,30], r:9, v:'upper'}, emo:{c:[-22,38,-16], r:16, v:'below'} },
+    beats:[
+      {pin:'exec', hook:'The executive', cue:'An executive sits at his desk doing the team’s planning.', term:'Prefrontal cortex', fn:'Executive planning',
+        facts:['Your frontal lobe makes up about a third of your cerebral cortex.',
+               'Your prefrontal cortex is one of the [[pfc-maturation|last regions to fully mature]], into your early-to-mid 20s.',
+               'Psychologists measure planning with the [[tower-london|Tower of London]] and flexible rule-switching with the [[wcst|Wisconsin Card Sorting Test]]. Try both.']},
+      {pin:'wm', hook:'His sketchpad', cue:'While he plans, he’s jotting on a sketchpad.', term:'Prefrontal cortex', fn:'Working memory', extra:'span',
+        facts:['[[miller|Miller’s magical number]]: you can hold about 7 ± 2 items in mind at once.',
+               'Later research by [[cowan|Cowan]] brought that down to about 4 chunks.',
+               'In [[baddeley|Baddeley & Hitch’s model]], working memory includes a visuospatial sketchpad, just like the one in the scene.']},
+      {pin:'broca', hook:'Running his “Boca”', cue:'Another executive barges in, running his boca: “Let’s make a deal!”', term:'Broca’s area', fn:'Speech production',
+        facts:['Located in the left inferior frontal gyrus (Brodmann areas 44 and 45). In most right-handed people, language is in the left hemisphere.',
+               'Damage here causes [[broca-aphasia|Broca’s aphasia]]: slow, effortful speech with comprehension mostly intact.'],
+        case:{title:'Patient “Tan”, 1861', card:'tan', text:'Broca’s patient could say only one syllable, “tan.” His brain gave the first strong evidence that language lives in a specific place.'}},
+      {pin:'motor', hook:'Athletes bust in', cue:'A group of athletes bursts in, moving around.', term:'Primary motor cortex', fn:'Motion',
+        facts:['A strip on the [[central|precentral gyrus]], just in front of the central sulcus (Brodmann area 4).',
+               'Control is [[contralateral|contralateral]]: your left motor cortex moves the right side of your body.',
+               'The [[homunculus|motor homunculus]] shows how much cortex each body part gets.']},
+      {pin:'emo', hook:'Phineas Gage', cue:'A man with a pipe through his head bursts in, flipping out.', term:'Orbitofrontal / ventromedial prefrontal cortex', fn:'Emotional control',
+        facts:['In 1848 an iron rod 3 ft 7 in long and about 13¼ lb shot through railroad foreman Phineas Gage’s head.',
+               'He survived, but people who knew him said his personality changed: he was “no longer Gage.”'],
+        case:{title:'Read the full story', card:'gage', text:'What actually happened, what changed, and how much he recovered.'}}
+    ]},
+  { id:'parietal', name:'Parietal Lobe', scene:'Pirate Ship', img:'img/parietal.jpg', color:'#f0a43a',
+    cam:{pos:[2.3,2.5,-1.0], target:[0.25,0.3,-0.3]}, anchor:[-35,-55,55],
+    pins:{ space:{c:[-30,-60,52], r:18, v:'top'}, s1:{c:[-24,-36,70], b:[-58,-22,32], r:9, v:'upper'} },
+    acro:[['P','Pain',1],['I','Itch',2],['T','Touch',3],['T','Temp',4]],
+    beats:[
+      {pin:'space', hook:'The pirate captain', cue:'He navigates the ship by tracking where his body is in space.', term:'Posterior parietal cortex', fn:'Spatial awareness & navigation (body in space)',
+        facts:['Part of the [[dorsal-stream|dorsal “where/how” stream]], which guides your reaching, grabbing and moving through space.',
+               'It combines vision, touch and body position (proprioception) into one map of where you are.'],
+        case:{title:'Hemispatial neglect', card:'neglect', text:'After right parietal damage, people ignore the whole left side of space.'}},
+      {pin:'s1', hook:'P · “OUCH!”', cue:'Below deck, a crew is trapped in the PITT. One has a stubbed red toe.', term:'Somatosensory cortex', fn:'Pain',
+        facts:['Your primary somatosensory cortex (S1) is the [[central|postcentral gyrus]], just behind the central sulcus.',
+               'S1 tells you where it hurts. [[pain-affect|Other regions]] decide how bad it feels.']},
+      {pin:'s1', hook:'I · “ITCH!”', cue:'A bug bite gets frantically scratched.', term:'Somatosensory cortex', fn:'Itch',
+        facts:['Itch travels up your spinal cord on the same spinothalamic pathway as pain and temperature.',
+               '[[itch|Why scratching works]]: mild pain signals switch off itch in the spinal cord.']},
+      {pin:'s1', hook:'T · the poke', cue:'A pirate playfully pokes his mate’s arm.', term:'Somatosensory cortex', fn:'Touch',
+        facts:['The [[homunculus|sensory homunculus]] gives your lips and fingertips the most cortex.',
+               'The [[two-point|two-point test]] shows it: fingertips feel two points 2–3 mm apart; your back needs about 4 cm.',
+               'After an amputation the map reorganizes, which helps explain [[phantom|phantom limbs]].']},
+      {pin:'s1', hook:'T · “HOT!”', cue:'A burning mug makes him sweat and yell.', term:'Somatosensory cortex', fn:'Temperature',
+        facts:['You have separate [[trp|heat and cold sensors]]. The heat sensor also responds to capsaicin, so chili peppers feel hot.',
+               'The cold sensor also responds to menthol, so mint feels cool.']}
+    ]},
+  { id:'temporal', name:'Temporal Lobe', scene:'The Temple', img:'img/temporal.jpg', color:'#ec6f86',
+    cam:{pos:[3.4,-0.35,0.35], target:[0.3,-0.2,-0.05]}, anchor:[-62,-25,-10],
+    pins:{ a1:{c:[-56,-20,6], r:12, v:'lateral'}, hippo:{c:[-27,-24,-12], deep:'hippo'}, amyg:{c:[-22,-4,-18], deep:'amyg'},
+           ffa:{c:[-40,-52,-18], r:11, v:'below'}, wern:{c:[-56,-44,14], r:13, v:'lateral'} },
+    beats:[
+      {pin:'a1', hook:'PAC-Man', cue:'PAC-Man wears headphones and listens.', term:'Primary auditory cortex', fn:'Hearing',
+        facts:['Sits on [[heschl|Heschl’s gyrus]], tucked into the lateral (Sylvian) fissure.',
+               'It’s laid out by pitch, low to high, like piano keys.',
+               'Each ear sends signals to both hemispheres, so damage on one side rarely causes deafness.']},
+      {pin:'hippo', hook:'Hippo on campus', cue:'A graduate hippo enters the temple. You form memories on campus.', term:'Hippocampus', fn:'Forming new memories',
+        facts:['The [[hippocampus|hippocampus]] is named for its shape: Greek hippokampos, “seahorse.”',
+               'London taxi drivers, who memorize thousands of streets, have larger posterior hippocampi.'],
+        case:{title:'Patient H.M.', card:'hm', text:'After surgery removed both of his hippocampi, he could no longer form new long-term memories.'}},
+      {pin:'amyg', hook:'Angry almond', cue:'The hippo chomps an angry almond.', term:'Amygdala', fn:'Processing emotion, especially fear',
+        facts:['[[amygdala|Amygdala]] comes from the Greek for “almond,” so the angry almond is literally the structure’s name.',
+               'It drives fear learning and fast threat responses, sometimes before you consciously notice the threat.',
+               '[[kluver|Klüver–Bucy syndrome]]: monkeys without temporal lobes lost their fear.'],
+        case:{title:'Patient S.M.', card:'sm', text:'A woman without amygdalae who doesn’t feel fear.'}},
+      {pin:'ffa', hook:'Face with a fuse', cue:'The almond holds a human face with a fuse.', term:'Fusiform face area', fn:'Recognizing faces',
+        facts:['On the [[ffa|fusiform gyrus]] (“spindle-shaped”), on the underside of your temporal lobe. Usually stronger on the right.',
+               'Damage causes [[prosopagnosia|prosopagnosia]], or face blindness.']},
+      {pin:'wern', hook:'“WHAT?!”', cue:'Wernicke watches and screams.', term:'Wernicke’s area', fn:'Understanding spoken language',
+        facts:['Posterior superior temporal gyrus, described by Carl Wernicke in 1874.',
+               'Damage causes [[wernicke-aphasia|Wernicke’s aphasia]]: fluent speech that makes little sense.',
+               'The [[arcuate|arcuate fasciculus]] connects it to Broca’s area.']}
+    ]},
+  { id:'occipital', name:'Occipital Lobe', scene:'The Oculus (NYC)', img:'img/occipital.jpg', color:'#36c3a5',
+    cam:{pos:[2.0,0.55,-3.0], target:[0.15,0.0,-0.85]}, anchor:[-25,-97,6],
+    pins:{ v1:{c:[-8,-100,4], b:[-6,-76,6], r:7, v:'medial'}, v2:{c:[-16,-98,10], r:10, v:'back'}, v3:{c:[-26,-92,18], r:10, v:'back'},
+           v4:{c:[-30,-74,-14], r:10, v:'below'}, v5:{c:[-46,-70,2], r:11, v:'lateral'}, cun:{c:[-6,-82,26], r:12, v:'medial'},
+           ofa:{c:[-38,-82,-10], r:9, v:'backside'} },
+    acro:[['V1','Line',0],['V2','2D',1],['V3','3-D',2],['V4','Color',3],['V5','Motion',4]],
+    beats:[
+      {pin:'v1', hook:'V1 = one line', cue:'The number 1 looks like a line.', term:'V1', fn:'Basic visual features: lines, edges, orientation, contrast',
+        facts:['Runs along the [[calcarine|calcarine sulcus]] on the inner surface of your brain.',
+               '[[hubel-wiesel|Hubel & Wiesel]] found V1 cells that fire for lines at one specific angle.',
+               'Your [[visual-field|left V1 sees the right visual field]], and the center of vision gets far more cortex than the edges.']},
+      {pin:'v2', hook:'V2 = 2D', cue:'V2 puts the lines together.', term:'V2', fn:'Organizes edges into contours, shapes, and figure vs. background',
+        facts:['V2 neurons respond to [[illusory|illusory contours]]: edges you see even though they aren’t drawn.']},
+      {pin:'v3', hook:'V3 = 3-D', cue:'The strongest one: 3 → 3-D.', term:'V3', fn:'Form, depth/spatial information, aspects of motion',
+        facts:['Helps combine shape with depth cues like [[disparity|binocular disparity]], the slightly different views from your two eyes.']},
+      {pin:'v4', hook:'V4 = color-FOUR', cue:'Colorful.', term:'V4', fn:'Color perception, plus form/object features',
+        facts:['Mapped as a color area by Semir Zeki. In humans it sits on the underside of the occipital lobe.',
+               'Damage here causes [[achromatopsia|cerebral achromatopsia]]: the world in shades of gray.']},
+      {pin:'v5', hook:'V5 = five-gear shift', cue:'Five gears means motion.', term:'V5 / MT', fn:'Motion perception and direction of movement',
+        facts:['MT stands for middle temporal, where the area sits in monkeys. In humans it’s at the occipital–temporal border.',
+               'Damage causes [[akinetopsia|akinetopsia]]: seeing the world as a series of frozen frames.']},
+      {pin:'cun', hook:'CUNY student points UP', cue:'A CUNY student walks into the Oculus with a compass and map.', term:'Cuneus', fn:'Upper visual field, plus visual/spatial processing',
+        facts:['Cuneus is Latin for “wedge.” It’s the wedge on the inner surface between the [[calcarine|calcarine and parieto-occipital sulci]].']},
+      {pin:'ofa', hook:'Optical Face Analyzer', cue:'A security-style scanner examines the parts of a face.', term:'Occipital face area (OFA)', fn:'Face features; works with the fusiform face area',
+        facts:['An early stop in your [[face-network|face network]]: the OFA handles the parts (eyes, nose, mouth) and passes them to the [[ffa|fusiform face area]], which puts the whole face together.',
+               'Briefly disrupting the OFA with magnetic stimulation makes it harder to tell face parts apart.'],
+        case:{title:'Related: the fusiform gyrus', card:'face-network', text:'See how the OFA and the fusiform face area work as a team, and light both up on the brain.'}}
+    ]},
+  { id:'cerebellum', name:'Cerebellum', scene:'Sarah Jessica Parker as a Ballerina', img:'img/cerebellum.jpg', color:'#a98cff',
+    cam:{pos:[2.0,-1.5,-2.8], target:[0.05,-0.55,-0.6]}, anchor:[-36,-72,-44],
+    pins:{ bal:{c:[0,-58,-18], b:[0,-82,-40], r:8, v:'back'}, cog:{c:[-40,-72,-30], r:14, v:'backside'}, coord:{c:[-16,-66,-22], r:10, v:'back'},
+           pred:{c:[-30,-60,-48], r:14, v:'backlow'}, eye:{c:[-24,-40,-40], r:9, v:'frontlow'} },
+    note:'Cerebellar functions are spread across the structure, so each highlight shows the area most associated with that function.',
+    beats:[
+      {pin:'bal', hook:'Balancing on a metronome', cue:'She balances on a ticking metronome.', term:'Balance, posture & timing', fn:'Keeps her stable and her movements on beat',
+        facts:['“Cerebellum” is Latin for “little brain”: about 10% of your brain’s volume but [[little-brain|more than half its neurons]].',
+               'Alcohol affects the cerebellum early, which is why roadside sobriety tests ask you to walk a line and touch your nose.']},
+      {pin:'cog', hook:'Thought bubble', cue:'A thought bubble floats above her head.', term:'Cognition', fn:'Contributes to thinking and planning',
+        facts:['Its large lateral hemispheres connect (through the thalamus) to your prefrontal cortex.',
+               'Cerebellar damage can impair planning and reasoning, not just movement: the [[ccas|cerebellar cognitive affective syndrome]].']},
+      {pin:'coord', hook:'Practicing the routine', cue:'She jumps off and practices a dance routine.', term:'Coordination & motor learning', fn:'Smooth, precise movement that improves with practice',
+        facts:['Its output comes from Purkinje cells, some of the largest neurons in your brain.',
+               'Damage causes [[ataxia|ataxia]] and a tremor that gets worse as your hand nears its target.',
+               'In [[prism|prism-goggle experiments]], people adapt their throws within minutes. Cerebellar patients don’t.']},
+      {pin:'pred', hook:'The empty box', cue:'She lifts a box she thought held books. It’s empty, and her arms fly up.', term:'Prediction & error correction', fn:'Corrects the movement and updates the prediction for next time',
+        facts:['Your cerebellum predicts what a movement will feel like, then compares that with what actually happens.',
+               'That prediction is [[tickle|why you can’t tickle yourself]].']},
+      {pin:'eye', hook:'Eyes into the box', cue:'She moves her eyes to look inside the box.', term:'Eye movement control', fn:'Directs her gaze accurately',
+        facts:['The flocculus tunes your [[vor|vestibulo-ocular reflex]], which keeps your eyes steady when your head moves.']}
+    ]}
+];
+
+/* ============ Reference list ============ */
+const REFS = {
+  kandel:'Kandel, E. R., Koester, J. D., Mack, S. H., & Siegelbaum, S. A. (Eds.). (2021). Principles of neural science (6th ed.). McGraw Hill.',
+  gogtay:'Gogtay, N., et al. (2004). Dynamic mapping of human cortical development during childhood through early adulthood. PNAS, 101(21), 8174–8179.',
+  sowell:'Sowell, E. R., Thompson, P. M., Holmes, C. J., Jernigan, T. L., & Toga, A. W. (1999). In vivo evidence for post-adolescent brain maturation in frontal and striatal regions. Nature Neuroscience, 2(10), 859–861.',
+  shallice:'Shallice, T. (1982). Specific impairments of planning. Philosophical Transactions of the Royal Society of London B, 298(1089), 199–209.',
+  grant:'Grant, D. A., & Berg, E. A. (1948). A behavioral analysis of degree of reinforcement and ease of shifting to new responses in a Weigl-type card-sorting problem. Journal of Experimental Psychology, 38(4), 404–411.',
+  milner63:'Milner, B. (1963). Effects of different brain lesions on card sorting. Archives of Neurology, 9(1), 90–100.',
+  miller:'Miller, G. A. (1956). The magical number seven, plus or minus two: Some limits on our capacity for processing information. Psychological Review, 63(2), 81–97.',
+  cowan:'Cowan, N. (2001). The magical number 4 in short-term memory: A reconsideration of mental storage capacity. Behavioral and Brain Sciences, 24(1), 87–114.',
+  baddeley74:'Baddeley, A. D., & Hitch, G. (1974). Working memory. In G. H. Bower (Ed.), The psychology of learning and motivation (Vol. 8, pp. 47–89). Academic Press.',
+  baddeley00:'Baddeley, A. (2000). The episodic buffer: A new component of working memory? Trends in Cognitive Sciences, 4(11), 417–423.',
+  broca:'Broca, P. (1861). Remarques sur le siège de la faculté du langage articulé, suivies d’une observation d’aphémie. Bulletin de la Société Anatomique de Paris, 6, 330–357.',
+  dronkers:'Dronkers, N. F., Plaisant, O., Iba-Zizen, M. T., & Cabanis, E. A. (2007). Paul Broca’s historic cases: High resolution MR imaging of the brains of Leborgne and Lelong. Brain, 130(5), 1432–1441.',
+  geschwind:'Geschwind, N. (1970). The organization of language and the brain. Science, 170(3961), 940–944.',
+  wernicke:'Wernicke, C. (1874). Der aphasische Symptomencomplex. Breslau: Cohn & Weigert.',
+  catani:'Catani, M., Jones, D. K., & ffytche, D. H. (2005). Perisylvian language networks of the human brain. Annals of Neurology, 57(1), 8–16.',
+  penfield37:'Penfield, W., & Boldrey, E. (1937). Somatic motor and sensory representation in the cerebral cortex of man as studied by electrical stimulation. Brain, 60(4), 389–443.',
+  penfield50:'Penfield, W., & Rasmussen, T. (1950). The cerebral cortex of man: A clinical study of localization of function. Macmillan.',
+  harlow48:'Harlow, J. M. (1848). Passage of an iron rod through the head. Boston Medical and Surgical Journal, 39, 389–393.',
+  harlow68:'Harlow, J. M. (1868). Recovery from the passage of an iron bar through the head. Publications of the Massachusetts Medical Society, 2, 327–347.',
+  damasio94:'Damasio, H., Grabowski, T., Frank, R., Galaburda, A. M., & Damasio, A. R. (1994). The return of Phineas Gage: Clues about the brain from the skull of a famous patient. Science, 264(5162), 1102–1105.',
+  macmillan:'Macmillan, M. (2000). An odd kind of fame: Stories of Phineas Gage. MIT Press.',
+  vanhorn:'Van Horn, J. D., et al. (2012). Mapping connectivity damage in the case of Phineas Gage. PLoS ONE, 7(5), e37454.',
+  ungerleider:'Ungerleider, L. G., & Mishkin, M. (1982). Two cortical visual systems. In D. J. Ingle, M. A. Goodale, & R. J. W. Mansfield (Eds.), Analysis of visual behavior (pp. 549–586). MIT Press.',
+  goodale:'Goodale, M. A., & Milner, A. D. (1992). Separate visual pathways for perception and action. Trends in Neurosciences, 15(1), 20–25.',
+  halligan:'Halligan, P. W., Fink, G. R., Marshall, J. C., & Vallar, G. (2003). Spatial cognition: Evidence from visual neglect. Trends in Cognitive Sciences, 7(3), 125–133.',
+  rainville:'Rainville, P., Duncan, G. H., Price, D. D., Carrier, B., & Bushnell, M. C. (1997). Pain affect encoded in human anterior cingulate but not somatosensory cortex. Science, 277(5328), 968–971.',
+  davidson:'Davidson, S., Zhang, X., Khasabov, S. G., Simone, D. A., & Giesler, G. J. (2009). Relief of itch by scratching: State-dependent inhibition of primate spinothalamic tract neurons. Nature Neuroscience, 12(5), 544–546.',
+  weinstein:'Weinstein, S. (1968). Intensive and extensive aspects of tactile sensitivity as a function of body part, sex, and laterality. In D. R. Kenshalo (Ed.), The skin senses (pp. 195–222). Charles C. Thomas.',
+  rama96:'Ramachandran, V. S., & Rogers-Ramachandran, D. (1996). Synaesthesia in phantom limbs induced with mirrors. Proceedings of the Royal Society B, 263(1369), 377–386.',
+  rama98:'Ramachandran, V. S., & Hirstein, W. (1998). The perception of phantom limbs. Brain, 121(9), 1603–1630.',
+  caterina:'Caterina, M. J., et al. (1997). The capsaicin receptor: A heat-activated ion channel in the pain pathway. Nature, 389(6653), 816–824.',
+  mckemy:'McKemy, D. D., Neuhausser, W. M., & Julius, D. (2002). Identification of a cold receptor reveals a general role for TRP channels in thermosensation. Nature, 416(6876), 52–58.',
+  formisano:'Formisano, E., et al. (2003). Mirror-symmetric tonotopic maps in human primary auditory cortex. Neuron, 40(4), 859–869.',
+  scoville:'Scoville, W. B., & Milner, B. (1957). Loss of recent memory after bilateral hippocampal lesions. Journal of Neurology, Neurosurgery & Psychiatry, 20(1), 11–21.',
+  corkin:'Corkin, S. (2013). Permanent present tense: The unforgettable life of the amnesic patient, H.M. Basic Books.',
+  maguire:'Maguire, E. A., et al. (2000). Navigation-related structural change in the hippocampi of taxi drivers. PNAS, 97(8), 4398–4403.',
+  ledoux:'LeDoux, J. E. (1996). The emotional brain: The mysterious underpinnings of emotional life. Simon & Schuster.',
+  feinstein:'Feinstein, J. S., Adolphs, R., Damasio, A., & Tranel, D. (2011). The human amygdala and the induction and experience of fear. Current Biology, 21(1), 34–38.',
+  kluver:'Klüver, H., & Bucy, P. C. (1939). Preliminary analysis of functions of the temporal lobes in monkeys. Archives of Neurology and Psychiatry, 42(6), 979–1000.',
+  kanwisher:'Kanwisher, N., McDermott, J., & Chun, M. M. (1997). The fusiform face area: A module in human extrastriate cortex specialized for face perception. Journal of Neuroscience, 17(11), 4302–4311.',
+  sacks10:'Sacks, O. (2010). The mind’s eye. Knopf.',
+  duchaine:'Duchaine, B., & Nakayama, K. (2006). The Cambridge Face Memory Test. Neuropsychologia, 44(4), 576–585.',
+  haxby:'Haxby, J. V., Hoffman, E. A., & Gobbini, M. I. (2000). The distributed human neural system for face perception. Trends in Cognitive Sciences, 4(6), 223–233.',
+  pitcher:'Pitcher, D., Walsh, V., Yovel, G., & Duchaine, B. (2007). TMS evidence for the involvement of the right occipital face area in early face processing. Current Biology, 17(18), 1568–1573.',
+  hubel59:'Hubel, D. H., & Wiesel, T. N. (1959). Receptive fields of single neurones in the cat’s striate cortex. Journal of Physiology, 148(3), 574–591.',
+  hubel62:'Hubel, D. H., & Wiesel, T. N. (1962). Receptive fields, binocular interaction and functional architecture in the cat’s visual cortex. Journal of Physiology, 160(1), 106–154.',
+  vonderheydt:'von der Heydt, R., Peterhans, E., & Baumgartner, G. (1984). Illusory contours and cortical neuron responses. Science, 224(4654), 1260–1262.',
+  kanizsa:'Kanizsa, G. (1976). Subjective contours. Scientific American, 234(4), 48–52.',
+  backus:'Backus, B. T., Fleet, D. J., Parker, A. J., & Heeger, D. J. (2001). Human cortical activity correlates with stereoscopic depth perception. Journal of Neurophysiology, 86(4), 2054–2068.',
+  zeki73:'Zeki, S. M. (1973). Colour coding in rhesus monkey prestriate cortex. Brain Research, 53(2), 422–427.',
+  zeki90:'Zeki, S. (1990). A century of cerebral achromatopsia. Brain, 113(6), 1721–1777.',
+  sacks95:'Sacks, O. (1995). An anthropologist on Mars (“The case of the colorblind painter”). Knopf.',
+  zihl:'Zihl, J., von Cramon, D., & Mai, N. (1983). Selective disturbance of movement vision after bilateral brain damage. Brain, 106(2), 313–340.',
+  azevedo:'Azevedo, F. A. C., et al. (2009). Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. Journal of Comparative Neurology, 513(5), 532–541.',
+  schmahmann:'Schmahmann, J. D., & Sherman, J. C. (1998). The cerebellar cognitive affective syndrome. Brain, 121(4), 561–579.',
+  martin:'Martin, T. A., Keating, J. G., Goodkin, H. P., Bastian, A. J., & Thach, W. T. (1996). Throwing while looking through prisms: I. Focal olivocerebellar lesions impair adaptation. Brain, 119(4), 1183–1198.',
+  blakemore:'Blakemore, S.-J., Wolpert, D. M., & Frith, C. D. (1998). Central cancellation of self-produced tickle sensation. Nature Neuroscience, 1(7), 635–640.',
+  blakemore99:'Blakemore, S.-J., Frith, C. D., & Wolpert, D. M. (1999). Spatio-temporal prediction modulates the perception of self-produced stimuli. Journal of Cognitive Neuroscience, 11(5), 551–559.',
+  ito:'Ito, M. (1982). Cerebellar control of the vestibulo-ocular reflex: Around the flocculus hypothesis. Annual Review of Neuroscience, 5, 275–296.',
+  mni:'Fonov, V., et al. (2011). Unbiased average age-appropriate atlases for pediatric studies. NeuroImage, 54(1), 313–327. (MNI ICBM152 2009 template used for the MRI slices.)'
+};
+
+/* ============ Concept cards ============
+   v: visual. {img, cap} = image file; {fig:'name'} = drawn figure; {demo:'name'} = interactive.
+   brain: {pins:['lobe.pin', ...], view} adds a “Show it on the 3D brain” button. */
+const MRI_NOTE = 'Real MRI (MNI152 average brain). Circles show approximate locations.';
+const CARDS = {
+  'pfc-maturation':{lobe:'frontal', kicker:'Brain development', title:'Last to mature',
+    v:[{img:'img/mri/pfc.png', cap:'Seen from above. ' + MRI_NOTE}],
+    body:['Researchers scanned the same young people every couple of years from childhood into early adulthood. Gray matter thinned (a sign of pruning and maturation) in a wave that moved from the back of the brain toward the front.',
+          'Your prefrontal cortex, especially the dorsolateral part circled here, was among the last to finish. That timing fits with how planning, impulse control and thinking ahead keep improving through your late teens and early twenties.'],
+    refs:['gogtay','sowell']},
+  'tower-london':{lobe:'frontal', kicker:'Try it · planning', title:'Tower of London',
+    v:[{demo:'tol'}],
+    body:['Move the balls until your pegs match the goal, in as few moves as possible. The pegs hold 3, 2 and 1 balls.',
+          'The trick is to plan the whole sequence in your head before you move anything. That look-ahead is the prefrontal cortex’s job. Tim Shallice found that people with left frontal damage needed many more moves to solve these puzzles.'],
+    refs:['shallice']},
+  'wcst':{lobe:'frontal', kicker:'Try it · flexible thinking', title:'Wisconsin Card Sorting Test',
+    v:[{demo:'wcst'}],
+    body:['Sort each new card onto one of the four key cards. You aren’t told the rule (match by color, shape or number); you only find out if you were right or wrong. After a run of correct answers, the rule changes without warning.',
+          'Most people notice the switch after an error or two. People with frontal-lobe damage often keep sorting by the old rule even while being told they’re wrong. That’s called perseveration.'],
+    refs:['grant','milner63']},
+  'miller':{lobe:'frontal', kicker:'Try it · working memory', title:'The magical number 7 ± 2',
+    v:[{demo:'span'}],
+    body:['In 1956 George Miller noticed the same limit turning up across very different experiments: people could hold about seven items, give or take two, in mind at once.',
+          'Test yourself: flash a sequence, then write it down from memory. Increase the length until you start making mistakes. That’s your digit span.'],
+    refs:['miller']},
+  'cowan':{lobe:'frontal', kicker:'Working memory', title:'Really about 4 chunks',
+    body:['Nelson Cowan argued that Miller’s seven was inflated by chunking: grouping items into meaningful units. When people can’t chunk or rehearse, they hold only about four chunks.',
+          'Chunking is why phone numbers are split 3-3-4, and why FBI-CIA-USA is much easier to remember than nine random letters. You remember three chunks, not nine letters.'],
+    refs:['cowan','miller']},
+  'baddeley':{lobe:'frontal', kicker:'Working memory', title:'Baddeley & Hitch’s model',
+    v:[{fig:'baddeley'}],
+    body:['Baddeley and Hitch argued that short-term memory isn’t one storage box but a workspace with parts. A central executive directs attention. The phonological loop holds sounds and words (the voice in your head repeating a phone number). The visuospatial sketchpad holds images and locations.',
+          'In 2000 Baddeley added the episodic buffer, which ties the pieces together and links them to long-term memory. The executive’s sketchpad in the Mimage is this sketchpad.'],
+    refs:['baddeley74','baddeley00']},
+  'broca-aphasia':{lobe:'frontal', kicker:'Language', title:'Broca’s aphasia',
+    v:[{img:'img/mri/broca.png', cap:'Left hemisphere, seen from the side. ' + MRI_NOTE}, {fig:'aphasia'}],
+    body:['Damage to Broca’s area makes speaking slow and effortful. Small words and grammar drop out, leaving “telegraphic” speech like “Walk… dog… park.” Understanding is mostly intact, and people are usually aware of the problem and frustrated by it.'],
+    refs:['broca','geschwind']},
+  'tan':{lobe:'frontal', kicker:'Classic case', title:'Patient “Tan”',
+    body:['In 1861 the French physician Paul Broca examined Louis Victor Leborgne, a man who for years had been able to say only one syllable, “tan,” though he seemed to understand what people said to him.',
+          'When Leborgne died days later, Broca found damage in the left frontal lobe. It was the first widely accepted evidence that a specific mental ability lives in a specific place in the brain. His preserved brain was scanned with MRI in 2007, and the damage turned out to reach deeper than Broca could see.'],
+    brain:{pins:['frontal.broca'], view:'lateral'},
+    refs:['broca','dronkers']},
+  'central':{lobe:'frontal', kicker:'Landmarks', title:'Precentral & postcentral gyri',
+    v:[{fig:'central'}],
+    body:['The central sulcus is the deep groove that separates your frontal lobe from your parietal lobe.',
+          'Just in front of it is the precentral gyrus: primary motor cortex, which sends movement commands. Just behind it is the postcentral gyrus: primary somatosensory cortex, which receives touch, pain and temperature. Easy rule: motor in front, sensory behind.'],
+    brain:{pins:['frontal.motor','parietal.s1'], view:'upper'},
+    refs:['kandel']},
+  'contralateral':{lobe:'frontal', kicker:'Wiring', title:'Contralateral control',
+    body:['Most of the fibers leaving your left motor cortex cross to the right side at the bottom of the brainstem (the pyramidal decussation in the medulla). So the left hemisphere moves the right side of the body, and the reverse.',
+          'That’s why a stroke in the left hemisphere usually weakens the right arm and leg. Touch is crossed too, so your left somatosensory cortex feels the right side of your body.'],
+    refs:['kandel']},
+  'homunculus':{lobe:'frontal', kicker:'Body maps', title:'The homunculus',
+    v:[{fig:'homunculus'}],
+    body:['Neurosurgeon Wilder Penfield mapped the cortex by gently stimulating it in awake patients during epilepsy surgery and noting which body part twitched or tingled.',
+          'The map is in order but not to scale. The more precisely you control or feel a part of your body, the more cortex it gets, and so the more neurons and connections are devoted to it. Your hands, lips and tongue get huge territories; your back and legs get thin slivers. That’s why the “little man” drawn from these maps has giant hands and lips.'],
+    refs:['penfield37','penfield50']},
+  'gage':{lobe:'frontal', kicker:'Classic case', title:'Phineas Gage',
+    v:[{fig:'gage'}, {img:'img/mri/ofc.png', cap:'Orbitofrontal cortex, the area most damaged. ' + MRI_NOTE}],
+    body:['On September 13, 1848, near Cavendish, Vermont, railroad foreman Phineas Gage was packing blasting powder into a hole with an iron rod when the powder exploded. The rod, 3 ft 7 in long, 1¼ in wide and about 13¼ lb, entered under his left cheekbone, passed behind his left eye and exited the top of his skull.',
+          'Remarkably, he survived and could talk within minutes. But his doctor, John Harlow, reported that he became impulsive, profane and unreliable. Friends said he was “no longer Gage.”',
+          'Historians now think he recovered a lot of his social skills over time; he later drove stagecoaches in Chile for years. Modern reconstructions of his skull show damage mainly to the left orbitofrontal and ventromedial prefrontal cortex. His skull and the rod are at Harvard’s Warren Anatomical Museum.'],
+    brain:{pins:['frontal.emo'], view:'below'},
+    refs:['harlow48','harlow68','damasio94','vanhorn','macmillan']},
+  'dorsal-stream':{lobe:'parietal', kicker:'Vision', title:'The “where/how” stream',
+    v:[{fig:'streams'}],
+    body:['Visual information leaves your occipital lobe on two main routes. The ventral “what” stream runs down into the temporal lobe to recognize objects and faces. The dorsal “where/how” stream runs up into the parietal lobe to work out where things are and guide your hands to them.',
+          'Some patients can’t name an object but can still reach for it accurately, and others can name it but fumble when they reach. That split is strong evidence for two separate streams.'],
+    refs:['ungerleider','goodale']},
+  'neglect':{lobe:'parietal', kicker:'Classic syndrome', title:'Hemispatial neglect',
+    v:[{fig:'neglect'}],
+    body:['After a stroke in the right parietal lobe, many people stop attending to the left side of space. They may eat only the food on the right half of the plate, shave or make up only half their face, or bump into doorframes on their left.',
+          'Asked to draw a clock, they often cram all 12 numbers into the right half. Their eyes work fine; it’s attention to that side of space that’s missing.'],
+    refs:['halligan']},
+  'pain-affect':{lobe:'parietal', kicker:'Pain', title:'Where vs. how bad',
+    body:['Pain has two sides. S1 handles the sensory part: where it is and how intense. The anterior cingulate cortex and the insula handle the emotional part: how unpleasant it feels.',
+          'In one study, hypnosis made people feel the same hot water as more or less unpleasant. Activity in the anterior cingulate changed with the unpleasantness, while S1 activity stayed the same.'],
+    refs:['rainville']},
+  'itch':{lobe:'parietal', kicker:'Itch', title:'Why scratching works',
+    body:['Itch signals travel to your brain on spinothalamic neurons in the spinal cord, alongside pain and temperature.',
+          'Scratching is a mild pain signal. In monkeys, scratching the skin quieted the spinal neurons carrying an itch signal, but only when an itch was present. So the relief starts in your spinal cord, before the signal reaches your brain.'],
+    refs:['davidson']},
+  'two-point':{lobe:'parietal', kicker:'Try it · touch', title:'Two-point discrimination',
+    v:[{fig:'twopoint'}],
+    body:['Try it with a partner and two pencil tips. With your eyes closed, can you tell whether one point or two is touching your fingertip? Now try your forearm or back.',
+          'On your fingertips you can feel two points just 2–3 mm apart. On your back they need to be about 4 cm apart before they stop feeling like one. Body parts with dense receptors get more cortex on the sensory homunculus.'],
+    refs:['weinstein']},
+  'phantom':{lobe:'parietal', kicker:'Body maps', title:'Phantom limbs',
+    body:['Most people who lose a limb keep feeling it, sometimes painfully. One reason: the area of S1 that used to receive signals from the missing hand gets taken over by its neighbors on the map, such as the face. Touching the cheek can then feel like touching the missing hand.',
+          'V. S. Ramachandran’s mirror box shows the reflection of the intact hand where the missing hand would be. Moving the real hand makes the phantom seem to move, which eased some patients’ phantom pain.'],
+    refs:['rama96','rama98']},
+  'trp':{lobe:'parietal', kicker:'Temperature', title:'Heat and cold sensors',
+    body:['Your skin has separate molecular sensors for hot and cold. TRPV1 opens at painful heat (above about 43 °C, or 109 °F) and also when it binds capsaicin, the chemical in chili peppers. That’s why spicy food feels hot.',
+          'TRPM8 opens with cold and also with menthol, which is why mint feels cool. David Julius shared the 2021 Nobel Prize in Physiology or Medicine for discovering these sensors.'],
+    refs:['caterina','mckemy']},
+  'heschl':{lobe:'temporal', kicker:'Hearing', title:'Heschl’s gyrus',
+    v:[{img:'img/mri/heschl.png', cap:'Seen from above. ' + MRI_NOTE}, {fig:'tonotopy'}],
+    body:['Your primary auditory cortex sits on Heschl’s gyrus, a small ridge hidden inside the lateral fissure on top of the temporal lobe.',
+          'It’s tonotopic: neurons are lined up by the pitch they respond to best, from low to high, like the keys on a piano. Each ear sends signals to both sides.'],
+    refs:['formisano']},
+  'hippocampus':{lobe:'temporal', kicker:'Memory', title:'Hippocampus',
+    v:[{img:'img/mri/hippocampus.png', cap:'Front-on slice. ' + MRI_NOTE}],
+    body:['The hippocampus curls along the inner edge of each temporal lobe. Its name is Greek for “seahorse,” because of its curved shape.',
+          'It turns new experiences into lasting memories and maps space. London taxi drivers, who memorize thousands of streets, have larger posterior hippocampi than other drivers, and the difference grows with years on the job.'],
+    brain:{pins:['temporal.hippo'], view:'deep'},
+    refs:['scoville','maguire']},
+  'hm':{lobe:'temporal', kicker:'Classic case', title:'Patient H.M.',
+    body:['In 1953, to stop severe seizures, surgeons removed most of Henry Molaison’s hippocampi and nearby tissue on both sides. The seizures improved, but he could no longer form new long-term memories (anterograde amnesia). He could hold a conversation, but forgot it minutes later.',
+          'Psychologist Brenda Milner had him trace a star while looking only at its reflection in a mirror. He improved every day, yet never remembered practicing. That showed that skill memory and memory for facts and events use different brain systems.'],
+    brain:{pins:['temporal.hippo'], view:'deep'},
+    refs:['scoville','corkin']},
+  'amygdala':{lobe:'temporal', kicker:'Emotion', title:'Amygdala',
+    v:[{img:'img/mri/amygdala.png', cap:'Front-on slice. ' + MRI_NOTE}],
+    body:['The amygdala is an almond-sized cluster just in front of the hippocampus. Its name comes from the Greek amygdalē, “almond.”',
+          'It learns what to fear (fear conditioning) and triggers fast threat responses. Joseph LeDoux described a quick “low road” that reaches the amygdala before the cortex has finished identifying the threat. That’s why you can jump at a stick before realizing it isn’t a snake.'],
+    brain:{pins:['temporal.amyg'], view:'deep'},
+    refs:['ledoux']},
+  'sm':{lobe:'temporal', kicker:'Classic case', title:'Patient S.M.',
+    body:['S.M. has a rare genetic disease that destroyed both of her amygdalae. Researchers tried everything to scare her. She handled live snakes and spiders, walked through a haunted house without flinching, and in real life approached dangerous situations that would frighten most people.',
+          'She still feels other emotions, which suggests the amygdala is especially important for fear.'],
+    brain:{pins:['temporal.amyg'], view:'deep'},
+    refs:['feinstein']},
+  'kluver':{lobe:'temporal', kicker:'Classic experiment', title:'Klüver–Bucy syndrome',
+    body:['In the 1930s, Heinrich Klüver and Paul Bucy removed the temporal lobes (including the amygdalae) of rhesus monkeys. The normally wary monkeys lost their fear of snakes and people, put everything in their mouths, and behaved in unusually tame ways.',
+          'Later work traced the loss of fear mainly to the amygdala.'],
+    refs:['kluver']},
+  'ffa':{lobe:'temporal', kicker:'Faces', title:'Fusiform face area',
+    v:[{img:'img/mri/fusiform.png', cap:'Front-on slice through the underside of the temporal lobes. ' + MRI_NOTE}],
+    body:['In 1997 Nancy Kanwisher’s lab used fMRI to find a patch of the fusiform gyrus that responds much more strongly to faces than to houses, hands or other objects. It’s usually larger on the right.',
+          'It works with the occipital face area (OFA), which handles face parts, and puts them together into a whole face you recognize.'],
+    brain:{pins:['temporal.ffa','occipital.ofa'], view:'below'},
+    refs:['kanwisher','haxby']},
+  'prosopagnosia':{lobe:'temporal', kicker:'Faces', title:'Prosopagnosia',
+    body:['Prosopagnosia, or face blindness, makes it hard or impossible to recognize people by their faces. People recognize friends by voice, hair, clothes or walk instead.',
+          'It can follow damage to the fusiform face area, but some people are born with it. The neurologist Oliver Sacks had it and sometimes didn’t recognize his own reflection. Researchers test it with the Cambridge Face Memory Test.'],
+    refs:['sacks10','duchaine']},
+  'wernicke-aphasia':{lobe:'temporal', kicker:'Language', title:'Wernicke’s aphasia',
+    v:[{img:'img/mri/broca.png', cap:'Left hemisphere, seen from the side. ' + MRI_NOTE}, {fig:'aphasia'}],
+    body:['Damage to Wernicke’s area leaves speech fluent, with normal rhythm and grammar, but the words don’t make sense (“word salad”), and understanding others is poor. People are often unaware that anything is wrong.'],
+    refs:['wernicke','geschwind']},
+  'arcuate':{lobe:'temporal', kicker:'Language', title:'Arcuate fasciculus',
+    body:['The arcuate fasciculus is a bundle of nerve fibers that arcs around the lateral fissure, linking Wernicke’s area (understanding) with Broca’s area (speaking).',
+          'Damage to it causes conduction aphasia: people speak fluently and understand well, but can’t repeat what they just heard.'],
+    brain:{pins:['frontal.broca','temporal.wern'], view:'lateral'},
+    refs:['geschwind','catani']},
+  'calcarine':{lobe:'occipital', kicker:'Landmarks', title:'Calcarine sulcus & cuneus',
+    v:[{img:'img/mri/calcarine.png', cap:'Inner (medial) surface of the left hemisphere. ' + MRI_NOTE}],
+    body:['The calcarine sulcus is a deep horizontal groove on the inner surface of the occipital lobe. V1 lines its walls.',
+          'The cuneus is the wedge of cortex above it, bounded by the parieto-occipital sulcus.'],
+    brain:{pins:['occipital.v1','occipital.cun'], view:'medial'},
+    refs:['kandel']},
+  'hubel-wiesel':{lobe:'occipital', kicker:'Classic experiment', title:'Hubel & Wiesel’s line detectors',
+    v:[{fig:'tuning'}],
+    body:['In the late 1950s, David Hubel and Torsten Wiesel recorded from single neurons in the visual cortex while showing simple patterns. A neuron would fire rapidly for a bar of light at one angle and barely at all for other angles.',
+          'Neighboring neurons preferred neighboring angles. These “edge detectors” are the building blocks of everything you see, and the work earned the 1981 Nobel Prize.'],
+    refs:['hubel59','hubel62']},
+  'visual-field':{lobe:'occipital', kicker:'Wiring', title:'Crossed visual fields',
+    v:[{fig:'fields'}],
+    body:['Each eye sees both halves of the world. At the optic chiasm, fibers from the inner half of each retina cross over, so everything in your right visual field ends up in your left V1, and the reverse.',
+          'That’s why a stroke in the left occipital lobe causes blindness in the right half of the visual field of both eyes.'],
+    refs:['kandel']},
+  'illusory':{lobe:'occipital', kicker:'Try it · vision', title:'Illusory contours',
+    v:[{fig:'kanizsa'}],
+    body:['Look at the Kanizsa triangle: you see a bright white triangle with sharp edges, but no edge is drawn. Your visual system fills it in.',
+          'Some neurons in V2 fire for these illusory edges as if they were real lines, showing that V2 is already grouping V1’s fragments into shapes.'],
+    refs:['vonderheydt','kanizsa']},
+  'disparity':{lobe:'occipital', kicker:'Try it · depth', title:'Binocular disparity',
+    body:['Hold a finger up about 15 cm (6 in) from your face and close one eye, then the other. Your finger jumps against the background because each eye sees from a slightly different spot.',
+          'Your brain uses that difference, called binocular disparity, to judge depth. In fMRI studies, activity in V3 and nearby areas tracks people’s depth perception.'],
+    refs:['backus']},
+  'achromatopsia':{lobe:'occipital', kicker:'Try it · color', title:'Cerebral achromatopsia',
+    v:[{demo:'gray'}],
+    body:['Damage to V4 and the color areas around it can drain color from the world even though the eyes are fine. People describe everything as gray, dirty or like an old black-and-white TV.',
+          'Oliver Sacks wrote about a painter who lost all color vision after a car accident. Toggle the image to get a rough sense of it.'],
+    refs:['zeki73','zeki90','sacks95']},
+  'akinetopsia':{lobe:'occipital', kicker:'Try it · motion', title:'Akinetopsia',
+    v:[{demo:'motion'}],
+    body:['After a stroke damaged V5/MT on both sides, patient L.M. lost the ability to see motion. Pouring tea looked like a frozen glacier, so she couldn’t tell when the cup was full. Cars seemed to jump from far away to right in front of her, which made crossing the street terrifying.',
+          'Switch the demo to see a rough version of what she described.'],
+    refs:['zihl']},
+  'face-network':{lobe:'occipital', kicker:'Faces', title:'OFA → fusiform face area',
+    v:[{img:'img/mri/fusiform.png', cap:'The fusiform gyrus runs along the underside of the temporal and occipital lobes. ' + MRI_NOTE}],
+    body:['Faces are handled by a team of regions. The occipital face area (OFA), in the occipital lobe, analyzes the parts: eyes, nose, mouth. It passes them forward along the underside of your brain to the fusiform face area (FFA) on the fusiform gyrus, which puts them together into a whole face you recognize.',
+          'Briefly disrupting the right OFA with magnetic stimulation (TMS) makes it harder to tell apart faces that differ in their parts.'],
+    brain:{pins:['occipital.ofa','temporal.ffa'], view:'below'},
+    refs:['haxby','pitcher','kanwisher']},
+  'little-brain':{lobe:'cerebellum', kicker:'Cerebellum', title:'Little brain, most neurons',
+    v:[{img:'img/mri/cerebellum.png', cap:'Midline slice. ' + MRI_NOTE}],
+    body:['Your cerebellum is only about 10% of your brain’s volume, yet it holds around 69 billion of your roughly 86 billion neurons, most of them tiny granule cells.',
+          'Its surface is folded into thin leaves called folia, giving it a surface area far larger than its size suggests.'],
+    refs:['azevedo']},
+  'ccas':{lobe:'cerebellum', kicker:'Cerebellum', title:'Cerebellar cognitive affective syndrome',
+    body:['Jeremy Schmahmann and Janet Sherman studied patients with damage limited to the cerebellum. Along with clumsiness, many had trouble planning, shifting between tasks, finding words, reasoning abstractly and controlling emotions.',
+          'That changed the old view of the cerebellum as purely a movement organ.'],
+    refs:['schmahmann']},
+  'ataxia':{lobe:'cerebellum', kicker:'Cerebellum', title:'Ataxia & intention tremor',
+    body:['Ataxia is uncoordinated movement: a wide, unsteady walk, slurred speech, and reaching that overshoots or zigzags.',
+          'Doctors test it with the finger-to-nose test. With cerebellar damage, the hand shakes more and more as it nears the target (an intention tremor), because the cerebellum isn’t smoothing out the corrections.'],
+    refs:['kandel']},
+  'prism':{lobe:'cerebellum', kicker:'Classic experiment', title:'Prism goggles',
+    body:['Put on goggles with prisms that shift everything you see to one side, and your first throws miss to that side. Within a few dozen throws you adapt and hit the target again. Take the goggles off and you miss the other way at first.',
+          'People with damage to the cerebellum or its input pathway barely adapt. The cerebellum is where the correction is learned.'],
+    refs:['martin']},
+  'tickle':{lobe:'cerebellum', kicker:'Prediction', title:'Why you can’t tickle yourself',
+    body:['When you move, your cerebellum predicts what it will feel like and the brain turns down that expected sensation. When you try to tickle yourself, the touch is perfectly predicted, so it feels weak.',
+          'When a robot added a short delay or a slight change of direction to people’s own tickling movements, the touch felt more ticklish, because the prediction no longer matched. Brain scans point to the cerebellum as the place where that prediction is made.'],
+    refs:['blakemore99','blakemore']},
+  'vor':{lobe:'cerebellum', kicker:'Try it · eyes', title:'Vestibulo-ocular reflex',
+    v:[{demo:'vor'}],
+    body:['Shake your head while reading this sentence: the words stay sharp. Now hold your head still and shake the text instead with the button below: it blurs.',
+          'When your head moves, your inner ear detects it and your eyes automatically counter-rotate. That’s the vestibulo-ocular reflex. The flocculus in your cerebellum keeps it calibrated, for example when you get new glasses.'],
+    refs:['ito']}
+};
+
+/* ============ State ============ */
+const state = { lobe:-1, beat:0, quiz:false, revealed:new Set(), override:null };
+const $ = s => document.querySelector(s);
+const panel = $('#panel');
+const S = (x,y,z) => new THREE.Vector3(-x/80, (z-10)/80, (y+18)/80); // MNI mm -> scene
+
+/* ============ Noise ============ */
+const perm = new Uint8Array(512);
+(() => { const p=[...Array(256).keys()]; let s=7; const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  for(let i=255;i>0;i--){const j=Math.floor(r()*(i+1));[p[i],p[j]]=[p[j],p[i]];}
+  for(let i=0;i<512;i++)perm[i]=p[i&255]; })();
+const G=[[1,1,0],[-1,1,0],[1,-1,0],[-1,-1,0],[1,0,1],[-1,0,1],[1,0,-1],[-1,0,-1],[0,1,1],[0,-1,1],[0,1,-1],[0,-1,-1]];
+function noise3(x,y,z){
+  const F3=1/3,G3=1/6; const s=(x+y+z)*F3; const i=Math.floor(x+s),j=Math.floor(y+s),k=Math.floor(z+s);
+  const t=(i+j+k)*G3; const x0=x-(i-t),y0=y-(j-t),z0=z-(k-t);
+  let i1,j1,k1,i2,j2,k2;
+  if(x0>=y0){ if(y0>=z0){i1=1;j1=0;k1=0;i2=1;j2=1;k2=0;} else if(x0>=z0){i1=1;j1=0;k1=0;i2=1;j2=0;k2=1;} else {i1=0;j1=0;k1=1;i2=1;j2=0;k2=1;} }
+  else { if(y0<z0){i1=0;j1=0;k1=1;i2=0;j2=1;k2=1;} else if(x0<z0){i1=0;j1=1;k1=0;i2=0;j2=1;k2=1;} else {i1=0;j1=1;k1=0;i2=1;j2=1;k2=0;} }
+  const x1=x0-i1+G3,y1=y0-j1+G3,z1=z0-k1+G3, x2=x0-i2+2*G3,y2=y0-j2+2*G3,z2=z0-k2+2*G3, x3=x0-1+3*G3,y3=y0-1+3*G3,z3=z0-1+3*G3;
+  const ii=i&255,jj=j&255,kk=k&255;
+  const g=[perm[ii+perm[jj+perm[kk]]]%12, perm[ii+i1+perm[jj+j1+perm[kk+k1]]]%12, perm[ii+i2+perm[jj+j2+perm[kk+k2]]]%12, perm[ii+1+perm[jj+1+perm[kk+1]]]%12];
+  const c=(gi,a,b,d)=>{let tt=0.6-a*a-b*b-d*d; if(tt<0)return 0; tt*=tt; const q=G[gi]; return tt*tt*(q[0]*a+q[1]*b+q[2]*d);};
+  return 32*(c(g[0],x0,y0,z0)+c(g[1],x1,y1,z1)+c(g[2],x2,y2,z2)+c(g[3],x3,y3,z3));
+}
+const gauss=(v,w)=>Math.exp(-(v*v)/w);
+
+/* ============ Renderer, camera, lights ============ */
+const stage = $('#stage');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.05, 50);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.enablePan = false;
+controls.minDistance = 1.6; controls.maxDistance = 8; controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
+
+scene.add(new THREE.HemisphereLight(0xfff3ee, 0x2a1d22, 0.7));
+const key = new THREE.DirectionalLight(0xffffff, 0.95);
+const rim = new THREE.DirectionalLight(0xa9bcff, 0.55);
+const fill = new THREE.DirectionalLight(0xffe0d0, 0.3); fill.position.set(0,-3,2);
+camera.add(key); key.position.set(1.5,2.5,1); camera.add(rim); rim.position.set(-3,1,-3); scene.add(camera); scene.add(fill);
+
+/* ============ Brain material (lobe tint, sulcal shading, region spotlight, x-ray) ============ */
+const lin = hex => new THREE.Color(hex).convertSRGBToLinear();
+const uniforms = {
+  uColors:{value: LOBES.map(L => lin(L.color))}, uTissue:{value: lin('#d9b2a4')},
+  uSel:{value:-1}, uHover:{value:-1}, uDim:{value:0},
+  uA:{value:new THREE.Vector3()}, uB:{value:new THREE.Vector3()}, uR:{value:0.1}, uSpot:{value:0}, uSpotColor:{value:new THREE.Color()},
+  uAlpha:{value:1}, uTime:{value:0},
+  uA2:{value:new THREE.Vector3()}, uB2:{value:new THREE.Vector3()}, uR2:{value:0.1}, uSpot2:{value:0}, uSpotColor2:{value:new THREE.Color()}
+};
+function brainMaterial(cereb){
+  const m = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.62, metalness:0});
+  if (cereb) m.defines = {CEREB:''};
+  m.customProgramCacheKey = () => cereb ? 'cereb' : 'cortex';
+  m.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, uniforms);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', `#include <common>
+attribute float curv; varying float vCurv; varying vec3 vPos;
+#ifndef CEREB
+attribute vec4 lobeW; varying vec4 vLobeW;
+#endif`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+vPos = position; vCurv = curv;
+#ifndef CEREB
+vLobeW = lobeW;
+#endif`);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', `#include <common>
+varying float vCurv; varying vec3 vPos;
+#ifndef CEREB
+varying vec4 vLobeW;
+#endif
+uniform vec3 uColors[5]; uniform vec3 uTissue; uniform int uSel; uniform int uHover; uniform float uDim;
+uniform vec3 uA; uniform vec3 uB; uniform float uR; uniform float uSpot; uniform vec3 uSpotColor; uniform float uAlpha; uniform float uTime;
+uniform vec3 uA2; uniform vec3 uB2; uniform float uR2; uniform float uSpot2; uniform vec3 uSpotColor2;
+float dseg(vec3 p, vec3 a, vec3 b){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/max(dot(ba,ba),1e-6),0.0,1.0); return length(pa-ba*h); }
+float pickW(int i, vec4 w, float wc){ return i==0?w.x : i==1?w.y : i==2?w.z : i==3?w.w : i==4?wc : 0.0; }`)
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );', `
+#ifdef CEREB
+vec4 w = vec4(0.0); float wc = 1.0; float med = 0.0;
+#else
+vec4 w = vLobeW; float wc = 0.0; float med = clamp(1.0-(w.x+w.y+w.z+w.w),0.0,1.0);
+#endif
+vec3 lobeCol = w.x*uColors[0] + w.y*uColors[1] + w.z*uColors[2] + w.w*uColors[3] + wc*uColors[4] + med*uTissue;
+float selW = pickW(uSel,w,wc), hovW = pickW(uHover,w,wc);
+vec3 over = mix(uTissue, lobeCol, 0.72*(1.0-med));
+vec3 selc = mix(uTissue*0.8, lobeCol, 0.9*selW*(1.0-0.6*uSpot));
+vec3 col = mix(over, selc, uDim);
+float ao = mix(0.48, 1.06, smoothstep(-0.75, 0.6, vCurv));
+col *= ao;
+float d = dseg(vPos, uA, uB);
+float inside = 1.0 - smoothstep(uR*0.72, uR, d);
+float ring = smoothstep(uR*0.8, uR, d) * (1.0 - smoothstep(uR, uR*1.18, d));
+float d2 = dseg(vPos, uA2, uB2);
+float inside2 = 1.0 - smoothstep(uR2*0.72, uR2, d2);
+float ring2 = smoothstep(uR2*0.8, uR2, d2) * (1.0 - smoothstep(uR2, uR2*1.18, d2));
+#ifndef CEREB
+float sideOk = step(-0.004, vPos.x); inside *= sideOk; ring *= sideOk; inside2 *= sideOk; ring2 *= sideOk;
+#endif
+vec3 spotCol = mix(uSpotColor, vec3(1.0), 0.12);
+vec3 spotCol2 = mix(uSpotColor2, vec3(1.0), 0.12);
+float anySpot = max(uSpot, uSpot2), lit = max(inside*uSpot, inside2*uSpot2);
+col = mix(col, col*0.7, anySpot*(1.0-lit)*0.4);
+col = mix(col, spotCol*mix(0.75,1.0,ao), inside*uSpot);
+col = mix(col, spotCol2*mix(0.75,1.0,ao), inside2*uSpot2);
+vec4 diffuseColor = vec4(col, opacity*uAlpha);`)
+      .replace('vec3 totalEmissiveRadiance = emissive;', `
+vec3 totalEmissiveRadiance = emissive + lobeCol*0.22*hovW + spotCol*uSpot*(inside*0.32 + ring*(0.7+0.4*sin(uTime*4.0))) + spotCol2*uSpot2*(inside2*0.32 + ring2*(0.7+0.4*sin(uTime*4.0)));`);
+  };
+  return m;
+}
+const cortexMat = brainMaterial(false), cerebMat = brainMaterial(true);
+const stemMat = new THREE.MeshStandardMaterial({color:0xb8968c, roughness:0.65});
+const STEM_ON = new THREE.Color(0xb8968c), STEM_OFF = new THREE.Color(0x4a3f3d);
+
+/* ============ Geometry ============ */
+let lh, rh, cerebellum, medulla, pons, midbrain;
+let brainMeshes = [], occluders = [];
+const LOBE_IDS = ['frontal','parietal','temporal','occipital','cerebellum'];
+
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer;
+  const n = 32492, f = 64980; let off = 0;
+  const meshes = [];
+  for (let h=0; h<2; h++){
+    const pos = new Int16Array(buf, off, n*3); off += n*6;
+    const idx = new Uint16Array(buf, off, f*3); off += f*6;
+    const curv = new Int8Array(buf, off, n); off += n;
+    const lobe = new Uint8Array(buf, off, n); off += n;
+    const P = new Float32Array(n*3), C = new Float32Array(n), W = new Float32Array(n*4);
+    for (let i=0;i<n;i++){
+      const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300);
+      P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z;
+      C[i] = curv[i]/127;
+      if (lobe[i] < 4) W[i*4+lobe[i]] = 1;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(P,3));
+    g.setAttribute('curv', new THREE.BufferAttribute(C,1));
+    g.setAttribute('lobeW', new THREE.BufferAttribute(W,4));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1));
+    g.computeVertexNormals();
+    const m = new THREE.Mesh(g, cortexMat);
+    m.userData.lobe = lobe.slice();
+    scene.add(m); meshes.push(m);
+  }
+  [lh, rh] = meshes; // lh = left hemisphere (scene +x)
+}
+
+function buildCerebellum(){
+  const geo = new THREE.SphereGeometry(1, 200, 160);
+  const pos = geo.attributes.position; const v = new THREE.Vector3();
+  const C = new Float32Array(pos.count);
+  const ctr = S(0,-62,-33);
+  for (let i=0;i<pos.count;i++){
+    v.fromBufferAttribute(pos,i);
+    const ux=v.x, uy=v.y, uz=v.z; // x lateral, y up, z front
+    const p = new THREE.Vector3(ux*0.6*(1+0.08*Math.max(0,-uy)), uy*(uy>0?0.24:0.31), uz*(uz>0?0.36:0.4));
+    p.y -= 0.06*Math.max(0,uy)*uz;                          // tentorial slope
+    const folia = Math.sin((uy*0.9 - uz*0.45)*58 + 2.2*noise3(ux*2.5,uy*2.5,uz*2.5));
+    let f = 1 + 0.016*folia;
+    f -= 0.16*gauss(ux,0.004)*Math.max(0,-uz);              // posterior vermis notch
+    f -= 0.35*gauss(ux,0.03)*Math.max(0,uz)*Math.max(0,uz); // anterior notch for the brainstem
+    f -= 0.05*gauss(ux,0.02);
+    p.multiplyScalar(f).add(ctr);
+    pos.setXYZ(i,p.x,p.y,p.z);
+    C[i] = folia*0.9;
+  }
+  geo.setAttribute('curv', new THREE.BufferAttribute(C,1));
+  geo.computeVertexNormals();
+  cerebellum = new THREE.Mesh(geo, cerebMat);
+  scene.add(cerebellum);
+}
+
+function buildStem(){
+  const tube = (a,b,r0,r1) => {
+    const A=S(...a), B=S(...b), len=A.distanceTo(B);
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(r0,r1,len,40,1), stemMat);
+    m.position.copy(A).add(B).multiplyScalar(0.5);
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), A.clone().sub(B).normalize());
+    scene.add(m); return m;
+  };
+  midbrain = tube([0,-24,0],[0,-24,-22], 0.15, 0.15);
+  medulla  = tube([0,-34,-42],[0,-42,-78], 0.12, 0.09);
+  pons = new THREE.Mesh(new THREE.SphereGeometry(1,48,36), stemMat);
+  pons.scale.set(0.19,0.2,0.17); pons.position.copy(S(0,-22,-28)); scene.add(pons);
+}
+
+/* deep structures, shown inside an x-ray cortex */
+const deepMeshes = {};
+function buildDeep(){
+  const hipMat = new THREE.MeshStandardMaterial({color:lin('#ec6f86'), emissive:lin('#ec6f86'), emissiveIntensity:0.45, roughness:0.4});
+  const curve = new THREE.CatmullRomCurve3([[-22,-6,-22],[-28,-16,-17],[-30,-26,-11],[-27,-36,-4],[-20,-42,4]].map(p=>S(...p)));
+  const tg = new THREE.TubeGeometry(curve, 60, 1, 20, false);
+  const tp = tg.attributes.position, tmp = new THREE.Vector3();
+  for (let i=0;i<tp.count;i++){ // taper: thick head, thin tail
+    const u = Math.floor(i/21)/60, pt = curve.getPointAt(Math.min(1,u));
+    tmp.fromBufferAttribute(tp,i).sub(pt).multiplyScalar(0.075*(1-0.6*u)).add(pt);
+    tp.setXYZ(i,tmp.x,tmp.y,tmp.z);
+  }
+  tg.computeVertexNormals();
+  deepMeshes.hippo = new THREE.Mesh(tg, hipMat);
+  deepMeshes.amyg = new THREE.Mesh(new THREE.SphereGeometry(1,40,30), hipMat.clone());
+  deepMeshes.amyg.scale.set(0.095,0.085,0.1); deepMeshes.amyg.position.copy(S(-22,-4,-18));
+  for (const k in deepMeshes){ deepMeshes[k].visible = false; deepMeshes[k].renderOrder = -1; scene.add(deepMeshes[k]); }
+}
+
+/* ============ Regions, pins & labels ============ */
+const labelsEl = $('#labels');
+function nearest(lobeId, mni){
+  const t = S(...mni);
+  const mesh = lobeId==='cerebellum' ? cerebellum : lh;
+  const P = mesh.geometry.attributes.position, N = mesh.geometry.attributes.normal, lob = mesh.userData.lobe;
+  const want = LOBE_IDS.indexOf(lobeId);
+  let best=-1, bd=Infinity;
+  for (let i=0;i<P.count;i++){
+    if (lob && lob[i] !== want) continue;
+    if (!lob && P.getX(i) < -0.02) continue;
+    const dx=P.getX(i)-t.x, dy=P.getY(i)-t.y, dz=P.getZ(i)-t.z; const d=dx*dx+dy*dy+dz*dz;
+    if (d<bd){bd=d;best=i;}
+  }
+  return { p:new THREE.Vector3(P.getX(best),P.getY(best),P.getZ(best)), n:new THREE.Vector3(N.getX(best),N.getY(best),N.getZ(best)) };
+}
+let overviewLabels = [], pinSets = [];
+function buildPins(){
+  overviewLabels = LOBES.map((L,i) => {
+    const el = document.createElement('div'); el.className='lobe-label'; el.style.setProperty('--c',L.color); el.textContent=L.name.replace(' Lobe','');
+    el.addEventListener('click', () => selectLobe(i));
+    labelsEl.appendChild(el);
+    const h = nearest(L.id, L.anchor);
+    return { el, world: h.p.add(h.n.multiplyScalar(0.04)) };
+  });
+  pinSets = LOBES.map((L, li) => Object.entries(L.pins).map(([key,def]) => {
+    const nums = L.beats.map((b,bi)=>b.pin===key?bi+1:0).filter(Boolean);
+    let a, b, n, world, medial=false;
+    if (def.deep){
+      world = S(...def.c); a = b = world.clone(); n = new THREE.Vector3(...VIEWS.deep).normalize();
+    } else {
+      const ha = nearest(L.id, def.c);
+      const hb = def.b ? nearest(L.id, def.b) : ha;
+      const mid = def.b ? nearest(L.id, def.c.map((v,i)=>(v+def.b[i])/2)) : ha;
+      a = ha.p; b = hb.p; n = new THREE.Vector3(...VIEWS[def.v||'lateral']).normalize();
+      world = mid.p.clone().add(mid.n.clone().multiplyScalar(0.025));
+      medial = def.v === 'medial';
+    }
+    const el = document.createElement('button'); el.className='pin'; el.hidden = true; el.style.setProperty('--c',L.color);
+    const label = nums.length>1 ? `${nums[0]}–${nums[nums.length-1]}` : String(nums[0]);
+    el.innerHTML = `<span class="knob">${label}</span><span class="tag"></span>`;
+    el.setAttribute('aria-label', `Part ${label}`);
+    el.addEventListener('click', e => { e.stopPropagation(); if (state.lobe === li) setBeat(nums[0]); else selectLobe(li, nums[0]); });
+    labelsEl.appendChild(el);
+    return { key, li, nums, el, world, a, b, n, r:(def.r||10)/80, deep:def.deep||null, medial };
+  }));
+}
+
+/* ============ Camera ============ */
+const VIEWS = { lateral:[1,0.12,0], medial:[-1,0.12,0], front:[0.55,0.2,1], back:[0.45,0.2,-1], backside:[0.9,0.05,-0.7],
+  top:[0.55,1,-0.25], upper:[0.9,0.85,0], below:[0.45,-1,0.15], backlow:[0.55,-0.7,-0.8], frontlow:[0.9,-0.55,0.45], deep:[1,-0.22,0.12] };
+const OVERVIEW = {pos:[3.7,1.2,1.4], target:[0,-0.12,-0.05]};
+let tween = null;
+const isNarrow = () => innerWidth <= 820;
+function flyTo(pos, target){
+  tween = { from:camera.position.clone(), to:pos.clone(), tf:controls.target.clone(), tt:target.clone(), t0:performance.now(), dur:1100 };
+}
+function flyPreset(view, lobeView=true){
+  const scale = (isNarrow() ? 1.3 : 1) * (lobeView ? 1.4 : 1);
+  const t = new THREE.Vector3(...view.target);
+  flyTo(new THREE.Vector3(...view.pos).sub(t).multiplyScalar(scale).add(t), t);
+}
+function flyToSpots(spots, viewName){
+  const medial = spots.some(p => p.medial);
+  const dist = (medial ? 3.0 : 3.5) * (isNarrow() ? 1.3 : 1);
+  const target = new THREE.Vector3();
+  spots.forEach(p => target.add(p.a).add(p.b)); target.multiplyScalar(1/(2*spots.length));
+  target.lerp(new THREE.Vector3(0,-0.1,-0.05), 0.3);
+  const dir = viewName ? new THREE.Vector3(...VIEWS[viewName]).normalize() : spots[0].n.clone();
+  flyTo(target.clone().add(dir.multiplyScalar(dist)), target);
+}
+controls.addEventListener('start', () => { tween = null; controls.autoRotate = false; });
+
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w,h);
+  camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.25), w, h);
+  else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), 0, w, h);
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+
+/* ============ Picking ============ */
+const ray = new THREE.Raycaster(); const ndc = new THREE.Vector2();
+let hoverLobe = null, downAt = null;
+function lobeOfHit(hit){
+  if (hit.object === cerebellum) return 'cerebellum';
+  const l = hit.object.userData.lobe?.[hit.face.a];
+  return l != null && l < 4 ? LOBE_IDS[l] : null;
+}
+function pick(ev){
+  if (!lh) return null;
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((ev.clientX-r.left)/r.width)*2-1, -((ev.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(brainMeshes.filter(m=>m.visible), false)[0];
+  return hit ? lobeOfHit(hit) : null;
+}
+renderer.domElement.addEventListener('pointermove', ev => { hoverLobe = pick(ev); renderer.domElement.classList.toggle('hovering', !!hoverLobe); });
+renderer.domElement.addEventListener('pointerleave', () => { hoverLobe = null; });
+renderer.domElement.addEventListener('pointerdown', ev => { downAt = [ev.clientX, ev.clientY]; });
+renderer.domElement.addEventListener('pointerup', ev => {
+  if (!downAt) return; const moved = Math.hypot(ev.clientX-downAt[0], ev.clientY-downAt[1]); downAt = null;
+  if (moved > 6) return;
+  const id = pick(ev); if (!id) return;
+  const i = LOBE_IDS.indexOf(id);
+  if (i !== state.lobe) selectLobe(i);
+});
+
+/* ============ Helpers ============ */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lobeColor = id => (LOBES.find(L => L.id===id) || LOBES[0]).color;
+function rich(text){
+  return esc(text).replace(/\[\[([a-z0-9-]+)\|([^\]]+)\]\]/g, (m,k,t) =>
+    CARDS[k] ? `<button class="term" data-card="${k}" style="--c:${lobeColor(CARDS[k].lobe)}">${t}</button>` : t);
+}
+const crop = (li, bi) => `img/crops/${LOBES[li].id}-${bi+1}.jpg`;
+
+/* ============ Figures ============ */
+const FIG = {};
+FIG.gage = () => `<svg viewBox="0 0 240 210" role="img" aria-label="Diagram of the iron rod's path through Phineas Gage's skull">
+  <ellipse cx="128" cy="88" rx="80" ry="66" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <path d="M58 118 Q50 140 60 158 Q66 176 92 182 L118 184 Q132 184 138 172 L146 150 Q168 150 188 130" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <circle cx="78" cy="104" r="13" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <path d="M60 128 Q78 124 96 130" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <ellipse cx="96" cy="74" rx="30" ry="24" fill="#5b8cff" opacity=".35"/>
+  <line x1="70" y1="196" x2="122" y2="6" stroke="var(--chalk)" stroke-width="7" stroke-linecap="round"/>
+  <text x="132" y="18" fill="var(--fg)" font-size="11" font-family="IBM Plex Mono, monospace">exits top of skull</text>
+  <text x="86" y="204" fill="var(--fg)" font-size="11" font-family="IBM Plex Mono, monospace">enters under left cheekbone</text>
+  <text x="150" y="82" fill="#8fb0ff" font-size="11" font-family="IBM Plex Mono, monospace">left frontal lobe</text>
+</svg><figcaption>Schematic of the rod’s path (side view, face to the left). Shaded: the frontal tissue it destroyed.</figcaption>`;
+FIG.kanizsa = () => `<svg viewBox="0 0 240 190" role="img" aria-label="Kanizsa triangle illusion">
+  <rect width="240" height="190" fill="var(--bg)"/>
+  <circle cx="120" cy="34" r="26" fill="var(--fg)"/><circle cx="46" cy="160" r="26" fill="var(--fg)"/><circle cx="194" cy="160" r="26" fill="var(--fg)"/>
+  <polygon points="120,34 46,160 194,160" fill="var(--bg)"/>
+</svg><figcaption>Kanizsa triangle: you see a triangle, but none of its edges is drawn.</figcaption>`;
+FIG.baddeley = () => {
+  const box = (x,y,w,h,t,sub,col) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="none" stroke="${col}" stroke-width="2"/>
+    <text x="${x+w/2}" y="${y+h/2-2}" text-anchor="middle" fill="var(--fg)" font-size="12.5" font-weight="700">${t}</text>
+    <text x="${x+w/2}" y="${y+h/2+14}" text-anchor="middle" fill="var(--muted)" font-size="10.5">${sub}</text>`;
+  return `<svg viewBox="0 0 360 230" role="img" aria-label="Baddeley and Hitch working memory model">
+    ${box(110,8,140,52,'Central executive','directs attention','#5b8cff')}
+    ${box(6,96,110,52,'Phonological loop','sounds & words','var(--muted)')}
+    ${box(125,96,110,52,'Episodic buffer','added in 2000','var(--muted)')}
+    ${box(244,96,110,52,'Visuospatial','sketchpad · images','var(--chalk)')}
+    ${box(60,186,240,38,'Long-term memory','','var(--line)')}
+    <path d="M150 60 L70 96 M180 60 L180 96 M210 60 L290 96 M180 148 L180 186 M61 148 L120 186 M299 148 L240 186" stroke="var(--faint)" stroke-width="1.5" fill="none"/>
+  </svg><figcaption>Working memory as a workspace with parts. The sketchpad (gold) is the one in the Mimage.</figcaption>`;
+};
+FIG.aphasia = () => `<table class="cmp"><thead><tr><th></th><th>Broca’s</th><th>Wernicke’s</th></tr></thead><tbody>
+  <tr><th>Speech</th><td>Slow, effortful</td><td>Fluent, easy</td></tr>
+  <tr><th>Makes sense?</th><td>Yes, but telegraphic</td><td>Often not</td></tr>
+  <tr><th>Understanding</th><td>Mostly intact</td><td>Poor</td></tr>
+  <tr><th>Aware of it?</th><td>Usually, frustrated</td><td>Often not</td></tr>
+  <tr><th>Sounds like</th><td>“Walk… dog… park.”</td><td>“The dog is walking the toast in the yesterday.”</td></tr>
+  <tr><th>Damage</th><td>Left inferior frontal gyrus</td><td>Left posterior superior temporal gyrus</td></tr></tbody></table>
+  <figcaption>Memory hook: Broca’s = broken speech. Wernicke’s = “WHAT?!”, nonsense speech and poor comprehension.</figcaption>`;
+FIG.central = () => `<svg viewBox="0 0 320 170" role="img" aria-label="Precentral and postcentral gyri on either side of the central sulcus">
+  <rect x="40" y="24" width="110" height="110" rx="40" fill="#5b8cff" opacity=".35"/>
+  <rect x="170" y="24" width="110" height="110" rx="40" fill="#f0a43a" opacity=".35"/>
+  <path d="M160 14 L160 144" stroke="var(--fg)" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round"/>
+  <text x="95" y="74" text-anchor="middle" fill="var(--fg)" font-size="13" font-weight="700">Precentral</text>
+  <text x="95" y="92" text-anchor="middle" fill="var(--muted)" font-size="11">motor · sends</text>
+  <text x="225" y="74" text-anchor="middle" fill="var(--fg)" font-size="13" font-weight="700">Postcentral</text>
+  <text x="225" y="92" text-anchor="middle" fill="var(--muted)" font-size="11">sensory · receives</text>
+  <text x="160" y="162" text-anchor="middle" fill="var(--muted)" font-size="11" font-family="IBM Plex Mono, monospace">central sulcus</text>
+  <text x="8" y="160" fill="var(--faint)" font-size="11" font-family="IBM Plex Mono, monospace">← front</text>
+  <text x="312" y="160" text-anchor="end" fill="var(--faint)" font-size="11" font-family="IBM Plex Mono, monospace">back →</text>
+</svg><figcaption>Frontal lobe (blue) in front of the central sulcus, parietal lobe (gold) behind it.</figcaption>`;
+const HOMUN = {
+  motor:[['Toes',2],['Ankle',2],['Knee',2],['Hip',2],['Trunk',2.5],['Shoulder',2],['Elbow',2],['Wrist',2],['Hand',3],['Little',2],['Ring',2],['Middle',2],['Index',2.5],['Thumb',4.5],['Neck',2],['Brow',2],['Eyelid & eye',2.5],['Face',3.5],['Lips',6],['Jaw',3],['Tongue',4.5],['Swallowing',2.5]],
+  sensory:[['Genitals',1.5],['Toes',2],['Foot',2],['Leg',2],['Hip',1.5],['Trunk',2],['Neck',1.5],['Head',1.5],['Shoulder',1.5],['Arm',2],['Elbow',1.5],['Forearm',2],['Wrist',1.5],['Hand',3],['Fingers',5],['Thumb',3.5],['Eye',2],['Nose',2],['Face',3.5],['Lips',6],['Teeth & jaw',3],['Tongue',4],['Throat',2],['Abdomen',2]]
+};
+function homunculusSVG(kind){
+  const parts = HOMUN[kind], max = Math.max(...parts.map(p=>p[1]));
+  const col = kind==='motor' ? '#5b8cff' : '#f0a43a', rowH = 14, x0 = 96, w = 300, top = 22;
+  const rows = parts.map(([name,v],i) => {
+    const y = top + i*rowH, bw = (v/max)*w, big = v >= 4;
+    return `<text x="${x0-8}" y="${y+10.5}" text-anchor="end" fill="var(--fg)" font-size="${big?12:11}" font-weight="${big?700:400}">${name}</text>
+      <rect x="${x0}" y="${y+1}" width="${bw.toFixed(1)}" height="${rowH-3}" rx="3" fill="${col}" fill-opacity="${(0.3+0.7*v/max).toFixed(2)}"/>`;
+  }).join('');
+  const h = top + parts.length*rowH + 12;
+  return `<svg viewBox="0 0 420 ${h}" role="img" aria-label="${kind} homunculus: share of cortex per body part">
+    <text x="${x0}" y="12" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">top of the strip ↓ down the side</text>
+    ${rows}</svg>`;
+}
+// fix arc sweep direction (angles increase counter-clockwise on screen)
+FIG.homunculus = () => `<div class="tabs" data-fig="homunculus"><button class="tab on" data-k="motor">Motor (precentral)</button><button class="tab" data-k="sensory">Sensory (postcentral)</button></div>
+  <div class="homun-slot">${homunculusSVG('motor')}</div>
+  <figcaption>Body parts in the order they sit along the strip, from the top of your head down the side, after Penfield &amp; Rasmussen (1950). Bar length shows how much cortex each part gets: a longer bar means more neurons and more connections. Approximate, for illustration.</figcaption>`;
+FIG.streams = () => `<svg viewBox="0 0 400 240" role="img" aria-label="Dorsal and ventral visual streams">
+  <path d="M40 120 C40 58 128 26 214 30 C300 34 366 68 372 122 C378 164 350 186 318 190 C300 214 254 222 222 206 C190 218 128 212 104 190 C66 176 40 160 40 120 Z" fill="var(--raise)" stroke="var(--muted)" stroke-width="1.5"/>
+  <path d="M352 126 C320 70 270 56 214 70" fill="none" stroke="#f0a43a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M206 66 L218 62 L214 76" fill="none" stroke="#f0a43a" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M352 140 C320 182 270 190 210 180" fill="none" stroke="#ec6f86" stroke-width="5" stroke-linecap="round"/>
+  <path d="M216 172 L204 180 L216 188" fill="none" stroke="#ec6f86" stroke-width="4" stroke-linejoin="round"/>
+  <circle cx="356" cy="133" r="9" fill="#36c3a5"/>
+  <text x="200" y="52" text-anchor="middle" fill="#ffc46b" font-size="13" font-weight="700">Dorsal: where / how</text>
+  <text x="196" y="210" text-anchor="middle" fill="#ff9fb1" font-size="13" font-weight="700">Ventral: what</text>
+  <text x="372" y="160" text-anchor="end" fill="#6fe0c6" font-size="11">V1</text>
+  <text x="44" y="232" fill="var(--faint)" font-size="11" font-family="IBM Plex Mono, monospace">← front</text>
+</svg><figcaption>Left hemisphere, seen from the side. Gold: up to the parietal lobe. Pink: down to the temporal lobe.</figcaption>`;
+FIG.neglect = () => {
+  const clock = (cx, nums) => nums.map(([n,a]) => { const x = cx + 52*Math.sin(a), y = 80 - 52*Math.cos(a);
+    return `<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" fill="var(--fg)" font-size="12">${n}</text>`; }).join('');
+  const normal = Array.from({length:12},(_,i)=>[i+1, (i+1)*Math.PI/6]);
+  const neg = Array.from({length:12},(_,i)=>[ (i+12)%12 || 12, (i/11)*Math.PI - 0.08 ]);
+  return `<svg viewBox="0 0 360 170" role="img" aria-label="Clock drawings: typical and with left neglect">
+    <circle cx="90" cy="80" r="66" fill="none" stroke="var(--muted)" stroke-width="2"/>${clock(90, normal)}
+    <circle cx="270" cy="80" r="66" fill="none" stroke="var(--muted)" stroke-width="2"/>${clock(270, neg)}
+    <text x="90" y="164" text-anchor="middle" fill="var(--muted)" font-size="11.5">Typical drawing</text>
+    <text x="270" y="164" text-anchor="middle" fill="var(--muted)" font-size="11.5">With left neglect</text>
+  </svg><figcaption>A typical example of what people with left neglect draw: every number crowded onto the right side.</figcaption>`;
+};
+FIG.twopoint = () => {
+  const d = [['Fingertip',2.5],['Lips',5],['Palm',10],['Forehead',15],['Forearm',38],['Back',40],['Calf',45]];
+  const x0 = 82, w = 260, sc = w/50;
+  const bars = d.map(([n,v],i) => `<text x="${x0-8}" y="${24+i*24}" text-anchor="end" fill="var(--fg)" font-size="11.5">${n}</text>
+    <rect x="${x0}" y="${14+i*24}" width="${(v*sc).toFixed(1)}" height="14" rx="3" fill="#f0a43a" opacity="${(1-i*0.1).toFixed(2)}"/>
+    <text x="${(x0+v*sc+6).toFixed(1)}" y="${25+i*24}" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">${v} mm</text>`).join('');
+  const ticks = [0,10,20,30,40,50].map(t => `<line x1="${x0+t*sc}" y1="10" x2="${x0+t*sc}" y2="186" stroke="var(--line)"/><text x="${x0+t*sc}" y="200" text-anchor="middle" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">${t}</text>`).join('');
+  return `<svg viewBox="0 0 380 212" role="img" aria-label="Two-point thresholds by body part">${ticks}${bars}</svg>
+    <figcaption>Smallest distance at which two points feel like two (approximate adult values, after Weinstein, 1968). Shorter bar = more sensitive.</figcaption>`;
+};
+FIG.tonotopy = () => {
+  let keys = ''; for (let i=0;i<14;i++) keys += `<rect x="${20+i*24}" y="60" width="22" height="46" rx="2" fill="var(--fg)" opacity=".9"/>`;
+  [0,1,3,4,5,7,8,10,11,12].forEach(i => keys += `<rect x="${35+i*24}" y="60" width="14" height="28" rx="2" fill="var(--bg)"/>`);
+  return `<svg viewBox="0 0 380 120" role="img" aria-label="Tonotopic map from low to high pitch">
+    <defs><linearGradient id="tono" x1="0" x2="1"><stop offset="0" stop-color="#3b5bdb"/><stop offset="1" stop-color="#ec6f86"/></linearGradient></defs>
+    <rect x="20" y="16" width="336" height="26" rx="6" fill="url(#tono)"/>
+    <text x="28" y="34" fill="#fff" font-size="12" font-weight="700">low pitch</text>
+    <text x="348" y="34" text-anchor="end" fill="#fff" font-size="12" font-weight="700">high pitch</text>${keys}
+  </svg><figcaption>Neurons along Heschl’s gyrus are ordered by the pitch they prefer, like piano keys.</figcaption>`;
+};
+FIG.tuning = () => {
+  const angs = [0,30,60,90,120,150], rate = [1,3,9,3,1,0];
+  const cells = angs.map((a,i) => { const cx = 34+i*58;
+    let sp=''; for (let k=0;k<rate[i];k++) sp += `<line x1="${cx-20+k*4.6}" y1="96" x2="${cx-20+k*4.6}" y2="114" stroke="#36c3a5" stroke-width="2"/>`;
+    return `<circle cx="${cx}" cy="44" r="24" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="${cx}" y1="26" x2="${cx}" y2="62" stroke="var(--fg)" stroke-width="5" stroke-linecap="round" transform="rotate(${a} ${cx} 44)"/>
+      <line x1="${cx-22}" y1="114" x2="${cx+22}" y2="114" stroke="var(--line)"/>${sp}
+      <text x="${cx}" y="132" text-anchor="middle" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">${a}°</text>`; }).join('');
+  return `<svg viewBox="0 0 360 140" role="img" aria-label="One neuron's firing for bars at different angles">${cells}
+    <text x="4" y="90" fill="var(--faint)" font-size="10" font-family="IBM Plex Mono, monospace">spikes</text></svg>
+    <figcaption>Illustration of one V1 neuron: it fires most for a bar tilted 30° to the right of vertical, less for nearby angles, and hardly at all for others.</figcaption>`;
+};
+FIG.fields = () => `<svg viewBox="0 0 360 260" role="img" aria-label="Visual pathways crossing at the optic chiasm">
+  <path d="M60 50 A120 40 0 0 1 180 10 L180 50 Z" fill="#5b8cff" opacity=".35"/><path d="M180 10 A120 40 0 0 1 300 50 L180 50 Z" fill="#f0a43a" opacity=".4"/>
+  <text x="110" y="42" text-anchor="middle" fill="var(--fg)" font-size="11.5">left field</text><text x="250" y="42" text-anchor="middle" fill="var(--fg)" font-size="11.5">right field</text>
+  <circle cx="130" cy="96" r="20" fill="none" stroke="var(--muted)" stroke-width="2"/><circle cx="230" cy="96" r="20" fill="none" stroke="var(--muted)" stroke-width="2"/>
+  <path d="M118 110 L110 222" stroke="#f0a43a" stroke-width="3" fill="none"/>
+  <path d="M142 110 L180 160 L250 222" stroke="#5b8cff" stroke-width="3" fill="none"/>
+  <path d="M218 110 L180 160 L110 222" stroke="#f0a43a" stroke-width="3" fill="none"/>
+  <path d="M242 110 L250 222" stroke="#5b8cff" stroke-width="3" fill="none"/>
+  <text x="196" y="164" fill="var(--muted)" font-size="10.5" font-family="IBM Plex Mono, monospace">optic chiasm</text>
+  <rect x="62" y="222" width="96" height="30" rx="7" fill="#f0a43a" opacity=".3"/><text x="110" y="242" text-anchor="middle" fill="var(--fg)" font-size="12" font-weight="700">Left V1</text>
+  <rect x="202" y="222" width="96" height="30" rx="7" fill="#5b8cff" opacity=".3"/><text x="250" y="242" text-anchor="middle" fill="var(--fg)" font-size="12" font-weight="700">Right V1</text>
+</svg><figcaption>Seen from above. Everything in your right visual field (gold) ends up in your left V1, from both eyes.</figcaption>`;
+
+/* ============ Demos ============ */
+const DEMO = {};
+DEMO.span = () => `<div class="demo" data-demo="span">
+    <div class="span-out small">Flash a sequence, then write it down from memory.</div>
+    <div class="row" style="justify-content:space-between">
+      <span class="stepper"><button class="minus" aria-label="Fewer digits">−</button><span class="n">7</span> digits<button class="plus" aria-label="More digits">+</button></span>
+      <span class="row"><button class="btn small reveal" hidden>Check my answer</button><button class="btn small primary go">Flash digits</button></span>
+    </div></div>`;
+DEMO.tol = () => `<div class="demo" data-demo="tol"><div class="tol-wrap"></div>
+    <div class="row" style="justify-content:space-between"><span class="demo-msg">Tap a peg to pick up its top ball, then tap another peg.</span>
+    <span class="row"><button class="btn small reset">Reset</button><button class="btn small primary next">New puzzle</button></span></div></div>`;
+DEMO.wcst = () => `<div class="demo" data-demo="wcst"><div class="wcst-keys"></div><div class="wcst-card"></div>
+    <div class="row" style="justify-content:space-between"><span class="demo-msg">Tap the key card you think this card goes with.</span><span class="wcst-stats"></span></div></div>`;
+DEMO.gray = () => `<div class="demo" data-demo="gray"><img class="gray-img" src="img/occipital.jpg" alt="The occipital Mimage, toggled between color and grayscale">
+    <div class="row"><button class="btn small primary toggle-gray">See it without color</button></div></div>`;
+DEMO.motion = () => `<div class="demo" data-demo="motion"><canvas width="640" height="180" class="motion-canvas" aria-label="A ball moving across the screen"></canvas>
+    <div class="row"><button class="btn small primary toggle-motion">Switch to akinetopsia</button><span class="demo-msg">Normal motion</span></div></div>`;
+DEMO.vor = () => `<div class="demo" data-demo="vor"><p class="vor-text">Keep your eyes on this sentence while you shake your head gently from side to side.</p>
+    <div class="row"><button class="btn small primary toggle-vor">Shake the text instead</button></div></div>`;
+
+let demoTimers = [];
+function stopDemos(){ demoTimers.forEach(t => { clearInterval(t); cancelAnimationFrame(t); }); demoTimers = []; }
+function bindDemos(root){
+  root.querySelectorAll('[data-demo="span"]').forEach(el => {
+    let n = 7, seq = '', timer = null;
+    const out = el.querySelector('.span-out'), nEl = el.querySelector('.n'), rev = el.querySelector('.reveal');
+    el.querySelector('.minus').onclick = () => { n = Math.max(3,n-1); nEl.textContent = n; };
+    el.querySelector('.plus').onclick = () => { n = Math.min(12,n+1); nEl.textContent = n; };
+    el.querySelector('.go').onclick = () => {
+      clearInterval(timer); rev.hidden = true;
+      seq = Array.from({length:n}, () => Math.floor(Math.random()*10)).join('');
+      let i = 0; out.className = 'span-out'; out.textContent = '';
+      timer = setInterval(() => {
+        if (i < seq.length){ out.textContent = seq[i]; i++; }
+        else { clearInterval(timer); out.className='span-out small'; out.textContent = 'Now write them down in order, then check.'; rev.hidden = false; }
+      }, 1000);
+      demoTimers.push(timer);
+    };
+    rev.onclick = () => { out.className='span-out'; out.textContent = seq.replace(/(\d{3})(?=\d)/g,'$1 '); rev.hidden = true; };
+  });
+  root.querySelectorAll('[data-demo="tol"]').forEach(initTol);
+  root.querySelectorAll('[data-demo="wcst"]').forEach(initWcst);
+  root.querySelectorAll('[data-demo="gray"]').forEach(el => {
+    const img = el.querySelector('img'), b = el.querySelector('button');
+    b.onclick = () => { const g = img.classList.toggle('gray'); b.textContent = g ? 'Bring the color back' : 'See it without color'; };
+  });
+  root.querySelectorAll('[data-demo="motion"]').forEach(el => {
+    const cv = el.querySelector('canvas'), ctx = cv.getContext('2d'), b = el.querySelector('button'), msg = el.querySelector('.demo-msg');
+    let ak = false, shown = 0, lastFrame = 0; const t0 = performance.now();
+    b.onclick = () => { ak = !ak; b.textContent = ak ? 'Back to normal motion' : 'Switch to akinetopsia'; msg.textContent = ak ? 'Akinetopsia: frozen frames' : 'Normal motion'; };
+    const draw = now => {
+      if (!el.isConnected) return;
+      const t = (now - t0)/1000, x = 320 + 260*Math.sin(t*1.6);
+      if (!ak || now - lastFrame > 900){ shown = x; lastFrame = now; }
+      ctx.fillStyle = '#0c0f15'; ctx.fillRect(0,0,640,180);
+      ctx.strokeStyle = '#283044'; ctx.beginPath(); ctx.moveTo(40,150); ctx.lineTo(600,150); ctx.stroke();
+      ctx.fillStyle = '#36c3a5'; ctx.beginPath(); ctx.arc(shown, 110, 34, 0, Math.PI*2); ctx.fill();
+      demoTimers.push(requestAnimationFrame(draw));
+    };
+    demoTimers.push(requestAnimationFrame(draw));
+  });
+  root.querySelectorAll('[data-demo="vor"]').forEach(el => {
+    const p = el.querySelector('.vor-text'), b = el.querySelector('button');
+    b.onclick = () => { const on = p.classList.toggle('shake'); b.textContent = on ? 'Stop shaking' : 'Shake the text instead'; };
+  });
+}
+
+/* Tower of London: pegs hold 3, 2, 1 balls */
+const TOL_CAP = [3,2,1], TOL_COL = {r:'#ec6f86', g:'#36c3a5', b:'#5b8cff'};
+const TOL_START = [['r','g'],['b'],[]];
+const TOL_GOALS = [[['g'],['b','r'],[]], [[],['r','b'],['g']], [['b','g','r'],[],[]], [['g','r'],[],['b']], [[],['g','b'],['r']]];
+const tolKey = s => s.map(p => p.join('')).join('|');
+function tolMin(start, goal){
+  const target = tolKey(goal), seen = new Set([tolKey(start)]); let frontier = [start], d = 0;
+  while (frontier.length){
+    if (frontier.some(s => tolKey(s) === target)) return d;
+    const next = [];
+    for (const s of frontier) for (let i=0;i<3;i++) for (let j=0;j<3;j++){
+      if (i===j || !s[i].length || s[j].length >= TOL_CAP[j]) continue;
+      const t = s.map(p => p.slice()); t[j].push(t[i].pop());
+      const k = tolKey(t); if (!seen.has(k)){ seen.add(k); next.push(t); }
+    }
+    frontier = next; d++;
+  }
+  return -1;
+}
+function initTol(el){
+  let gi = 0, cur, held = null, moves = 0, best = 0, done = false;
+  const wrap = el.querySelector('.tol-wrap'), msg = el.querySelector('.demo-msg');
+  const pegsSVG = (st, ox, scale, clickable, title) => {
+    let g = `<text x="${ox+120*scale}" y="16" text-anchor="middle" fill="var(--muted)" font-size="12" font-family="IBM Plex Mono, monospace">${title}</text>`;
+    g += `<rect x="${ox}" y="${150*scale+18}" width="${240*scale}" height="6" rx="3" fill="var(--line)"/>`;
+    st.forEach((peg,i) => {
+      const px = ox + (40 + i*80)*scale, h = TOL_CAP[i]*38*scale;
+      g += `<rect x="${px-3}" y="${150*scale+18-h-10*scale}" width="6" height="${h+10*scale}" rx="3" fill="var(--faint)"/>`;
+      peg.forEach((c,k) => { const lifted = clickable && held && held.from===i && k===peg.length-1;
+        g += `<circle cx="${px}" cy="${150*scale+18-17*scale-k*36*scale-(lifted?14:0)}" r="${16*scale}" fill="${TOL_COL[c]}" stroke="${lifted?'var(--fg)':'none'}" stroke-width="3"/>`; });
+      if (clickable) g += `<rect class="peg-hit" data-i="${i}" x="${px-36*scale}" y="20" width="${72*scale}" height="${150*scale}" fill="transparent" style="cursor:pointer"/>`;
+    });
+    return g;
+  };
+  const draw = () => {
+    wrap.innerHTML = `<svg viewBox="0 0 400 190" role="img" aria-label="Tower of London puzzle">${pegsSVG(TOL_GOALS[gi],8,0.55,false,'goal')}${pegsSVG(cur,150,1,true,'your pegs')}</svg>`;
+    wrap.querySelectorAll('.peg-hit').forEach(r => r.onclick = () => tap(+r.dataset.i));
+  };
+  const reset = () => { cur = TOL_START.map(p=>p.slice()); held = null; moves = 0; done = false; best = tolMin(TOL_START, TOL_GOALS[gi]);
+    msg.textContent = `Match the goal. Best possible: ${best} moves. Plan first!`; draw(); };
+  const tap = i => {
+    if (done) return;
+    if (!held){ if (cur[i].length){ held = {from:i}; draw(); } return; }
+    if (i === held.from){ held = null; draw(); return; }
+    if (cur[i].length >= TOL_CAP[i]){ msg.textContent = `That peg only holds ${TOL_CAP[i]}.`; return; }
+    cur[i].push(cur[held.from].pop()); held = null; moves++;
+    if (tolKey(cur) === tolKey(TOL_GOALS[gi])){ done = true; msg.textContent = moves === best ? `Solved in ${moves} moves. That’s the minimum. Nice planning!` : `Solved in ${moves} moves. The minimum is ${best}. Try planning it all before moving.`; }
+    else msg.textContent = `Moves: ${moves} (best possible: ${best})`;
+    draw();
+  };
+  el.querySelector('.reset').onclick = reset;
+  el.querySelector('.next').onclick = () => { gi = (gi+1) % TOL_GOALS.length; reset(); };
+  reset();
+}
+
+/* Wisconsin Card Sorting (mini) */
+const W_COL = ['#ec6f86','#36c3a5','#f4d27a','#5b8cff'], W_SHAPE = ['triangle','star','cross','circle'], W_RULES = ['color','shape','number'];
+function shapePath(kind, x, y, r){
+  if (kind==='circle') return `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+  if (kind==='triangle') return `<polygon points="${x},${y-r} ${x+r*0.95},${y+r*0.8} ${x-r*0.95},${y+r*0.8}"/>`;
+  if (kind==='cross') { const t=r*0.38; return `<polygon points="${x-t},${y-r} ${x+t},${y-r} ${x+t},${y-t} ${x+r},${y-t} ${x+r},${y+t} ${x+t},${y+t} ${x+t},${y+r} ${x-t},${y+r} ${x-t},${y+t} ${x-r},${y+t} ${x-r},${y-t} ${x-t},${y-t}"/>`; }
+  let p=''; for (let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr = i%2? r*0.45 : r; p += `${(x+rr*Math.cos(a)).toFixed(1)},${(y+rr*Math.sin(a)).toFixed(1)} `; }
+  return `<polygon points="${p}"/>`;
+}
+function wcard(c, n, s, w=70){
+  const pos = {1:[[0.5,0.5]],2:[[0.5,0.3],[0.5,0.7]],3:[[0.5,0.22],[0.3,0.72],[0.7,0.72]],4:[[0.3,0.3],[0.7,0.3],[0.3,0.7],[0.7,0.7]]}[n];
+  const h = w*1.35, r = w*0.15;
+  return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="#f3f0e8" stroke="var(--line)"/>
+    <g fill="${W_COL[c]}">${pos.map(([px,py]) => shapePath(W_SHAPE[s], px*w, py*h, r)).join('')}</g></svg>`;
+}
+function initWcst(el){
+  const keys = [[0,1,0],[1,2,1],[2,3,2],[3,4,3]]; // [color, number, shape]
+  let rule = 0, streak = 0, card, correct = 0, errors = 0, persev = 0, switches = 0, prevRule = -1;
+  const keysEl = el.querySelector('.wcst-keys'), cardEl = el.querySelector('.wcst-card'), msg = el.querySelector('.demo-msg'), stats = el.querySelector('.wcst-stats');
+  const deal = () => {
+    do { card = [Math.floor(Math.random()*4), 1+Math.floor(Math.random()*4), Math.floor(Math.random()*4)]; }
+    while (new Set([card[0], card[2], card[1]-1]).size < 3);
+    cardEl.innerHTML = `<span class="eyebrow">Sort this card</span>${wcard(card[0],card[1],card[2],78)}`;
+  };
+  const matchIndex = r => r===0 ? card[0] : r===1 ? card[2] : card[1]-1;
+  keysEl.innerHTML = keys.map((k,i) => `<button class="wkey" data-i="${i}" aria-label="Key card ${i+1}">${wcard(k[0],k[1],k[2])}</button>`).join('');
+  const render = () => { stats.textContent = `${correct} right · ${errors} wrong · ${switches} rule changes`; };
+  keysEl.querySelectorAll('.wkey').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    if (i === matchIndex(rule)){
+      correct++; streak++; msg.textContent = 'Right.'; msg.className = 'demo-msg ok';
+      if (streak >= 6){ prevRule = rule; rule = (rule+1)%3; streak = 0; switches++; }
+    } else {
+      errors++; streak = 0; msg.textContent = 'Wrong.'; msg.className = 'demo-msg bad';
+      if (prevRule >= 0 && i === matchIndex(prevRule)) persev++;
+    }
+    if (switches === 3 && streak === 0 && msg.textContent === 'Right.') msg.textContent = 'Right. The rule just changed for the third time. Did you notice each switch?';
+    render(); deal();
+  });
+  deal(); render();
+}
+
+/* ============ Cards ============ */
+const cardEl = $('#card');
+let lastFocus = null;
+function openCard(key){
+  const c = CARDS[key]; if (!c) return;
+  stopDemos();
+  lastFocus = document.activeElement;
+  const col = lobeColor(c.lobe);
+  const visuals = (c.v||[]).map(v => {
+    if (v.img) return `<figure class="figure"><img src="${v.img}" alt="${esc(c.title)}" class="zoomable"><figcaption>${esc(v.cap||'')}</figcaption></figure>`;
+    if (v.fig) return `<figure class="figure">${FIG[v.fig]()}</figure>`;
+    if (v.demo) return `<div class="figure">${DEMO[v.demo]()}</div>`;
+    return '';
+  });
+  const body = c.body.map(p => `<p>${esc(p)}</p>`);
+  // put the first visual after the first paragraph so text and picture sit together
+  const content = [body[0] || '', ...visuals, ...body.slice(1)].join('');
+  cardEl.querySelector('.card-sheet').style.setProperty('--c', col);
+  cardEl.querySelector('.card-sheet').innerHTML = `
+    <div class="card-top"><div><div class="eyebrow">${esc(c.kicker)}</div><h3 id="cardTitle">${esc(c.title)}</h3></div>
+      <button class="close" aria-label="Close card">×</button></div>
+    <div class="card-body">${content}
+      ${c.brain ? `<button class="btn primary brain-btn">Show it on the 3D brain</button>` : ''}
+      <details class="refs" open><summary>Sources</summary><ol>${(c.refs||[]).map(r => `<li>${esc(REFS[r]||r)}</li>`).join('')}${c.v && c.v.some(v=>v.img && v.img.includes('/mri/')) ? `<li>${esc(REFS.mni)}</li>` : ''}</ol></details>
+    </div>`;
+  cardEl.hidden = false;
+  const sheet = cardEl.querySelector('.card-sheet');
+  sheet.scrollTop = 0;
+  sheet.querySelector('.close').onclick = closeCard;
+  const bb = sheet.querySelector('.brain-btn'); if (bb) bb.onclick = () => { closeCard(); showOnBrain(c.brain); };
+  sheet.querySelectorAll('.zoomable').forEach(im => im.onclick = () => openLightbox(im.src, im.alt));
+  sheet.querySelectorAll('.tabs .tab').forEach(t => t.onclick = () => {
+    sheet.querySelectorAll('.tabs .tab').forEach(x => x.classList.toggle('on', x===t));
+    sheet.querySelector('.homun-slot').innerHTML = homunculusSVG(t.dataset.k);
+  });
+  bindTerms(sheet);
+  bindDemos(sheet);
+  sheet.querySelector('.close').focus();
+}
+function closeCard(){ stopDemos(); cardEl.hidden = true; if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+cardEl.addEventListener('click', e => { if (e.target === cardEl) closeCard(); });
+function bindTerms(root){ root.querySelectorAll('.term').forEach(t => t.onclick = e => { e.stopPropagation(); openCard(t.dataset.card); }); }
+
+/* ============ Panel ============ */
+function isRevealed(bi){ return !state.quiz || state.revealed.has(state.lobe+':'+bi) || (state.beat>0 && bi < state.beat); }
+
+function renderChips(){
+  $('#chips').innerHTML = LOBES.map((L,i)=>`<button class="chip" style="--c:${L.color}" aria-pressed="${state.lobe===i}" data-i="${i}"><span class="dot"></span>${esc(L.name.replace(' Lobe',''))}</button>`).join('');
+  $('#chips').querySelectorAll('.chip').forEach(b => b.onclick = () => selectLobe(+b.dataset.i));
+}
+const quizToggle = () => `<label class="toggle"><input type="checkbox" id="quiz" ${state.quiz?'checked':''}> Quiz me: hide the answers</label>`;
+function bindQuiz(){ const q = $('#quiz'); if (q) q.onchange = () => { state.quiz = q.checked; state.revealed.clear(); renderPanel(); updatePins(); }; }
+
+function renderPanel(){
+  stopDemos();
+  if (state.lobe < 0){
+    panel.innerHTML = `
+      <div><div class="eyebrow">Neuroanatomy Part I · Mimages</div><h2>Every lobe is a scene</h2></div>
+      <p>Each lobe of your brain is a memory scene. Open one, then step through its parts: each part lights up its exact spot on the brain.</p>
+      <p>Tap any <span class="term-sample">underlined term</span> to open a card with an explanation, images or a quick experiment, and sources.</p>
+      <div class="row"><button class="btn primary" id="start">Start with the frontal lobe</button>${quizToggle()}</div>
+      <ul class="lobe-list">${LOBES.map((L,i)=>`
+        <li><button class="lobe-btn" style="--c:${L.color}" data-i="${i}"><span class="dot"></span>
+          <span><b>${esc(L.name)}</b><span>${esc(L.scene)}</span></span><em>${L.beats.length} parts</em></button></li>`).join('')}
+      </ul>
+      <p class="note">Tip: use the ← and → keys to move through the parts, and Esc to see the whole brain again.</p>`;
+    $('#start').onclick = () => selectLobe(0);
+    panel.querySelectorAll('.lobe-btn').forEach(b => b.onclick = () => selectLobe(+b.dataset.i));
+    bindQuiz(); return;
+  }
+  const L = LOBES[state.lobe];
+  panel.style.setProperty('--c', L.color);
+  const acro = L.acro ? `<div class="acro" style="--n:${L.acro.length}">${L.acro.map(([b,s,bi])=>
+      `<div class="${isRevealed(bi)?'':'masked'}"><b>${esc(b)}</b><small>${esc(s)}</small></div>`).join('')}</div>` : '';
+  panel.innerHTML = `
+    <button class="back" id="back">← All lobes</button>
+    <div class="lobe-head"><div class="eyebrow">${esc(L.name)} · ${L.beats.length} parts</div><h2>${esc(L.scene)}</h2></div>
+    <img class="scene-img" src="${L.img}" alt="${esc(L.name)} Mimage: ${esc(L.scene)}" id="sceneImg">
+    ${acro}
+    <ol class="beats">${L.beats.map((b,bi)=>{
+      const pin = L.pins[b.pin]; const shown = isRevealed(bi); const active = state.beat===bi+1;
+      return `<li class="beat ${active?'active':''}" data-b="${bi+1}">
+        <span class="num">${bi+1}</span>
+        <div class="beat-main"><div class="hook">${esc(b.hook)}</div><div class="cue">${esc(b.cue)}</div>
+        <div class="answer ${shown?'':'masked'}"><strong>${esc(b.term)}</strong> <span class="fn">· ${esc(b.fn)}</span>${pin.deep?'<span class="tagx">deep</span>':''}</div></div>
+        <img class="thumb" src="${crop(state.lobe,bi)}" alt="Part ${bi+1} of the scene">
+        ${active ? `<div class="more ${shown?'':'masked'}">
+            ${b.facts?`<ul class="facts">${b.facts.map(f=>`<li>${rich(f)}</li>`).join('')}</ul>`:''}
+            ${b.case?`<button class="case" data-card="${b.case.card}"><span class="eyebrow">${esc(b.case.title)}</span><span>${esc(b.case.text)}</span><span class="case-go">Open card →</span></button>`:''}
+            ${b.extra?`<div class="figure"><div class="eyebrow">Test your working memory</div>${DEMO[b.extra]()}</div>`:''}
+          </div>` : ''}
+      </li>`;}).join('')}
+    </ol>
+    ${L.note?`<p class="note">${esc(L.note)}</p>`:''}
+    <div class="row">${quizToggle()}</div>
+    <div class="pager">
+      <button class="btn" id="prev">← Back</button>
+      <span class="count">${state.beat ? `Part ${state.beat} of ${L.beats.length}` : 'Overview'}</span>
+      <button class="btn primary" id="next">${state.beat < L.beats.length ? (state.beat ? 'Next part →' : 'Start part 1 →') : (state.lobe < LOBES.length-1 ? `Next: ${esc(LOBES[state.lobe+1].name.replace(' Lobe',''))} →` : 'Finish →')}</button>
+    </div>`;
+  $('#back').onclick = overview; $('#prev').onclick = prev; $('#next').onclick = next;
+  $('#sceneImg').onclick = () => openLightbox(L.img, L.name);
+  panel.querySelectorAll('.thumb').forEach(t => t.onclick = e => { e.stopPropagation(); openLightbox(t.src, t.alt); });
+  panel.querySelectorAll('.case').forEach(c => c.onclick = e => { e.stopPropagation(); openCard(c.dataset.card); });
+  panel.querySelectorAll('.beat').forEach(li => li.onclick = e => {
+    if (e.target.closest('button, .figure, .term')) return;
+    const bi = +li.dataset.b;
+    if (state.quiz) state.revealed.add(state.lobe+':'+(bi-1));
+    if (bi !== state.beat) setBeat(bi);
+  });
+  bindTerms(panel); bindQuiz(); bindDemos(panel);
+  const act = panel.querySelector('.beat.active');
+  if (act) act.scrollIntoView({block:'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+}
+
+/* ============ Navigation & spotlights ============ */
+function pinByRef(ref){
+  const [lid, key] = ref.split('.'); const li = LOBE_IDS.indexOf(lid);
+  return pinSets[li] ? pinSets[li].find(p => p.key === key) : null;
+}
+function activePin(){
+  if (state.lobe < 0 || !state.beat || !pinSets.length) return null;
+  const key = LOBES[state.lobe].beats[state.beat-1].pin;
+  return pinSets[state.lobe].find(p => p.key === key);
+}
+function currentSpots(){
+  if (state.override) return state.override.pins.map(pinByRef).filter(Boolean);
+  const p = activePin(); return p ? [p] : [];
+}
+function frameCamera(){
+  if (state.lobe < 0 && !state.override) return flyPreset(OVERVIEW, false);
+  const spots = currentSpots();
+  if (spots.length) flyToSpots(spots, state.override ? state.override.view : null);
+  else flyPreset(LOBES[state.lobe].cam);
+}
+function showOnBrain(b){ state.override = b; controls.autoRotate = false; frameCamera(); updatePins(); }
+function selectLobe(i, beat=0){
+  state.override = null; state.lobe = i; state.beat = beat; controls.autoRotate = false;
+  frameCamera(); updatePins(); renderPanel(); renderChips();
+  if (!beat) panel.scrollTop = 0;
+}
+function overview(){ state.override = null; state.lobe = -1; state.beat = 0; frameCamera(); updatePins(); renderPanel(); renderChips(); panel.scrollTop = 0; }
+function setBeat(b){ state.override = null; state.beat = b; frameCamera(); updatePins(); renderPanel(); }
+function next(){
+  if (state.lobe < 0) return selectLobe(0);
+  if (state.beat < LOBES[state.lobe].beats.length) return setBeat(state.beat+1);
+  if (state.lobe < LOBES.length-1) return selectLobe(state.lobe+1);
+  overview();
+}
+function prev(){
+  if (state.lobe < 0) return;
+  if (state.beat > 0) return setBeat(state.beat-1);
+  if (state.lobe === 0) return overview();
+  const pl = state.lobe-1; selectLobe(pl, LOBES[pl].beats.length);
+}
+function setSpotUniforms(p, A, B, R, C){
+  A.value.copy(p.a); B.value.copy(p.b); R.value = p.r; C.value.copy(lin(LOBES[p.li].color));
+}
+function updatePins(){
+  const spots = currentSpots();
+  pinSets.forEach((set,li) => set.forEach(p => {
+    const on = spots.includes(p);
+    p.el.hidden = !(li === state.lobe || on);
+    p.el.classList.toggle('active', on);
+    const bIdx = (on && li === state.lobe && !state.override) ? state.beat - 1 : p.nums[0] - 1;
+    const b = LOBES[li].beats[bIdx];
+    const show = li !== state.lobe || isRevealed(bIdx);
+    p.el.querySelector('.tag').innerHTML = show
+      ? `${on ? `<img src="${crop(li,bIdx)}" alt="">` : ''}<span>${esc(b.term)}${p.deep?'<small>deep</small>':''}</span>` : '?';
+  }));
+  overviewLabels.forEach(o => o.el.hidden = state.lobe >= 0 || !!state.override);
+  const surf = spots.filter(p => !p.deep);
+  if (surf[0]){ setSpotUniforms(surf[0], uniforms.uA, uniforms.uB, uniforms.uR, uniforms.uSpotColor); uniforms.uSpot.value = 0; }
+  if (surf[1]){ setSpotUniforms(surf[1], uniforms.uA2, uniforms.uB2, uniforms.uR2, uniforms.uSpotColor2); uniforms.uSpot2.value = 0; }
+  for (const k in deepMeshes) deepMeshes[k].visible = spots.some(p => p.deep === k);
+  const medial = spots.some(p => p.medial);
+  if (rh) rh.visible = !medial;
+  for (const m of [pons, midbrain, medulla]) if (m) m.visible = !medial;
+}
+
+addEventListener('keydown', e => {
+  if (!$('#lightbox').hidden){ if (e.key==='Escape' || e.key===' ') { closeLightbox(); e.preventDefault(); } return; }
+  if (!cardEl.hidden){ if (e.key==='Escape'){ closeCard(); e.preventDefault(); } return; }
+  if (e.target.tagName==='INPUT' && e.key===' ') return;
+  if (e.target.closest && e.target.closest('button') && (e.key===' ' || e.key==='Enter')) return;
+  if (['ArrowRight','PageDown','ArrowDown'].includes(e.key) || (e.key===' ' && !e.target.closest('button'))){ e.preventDefault(); if (state.quiz && state.lobe>=0 && state.beat>0) state.revealed.add(state.lobe+':'+(state.beat-1)); next(); }
+  else if (['ArrowLeft','PageUp','ArrowUp'].includes(e.key)){ e.preventDefault(); prev(); }
+  else if (e.key==='Escape' || e.key==='Home'){ overview(); }
+  else if (/^[1-5]$/.test(e.key)){ selectLobe(+e.key-1); }
+});
+function openLightbox(src, alt){ const lb=$('#lightbox'); lb.querySelector('img').src=src; lb.querySelector('img').alt=alt||''; lb.hidden=false; }
+function closeLightbox(){ $('#lightbox').hidden=true; }
+$('#lightbox').onclick = closeLightbox;
+
+/* ============ Render loop ============ */
+const tmp = new THREE.Vector3();
+const ease = t => t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+function occluded(world){
+  const dir = tmp.copy(world).sub(camera.position); const dist = dir.length(); dir.normalize();
+  ray.set(camera.position, dir); ray.far = dist - 0.03;
+  const hit = ray.intersectObjects(occluders.filter(m=>m.visible), false).length > 0;
+  ray.far = Infinity; return hit;
+}
+function place(el, world){
+  const v = world.clone().project(camera);
+  el.style.transform = `translate(${((v.x+1)/2*innerWidth).toFixed(1)}px,${((1-v.y)/2*innerHeight).toFixed(1)}px)`;
+}
+function setXray(mat, a){
+  const want = a < 0.99;
+  if (mat.transparent !== want){ mat.transparent = want; mat.depthWrite = !want; mat.needsUpdate = true; }
+}
+let frame = 0, last = 0;
+function loop(now){
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.1, (now - (last||now))/1000); last = now;
+  if (tween){
+    const k = Math.min(1,(now - tween.t0)/tween.dur), e = ease(k);
+    camera.position.lerpVectors(tween.from, tween.to, e);
+    controls.target.lerpVectors(tween.tf, tween.tt, e);
+    if (k>=1) tween = null;
+  }
+  controls.update();
+  const spots = pinSets.length ? currentSpots() : [];
+  const surf = spots.filter(p => !p.deep), deep = spots.some(p => p.deep);
+  const k = Math.min(1, dt*5);
+  uniforms.uTime.value = now/1000;
+  uniforms.uSel.value = state.lobe;
+  uniforms.uHover.value = hoverLobe ? LOBE_IDS.indexOf(hoverLobe) : -1;
+  uniforms.uDim.value += ((state.lobe>=0 || state.override ? 1 : 0) - uniforms.uDim.value)*k;
+  uniforms.uSpot.value += ((surf[0] ? 1 : 0) - uniforms.uSpot.value)*k;
+  uniforms.uSpot2.value += ((surf[1] ? 1 : 0) - uniforms.uSpot2.value)*k;
+  uniforms.uAlpha.value += ((deep ? 0.22 : 1) - uniforms.uAlpha.value)*k;
+  setXray(cortexMat, uniforms.uAlpha.value); setXray(cerebMat, uniforms.uAlpha.value);
+  stemMat.opacity = uniforms.uAlpha.value; setXray(stemMat, uniforms.uAlpha.value);
+  stemMat.color.lerpColors(STEM_ON, STEM_OFF, uniforms.uDim.value);
+  renderer.render(scene, camera);
+
+  if (!lh) return;
+  const check = (frame++ % 2) === 0;
+  if (state.lobe < 0 && !state.override){
+    overviewLabels.forEach(o => {
+      place(o.el, o.world);
+      if (check){ const hid = occluded(o.world); o.el.style.opacity = hid ? 0 : 1; o.el.style.pointerEvents = hid ? 'none' : 'auto'; }
+    });
+  }
+  pinSets.forEach(set => set.forEach(p => {
+    if (p.el.hidden) return;
+    place(p.el, p.world);
+    if (check) p.el.classList.toggle('hidden-side', p.deep ? uniforms.uAlpha.value > 0.5 : occluded(p.world));
+  }));
+}
+
+/* ============ Boot ============ */
+resize();
+camera.position.set(...OVERVIEW.pos); controls.target.set(...OVERVIEW.target);
+renderPanel(); renderChips();
+requestAnimationFrame(loop);
+loadCortex().then(() => {
+  buildCerebellum(); buildStem(); buildDeep();
+  brainMeshes = [lh, rh, cerebellum];
+  occluders = [lh, rh, cerebellum, pons, medulla, midbrain];
+  buildPins(); updatePins(); resize();
+  $('#loading').hidden = true;
+}).catch(err => { $('#loading').textContent = 'The brain model could not load. Reload the page to try again.'; console.error(err); });
+
+</script>
+</body></html>
