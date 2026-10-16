@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neuroanatomy Part II</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a glass brain whose lobes light up; each chapter opens with a question about the mind; notes docked right, bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 75% 70% at 38% 42%,#1a2034 0%,#0d1018 66%,#090b10 100%)}
+.video{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000}
+.video-frame{position:relative;aspect-ratio:16/9}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video figcaption{background:var(--raise);padding:9px 12px;font-size:13px;color:var(--muted)}
+.video figcaption b{color:var(--fg)}
+.yt-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at center,#2a1420 0%,#0b0e14 75%)}
+.yt-card .yt-play{width:74px;height:52px;border-radius:14px;background:#ff0033;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 30px rgba(255,0,51,.35)}
+.yt-card .yt-t{font-weight:700;font-size:14px}
+.sec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.sec h3{margin:0;font-family:var(--f-display);font-size:19px;line-height:1.2}
+.sec p{margin:0}
+.lab-c{color:var(--c)}
+.src{font-size:12px;color:var(--faint)}
+.muted{color:var(--muted)}
+.more summary{cursor:pointer;color:var(--c);font-weight:700;font-size:14px}
+.more p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.mindq{background:color-mix(in srgb,var(--c) 12%,var(--raise));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.mindq .eyebrow{color:var(--c)}
+.clues{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:9px}
+.clues li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;column-gap:10px}
+.clues li::before{content:counter(c);grid-row:span 2;width:26px;height:26px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center;font-size:14px}
+.clues b{font-size:15px}.clues span{color:var(--muted);font-size:14px}
+.hold{margin:0;font-style:italic;color:var(--fg)}
+.mlines{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.mlines li::marker{color:var(--c)}
+.mlines .mean{color:var(--chalk);font-size:13.5px}
+.mim-soon{font-size:14px;color:var(--muted);background:var(--raise);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
+.answer{border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;background:var(--raise);padding:12px 16px}
+.answer summary{cursor:pointer;display:flex;flex-direction:column;gap:3px;list-style:none}
+.answer summary::-webkit-details-marker{display:none}
+.answer summary .eyebrow{color:var(--c)}
+.answer summary b{font-family:var(--f-display);font-size:17px}
+.answer .reveal{font-size:13px;color:var(--c);font-weight:700}
+.answer[open] .reveal{display:none}
+.answer p{margin:10px 0 0}
+.nextup{font-weight:700;color:var(--chalk);font-size:14px}
+.howto{font-size:14px;color:var(--muted);background:var(--raise);border-radius:10px;padding:10px 12px}
+.howto b{color:var(--fg)}
+.chlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.chrow{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:9px 11px;border-radius:11px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.chrow:hover,.chrow:focus-visible{border-color:var(--c)}
+.chn{width:30px;height:30px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center}
+.chrow b{display:block;font-family:var(--f-display);font-size:16px}
+.chq{display:block;color:var(--muted);font-size:13.5px}
+.demo{display:flex;flex-direction:column;gap:8px}
+.wcst{display:flex;flex-direction:column;gap:10px}
+.wtargets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.wt{padding:0;border:2px solid transparent;border-radius:9px;background:none;cursor:pointer}
+.wt:hover,.wt:focus-visible{border-color:var(--c)}
+.wc{display:block;width:100%;height:auto}
+.wrow{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:start}
+.wcur svg{width:80px}
+.wlog{margin:0}.wstats{margin:4px 0 8px;font-size:13px}
+b.ok{color:#5fe08a}b.bad{color:#ff7a7a}
+.illu{display:flex;flex-direction:column;gap:8px}
+.illu svg,.illu img{width:100%;height:auto;border-radius:10px;display:block;background:#f6f3ee}
+.hb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.hbt{font-family:var(--f-display);font-size:44px;font-weight:800;color:var(--muted)}
+.hbt.on{color:var(--c)}
+.hb .num{width:80px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+.drmw{font-family:var(--f-display);font-size:34px;font-weight:800;text-align:center;padding:14px;background:var(--raise);border-radius:12px}
+.drmt{display:flex;flex-direction:column;gap:6px}
+.drmq{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}
+.drmq .qopt{padding:5px 12px}
+.steps{display:flex;flex-direction:column;gap:6px}
+.stp{display:flex;flex-direction:column;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--raise);opacity:.45;transition:opacity .4s,border-color .4s}
+.stp.on{opacity:1;border-color:var(--c)}
+.stp span{font-size:13.5px;color:var(--muted)}
+.rpe canvas{width:100%;height:auto;border-radius:10px;display:block}
+.rpe .seg{display:flex;flex-wrap:wrap;gap:6px}
+.qitem{display:flex;flex-direction:column;gap:8px}
+.quiz{gap:14px}
+.figure img{background:#f6f3ee}
+.figure.narrow img{max-height:300px;object-fit:contain}
+.plabel{font-size:12px}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the brain…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Neuroanatomy Part II</h1>
+  <div class="brand-sub">Deeper into the lobes</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle"></div>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="lightbox" hidden><img alt="Image, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Deep structures (schematic, MNI-placed) ============ */
+// S(x,y,z): MNI mm -> scene units. +x scene = subject's right? (S flips x) — we draw both hemispheres.
+const DEEP_DEF = {
+  thal:  {name:'Thalamus', color:'#3d8bff'},
+  hypo:  {name:'Hypothalamus', color:'#ff9f1c'},
+  pit:   {name:'Pituitary', color:'#ff6a2c'},
+  hip:   {name:'Hippocampus', color:'#22c77a'},
+  amy:   {name:'Amygdala', color:'#ff3355'},
+  ins:   {name:'Insula', color:'#a066ff'},
+  caud:  {name:'Caudate', color:'#2fc7d9'},
+  put:   {name:'Putamen', color:'#3a7bff'},
+  gp:    {name:'Globus pallidus', color:'#8fb8ff'},
+  nacc:  {name:'Nucleus accumbens', color:'#ffcc33'},
+  sn:    {name:'Substantia nigra', color:'#4a4a5e'},
+  stem:  {name:'Brainstem', color:'#c99a8a'},
+  cbl:   {name:'Cerebellum', color:'#b05cc0'}
+};
+function buildDeep(parent, mkMat){
+  const out = {}; Object.keys(DEEP_DEF).forEach(k => out[k] = {meshes:[], def:DEEP_DEF[k]});
+  const add = (k, m) => { m.userData.deep = k; parent.add(m); out[k].meshes.push(m); return m; };
+  const blob = (k, c, r, rot) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), mkMat(DEEP_DEF[k].color)); m.position.copy(S(...c)); m.scale.set(r[0]/80, r[2]/80, r[1]/80); if (rot) m.rotation.set(...rot); return add(k, m); };
+  const tubeK = (k, pts, r0, r1) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p)));
+    const g = new THREE.TubeGeometry(curve, 64, 1, 14); const P = g.attributes.position, n = 65, rs = 15, ctr = V();
+    for (let i=0;i<=64;i++){ const t = i/64, rad = (r0 + (r1 - r0)*t)/80; curve.getPointAt(t, ctr); for (let j=0;j<rs;j++){ const idx = i*rs + j; const v = V().fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rad).add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
+    g.computeVertexNormals(); const m = new THREE.Mesh(g, mkMat(DEEP_DEF[k].color)); m.userData.curve = curve; return add(k, m); };
+  [1, -1].forEach(s => {
+    blob('thal', [s*11,-17,6], [7,15,8]);
+    tubeK('hip', [[s*24,-8,-22],[s*28,-18,-16],[s*30,-28,-8],[s*27,-36,-1],[s*20,-40,6]], 6.5, 3);
+    blob('amy', [s*22,-4,-19], [7,8,7]);
+    blob('ins', [s*37,-4,4], [2.5,19,11]);
+    tubeK('caud', [[s*12,14,8],[s*14,4,16],[s*17,-10,20],[s*22,-24,16],[s*28,-32,6],[s*30,-26,-6]], 7, 2.2);
+    blob('put', [s*25,2,1], [6,14,9]);
+    blob('gp', [s*18,-3,-1], [4,8,5.5]);
+    blob('nacc', [s*10,11,-8], [4,5,4]);
+    blob('sn', [s*10,-18,-11], [3,6,2.2]);
+  });
+  blob('hypo', [0,-4,-11], [7,9,5.5]);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.12, 12), mkMat(DEEP_DEF.pit.color)); stalk.position.copy(S(0,1,-22)); stalk.rotation.x = 0.35; add('pit', stalk);
+  blob('pit', [0,4,-30], [6,5,4.5]);
+  tubeK('stem', [[0,-20,-6],[0,-26,-24],[0,-31,-40],[0,-38,-60],[0,-42,-72]], 12, 8);
+  blob('cbl', [0,-66,-36], [44,23,17]);
+  return out;
+}
+
+/* ============ Part II content: Deeper into the lobes ============ */
+const PAGE = { color:'#5b8cff', eyebrow:'Unit 9 · Neuroanatomy Part II', h2:'Deeper into the lobes',
+  lead:'Part I gave you the map. Now go deeper into each lobe of the cortex, plus the cerebellum, and use them to answer real questions about the mind.',
+  homeLobes:true, dimDeep:0.06, homeDeep:['cbl'], homeDeepOp:0.45, glass:0.05,
+  homeView:{dir:[1,0.35,0.55], dist:4.4, tgt:[0,-22,8]}, hudTitle:'Deeper into the lobes', hudText:'Tap a lobe or pick a chapter. Drag to turn the brain; pinch or scroll to zoom.',
+  nextUnit:['part3.html','Part III: Inside the brain'],
+  homeExtra:`<a class="go-card" href="part3.html"><b>Next: Neuroanatomy Part III →</b><span>Inside the brain: brainstem, thalamus, hypothalamus, basal ganglia, amygdala, hippocampus, insula and music.</span></a>` };
+
+const CH = [
+ { id:'frontal', title:'Frontal lobe', short:'Frontal', color:'#5b8cff', lobe:0, anchor:[-40,34,34],
+   view:{dir:[0.85,0.3,0.75], dist:4.2, tgt:[-16,6,18]},
+   marks:[['Prefrontal cortex',[-44,36,24]],['Primary motor cortex',[-36,-18,62],'#ff8a5c'],['Broca’s area',[-50,16,10]]], paths:['motor'],
+   q:'Who’s in charge: you, or what’s in front of you?',
+   clues:[['Objects can take over','Lhermitte’s frontal patients picked up whatever was nearby and used it: a toothbrush, a syringe, even a bed.'],
+          ['Knowing isn’t doing','On the card-sorting test, a frontal patient says “I know shape is wrong now”… and sorts by shape again.'],
+          ['Still under construction','The prefrontal cortex keeps refining its wiring into your mid-20s, and keeps changing after that.']],
+   hold:'Hold this question: is self-control something your brain does, and can it run out?',
+   where:'The front of the brain, ahead of the central sulcus. It’s your largest lobe, about a third of the cortex.',
+   funcs:[['Executive function','planning, holding things in mind (working memory) and self-control.'],['Abstract thought','rules, metaphors, “what if?” and moral reasoning.'],['Movement','the primary motor cortex runs along its back edge (precentral gyrus).'],['Speech production','Broca’s area, usually on the left.'],['Personality and emotional control','remember Phineas Gage.']],
+   mim:{img:'img/p2/frontal_mimage.jpg', title:'Front Office for a Sports Team', lines:[['An executive plans on a sketchpad','planning and working memory'],['Another executive barges in running his Boca','Broca’s area, speech'],['Athletes burst in, moving around','motion, motor cortex'],['Phineas Gage bursts in with a pipe through his head','emotional control']]},
+   secs:[
+     {h:'Abstract thought and executive function', list:['**Working memory and planning:** holding information in mind to set goals and plan several steps ahead.','**Inhibitory control:** holding back impulses, ignoring distractions and waiting for a bigger reward.','**Cognitive flexibility:** switching strategies when the rules change.','**Abstract reasoning:** metaphors, moral reasoning and “what if?” thinking.','**After damage** (like Phineas Gage): basic intelligence can survive, but personality, foresight and impulse control suffer.']},
+     {h:'Try it: the card-sorting test', p:'This is a version of the Wisconsin Card Sorting Test. Sort each card. The rule is secret, and it changes without warning. Healthy people adapt within a trial or two. Patients with damage to the dorsolateral prefrontal cortex keep using the old rule, even while saying it’s wrong. That’s **perseveration**.', demo:'wcst', video:['JSDVmfAz-tE','The Wisconsin Card Sorting Test']},
+     {h:'Utilization behavior: when objects take over', p:'French neurologist François Lhermitte studied patients with damage to the front of the frontal lobe. Shown an object, they used it, whether or not it made sense: handed a toothbrush in an office, they brushed their teeth; shown a syringe, one tried to give the doctor an injection. Invited into Lhermitte’s bedroom, a patient undressed and got into bed.', img:['img/p2/utilization.jpg','Utilization behavior. From your slides.'], more:['The lesson','Without the prefrontal cortex supplying context (“this isn’t my bathroom”), what an object invites you to do (its affordance) wins. The environment runs the show.']},
+     {h:'Do you stop maturing at 25?', list:['**The “25 finish line” is a myth.** Around the mid-20s, big structural changes level off on average. Nothing switches off on your birthday.','**Cleaning up the wiring:** through your 20s, synaptic pruning removes weak connections, making the remaining networks faster and more efficient.','**Lifelong flexibility:** your brain keeps learning and changing (plasticity) your whole life.'], img:['img/p2/age25.jpg','Prefrontal maturation and the “age 25” myth. From your slides.']},
+     {h:'Motion: it started with frogs', p:'In the 1780s, Luigi Galvani saw dissected frog legs twitch when a charged scalpel touched a nerve. He concluded that animals make their own electricity (“animal electricity”), founding the study of bioelectricity. The idea that electricity might animate dead tissue helped inspire Mary Shelley’s **Frankenstein** (1818).', img:['img/p2/galvani.jpg','Galvani’s frog-leg experiments. From your slides.', true]},
+     {h:'Were brains made for movement?', p:'Almost everything you do runs through muscles: talking, texting, hugging, singing, walking to the train. Neuroscientist Daniel Wolpert argues that the real reason we have brains is to produce adaptable, complex movement.', video:['7s0CpRfyYp8','Daniel Wolpert: The real reason for brains']},
+     {h:'How a “move” gets to your muscles', list:['**The brain decides** (pick up a glass) and the motor cortex sends the signal down the spinal cord (ventral = vroom).','**Motor neurons** carry it to the muscle.','**Acetylcholine (ACh)** is released into the gap between neuron and muscle (the neuromuscular junction).','**The muscle contracts.**'], demo:'move', img:['img/p2/nmj.jpg','The neuromuscular junction: ACh crosses the gap and the muscle contracts.', true]},
+     {h:'The little man in your motor cortex', p:'“Homunculus” is Latin for “little man.” Body parts are drawn by how much cortex controls them, not by their size. Hands, lips and tongue are huge because you control them precisely.', img:['img/p2/homunculus.jpg','The sensory and motor homunculi.', true]},
+     {h:'Fainting goats', p:'Myotonic (“fainting”) goats stiffen and fall over when startled. They don’t actually faint: their muscles can’t relax. A mutation in the **CLCN1** gene weakens chloride channels in muscle, so after a contraction the muscle can’t repolarize quickly and stays contracted.', video:['AEmRfxxGGcE','Fainting goats'], more:['Why does the trait survive?','It would be a disaster in the wild. It likely persisted through small, isolated populations (genetic drift) and because people bred the goats on purpose. On a farm there’s no predator to remove it.']}],
+   answer:'Mostly you, but less than it feels. The frontal lobe lets you act on goals instead of whatever is in front of you: it holds plans in mind, switches rules and puts the brakes on impulses. Damage it and the environment takes over (Lhermitte), and knowing the right answer stops being enough (card sorting). Self-control is something the brain does, and environments that make good choices easy help it.',
+   next:'Later, in Cognition: the orbitofrontal and ventromedial prefrontal cortex (decisions and gut feelings).',
+   quiz:[{q:'A patient keeps sorting by color after the rule changed to shape, while saying “color is wrong.” This is…', o:['Perseveration','Hemispatial neglect','Utilization behavior','Aphasia'], a:0, why:'Perseveration means sticking with an old response. It’s a classic sign of dorsolateral prefrontal damage.'},
+         {q:'Where is the primary motor cortex?', o:['Precentral gyrus, just in front of the central sulcus','Postcentral gyrus, just behind the central sulcus','The occipital pole','The superior temporal gyrus'], a:0, why:'Pre = before the central sulcus = motor. Post = sensory, like the post office receiving mail.'}],
+   refs:['Lhermitte, F. (1983, 1986). Utilization and imitation behavior. Brain; Annals of Neurology.','Milner, B. (1963). Effects of different brain lesions on card sorting. Archives of Neurology.','Giedd, J. N. et al. (1999). Brain development during childhood and adolescence. Nature Neuroscience.','Wolpert, D. (2011). The real reason for brains. TED.']},
+
+ { id:'parietal', title:'Parietal lobe', short:'Parietal', color:'#f0a43a', lobe:1, anchor:[-36,-48,56],
+   view:{dir:[0.75,0.9,-0.15], dist:3.6, tgt:[-22,-36,30]},
+   marks:[['Primary somatosensory cortex (S1)',[-40,-30,58]],['Posterior parietal cortex',[-28,-60,54]],['Temporoparietal junction',[-52,-54,26]]], paths:['touch'],
+   q:'Where do you end?',
+   clues:[['“That hand is my son’s”','After right-hemisphere damage, a woman insisted her own left hand belonged to someone else.'],
+          ['A rubber hand can become yours','Stroke a fake hand and a hidden real hand at the same time, and the fake one starts to feel like part of you.'],
+          ['Leaving your body','Electrically stimulating where the parietal and temporal lobes meet gave a patient an out-of-body experience.']],
+   hold:'Hold this question: is your sense of “me, here, in this body” something the brain builds moment to moment?',
+   where:'Behind the central sulcus, above the temporal lobe and in front of the occipital lobe.',
+   funcs:[['Body sensation','the primary somatosensory cortex (postcentral gyrus) handles PITT: pain, itch, touch, temperature, plus body position.'],['Body in space','where your body and limbs are, and where things are around you.'],['Spatial attention','especially on the right side of the brain.'],['Reaching and grasping','the end of the dorsal “where/how” visual stream.']],
+   mim:{img:'img/p2/parietal_mimage.jpg', title:'Pirate Ship', lines:[['The pirate captain navigates by tracking where his body is in space','spatial awareness and navigation'],['Below deck, a crew is trapped in the PITT','somatosensory cortex'],['P: a stubbed toe screams “OUCH!”','pain'],['I: a bug bite gets scratched','itch'],['T: a pirate pokes his mate’s arm','touch'],['T: a burning mug makes him yell “HOT!”','temperature']]},
+   secs:[
+     {h:'Hemispatial neglect: half the world disappears', p:'Damage to the parietal lobe, usually on the **right**, can cause neglect: the person ignores the **left** side of space and even of their own body. They may eat only the right half of their plate, shave half their face, or draw a clock with all twelve numbers crammed on the right. They aren’t blind on the left; their brain just stops attending to it.', video:['ymKvS0XsM4w','Hemispatial neglect']},
+     {h:'“That hand belongs to my son”', p:'In a published case, a woman with right-brain damage kept insisting that her own left hand belonged to her son. This is **somatoparaphrenia**, a disturbance of limb ownership. Ask yourself: how does your brain know that your hand is yours? Body ownership depends on a network centered on the parietal lobe.', video:['WNps5_ndHzY','Body ownership']},
+     {h:'Try it: the rubber hand illusion', p:'You need a friend, two paintbrushes, a rubber glove and a piece of cardboard. Hide your real hand behind the cardboard and put the glove where your hand could be. Your friend strokes both at the same time, in the same spots, for a minute or two. For many people the rubber hand starts to feel like theirs. If your friend then threatens the glove, people often flinch.', src:'Botvinick & Cohen, 1998'},
+     {h:'Touch: from skin to cortex', p:'Different receptors in your skin specialize: **Meissner** (light flutter), **Pacinian** (vibration), **Merkel** (shapes and texture), **Ruffini** (stretch), plus thermoreceptors and nociceptors (pain). The signal enters the spinal cord (dorsal = delivers), relays in the thalamus, and arrives in S1.', demo:'touch', img:['img/p2/touch.jpg','Someone lightly pokes your hand: the touch pathway. From your slides.'], more:['Why rubbing a bump helps: gate control','Non-painful touch signals activate inhibitory neurons in the spinal cord that turn down incoming pain signals before they reach the brain.']},
+     {h:'The sensory homunculus', p:'S1 holds a map of your body. Each part’s size reflects how many receptors it has, not how big it is, which is why lips, fingertips and the tongue look enormous. **Memory hint:** the **post**central gyrus receives, like a **post** office.', img:['img/p2/homunculus2.jpg','The sensory homunculus.', true]},
+     {h:'Touch is a need, not a luxury', p:'Psychoanalyst René Spitz saw orphanage infants who were fed and clean but rarely held. Many failed to thrive, and some died. He called it **hospitalism**. Harry Harlow’s monkeys chose a soft cloth “mother” over a wire one that gave milk, and monkeys deprived of touch developed rocking and withdrawal. Today, skin-to-skin contact is standard care for premature babies.', img:['img/p2/harlow.jpg','Harlow’s contact-comfort studies.', true], video:['OrNBEhzjg8I','Harlow’s monkeys']},
+     {h:'Pain without injury, injury without pain', p:'In **phantom limb pain**, people feel pain in a limb that’s gone. **Mirror therapy** uses a mirror to make the missing limb seem present and movable, which can ease the pain. At the other extreme, people with **congenital insensitivity to pain** (often from mutations in the SCN9A sodium channel gene) feel no pain at all, and suffer serious injuries without noticing.', video:['gc3CmS8_vUI','Phantom limbs and mirror therapy'], video2:['n6iOUW523BE','A girl who feels no pain']}],
+   answer:'Your sense of “me, here” isn’t fixed. The parietal lobe keeps building it from touch, body position and vision, moment to moment. Give it conflicting signals (the rubber hand), damage it (neglect, somatoparaphrenia), or stimulate it (an out-of-body experience), and the edge of “you” moves.',
+   quiz:[{q:'After a right parietal stroke, a patient eats only the right half of his plate. Most likely?', o:['Left hemispatial neglect','Damage to his left eye','Prosopagnosia','Cortical blindness'], a:0, why:'Right parietal damage often causes neglect of the left side of space. His eyes are fine; his attention isn’t.'},
+         {q:'Why are the hands huge on the sensory homunculus?', o:['They have many more receptors and much more cortex','Hands are the biggest body part','The map is drawn randomly','Hands are closest to the brain'], a:0, why:'Map size reflects receptor density and cortical area, not body size.'}],
+   refs:['Botvinick, M. & Cohen, J. (1998). Rubber hands “feel” touch that eyes see. Nature.','Blanke, O. et al. (2002). Stimulating illusory own-body perceptions. Nature.','Vallar, G. & Ronchi, R. (2009). Somatoparaphrenia. Experimental Brain Research.','Harlow, H. F. (1958). The nature of love. American Psychologist.','Ramachandran, V. S. & Rogers-Ramachandran, D. (1996). Synaesthesia in phantom limbs induced with mirrors. Proc. R. Soc. B.']},
+
+ { id:'temporal', title:'Temporal lobe', short:'Temporal', color:'#ec6f86', lobe:2, anchor:[-58,-20,-14], coch:true,
+   view:{dir:[1,0.15,0.3], dist:3.4, tgt:[-30,-22,-8]},
+   marks:[['Primary auditory cortex',[-48,-22,8]],['Wernicke’s area',[-56,-46,16]],['Fusiform face area (underneath)',[-40,-52,-20]],['MGN (thalamus)',[-16,-26,-4],'#ffd166']], paths:['auditory','acortex'],
+   q:'How do you know who someone is?',
+   clues:[['Faces without names','In face blindness, people see a face clearly but can’t tell whose it is, sometimes even their own.'],
+          ['Right face, wrong feeling','In Capgras delusion, a loved one looks right but feels wrong, so the person decides they’re an impostor.'],
+          ['Recognition is many things','Voices, words, songs and memories all come together in the temporal lobe.']],
+   hold:'Hold this question: when you recognize someone, how much is seeing, and how much is feeling?',
+   where:'Along the side of your head, below the lateral (Sylvian) fissure, roughly behind your temples.',
+   funcs:[['Hearing','primary auditory cortex.'],['Understanding language','Wernicke’s area, usually on the left.'],['Recognizing faces and objects','the fusiform face area and the ventral “what” stream.'],['Memory and emotion','the hippocampus and amygdala sit along its inner edge. More in Part III.']],
+   mim:{img:'img/p2/temporal_mimage.jpg', title:'The Temple', lines:[['PAC-Man wears headphones and listens','primary auditory cortex, hearing'],['A graduate hippo enters the temple','hippocampus, new memories on campus'],['The hippo chomps an angry almond','amygdala, emotion and fear'],['The almond holds a human face with a fuse','fusiform face area'],['Wernicke watches and screams “WHAT?!”','Wernicke’s area, understanding speech']]},
+   secs:[
+     {h:'A very simple hearing pathway', list:['**Mechanical trigger:** sound waves enter the ear and bend tiny hairs (stereocilia) on hair cells in the cochlea.','**Depolarization:** bending opens channels, and potassium rushes **in** (the fluid around the hairs is unusually rich in potassium).','**Action potentials** fire along the auditory nerve.','**Thalamic relay:** signals climb the brainstem and pass through the **medial geniculate nucleus (MGN)** of the thalamus.','**Cortex:** the MGN sends them to primary auditory cortex, and you consciously hear.'], demo:'sound', img:['img/p2/audition.jpg','The audition pathway. From your slides.'], video:['px3oVGXr4mo','What does sound look like?']},
+     {h:'Inside the ear', p:'A useful animated tour of how the ear turns air vibrations into nerve signals.', video:['57SqFa4XpPs','The auditory system'], img:['img/p2/ear.jpg','Outer, middle and inner ear.', true]},
+     {h:'Fun fact: your ear is a funnel', p:'The pinna (the part you can see) funnels sound into the ear canal, which boosts some frequencies and helps you tell whether a sound comes from above or below. One study even suggested that **moose antlers** may work like extra satellite dishes, collecting sound.', img:['img/p2/moose.jpg','Moose antlers as sound collectors?', true], src:'Bubenik & Bubenik, 2008'},
+     {h:'Face blindness', p:'Damage to the temporal lobe, especially the fusiform face area on its underside, can cause **prosopagnosia**: people see faces clearly but can’t recognize them, including friends, family, even their own face in a mirror. They rely on voices, clothes, hair or walk. Some people are born with it (developmental prosopagnosia), around 2% by some estimates.', video:['3-MzNPcEh6M','Face blindness'], more:['The flip side: Capgras delusion','Here, recognition works but the emotional “glow” of familiarity is missing. The person thinks: “She looks exactly like my wife… but she isn’t.” Face blindness loses the identity; Capgras loses the feeling.']}],
+   answer:'Recognition is two things at once. **Identifying:** the fusiform face area and other “what” areas say who it is. **Feeling:** links to the amygdala and limbic system say “this person matters to me.” Lose the first and you get face blindness; lose the second and you get Capgras. Knowing someone is both seeing and feeling.',
+   quiz:[{q:'Which part of the thalamus relays hearing?', o:['MGN (medial geniculate nucleus)','LGN (lateral geniculate nucleus)','Hypothalamus','Pons'], a:0, why:'MGN = Madison Square Garden = concerts = hearing. LGN = Louvre = vision.'},
+         {q:'Someone can see your face perfectly but can’t tell who you are. This is…', o:['Prosopagnosia','Capgras delusion','Cortical blindness','Neglect'], a:0, why:'Prosopagnosia is face blindness, often linked to the fusiform face area.'}],
+   refs:['Kanwisher, N., McDermott, J. & Chun, M. (1997). The fusiform face area. Journal of Neuroscience.','Ellis, H. D. & Young, A. W. (1990). Accounting for delusional misidentifications. British Journal of Psychiatry.','Bubenik, G. A. & Bubenik, P. G. (2008). Palmated antlers of moose may serve as a parabolic reflector of sounds. European Journal of Wildlife Research.']},
+
+ { id:'occipital', title:'Occipital lobe and vision', short:'Occipital', color:'#36c3a5', lobe:3, anchor:[-24,-94,8], eyes:true,
+   view:{dir:[1,0.3,0.05], dist:4.0, tgt:[-12,-22,-6]},
+   marks:[['V1',[-10,-92,4]],['V4 (color)',[-30,-74,-14]],['V5 / MT (motion)',[-46,-70,2]],['LGN (thalamus)',[-22,-24,-6],'#7ad7ff'],['Optic chiasm',[0,6,-18],'#7ad7ff']], paths:['optic','opticR','tract','radiation','dorsal','ventral'],
+   q:'Do you see the world, or build it?',
+   clues:[['Edges that aren’t there','The Kanizsa triangle: your brain draws a bright triangle the page doesn’t contain.'],
+          ['Seeing what isn’t there','In Charles Bonnet syndrome, people losing their sight see vivid people and patterns, and know they aren’t real.'],
+          ['Seeing without knowing','In blindsight, people blind on one side can still point to objects there that they insist they can’t see.']],
+   hold:'Hold this question: if you can “see” without being aware of it, what does consciousness add?',
+   where:'The back of the brain. Primary visual cortex (V1) lines the calcarine sulcus on the inner surface.',
+   funcs:[['V1 = one line','edges, lines, orientation and contrast.'],['V2 = 2D','puts the lines together into contours and shapes.'],['V3 = 3D','form and depth.'],['V4 = color-FOUR','color.'],['V5/MT = five-gear shift','motion.']],
+   mim:{img:'img/p2/occipital_mimage.jpg', title:'The Oculus', lines:[['The first thing you see are THE V’s','V1–V5'],['A CUNY student on the upper balcony looks down at the floor','cuneus: above the calcarine sulcus, but sees the lower visual field'],['A security scanner examines the parts of a face','occipital face area (OFA)']]},
+   secs:[
+     {h:'From eye to cortex', list:['**Photoreceptors:** rods (dim light, black and white) and cones (color and detail).','**Optic nerves** carry the signal back. At the **optic chiasm**, fibers from the inner half of each retina cross, so each side of the brain sees the opposite side of the world.','**LGN:** most fibers relay in the lateral geniculate nucleus of the thalamus (the Louvre on the whale’s tail).','**V1:** primary visual cortex, then two streams: **dorsal (“where/how”)** to the parietal lobe and **ventral (“what”)** to the temporal lobe.'], demo:'light'},
+     {h:'What and where', p:'**Ventral “what” stream** (purple): V1 → V2 → V4 → inferior temporal cortex, for recognizing objects and faces. **Dorsal “where/how” stream** (green): V1 → V2 → V5/MT → posterior parietal cortex, for motion, location, and guiding your eyes and hands.', img:['img/p2/whatwhere.jpg','The what and where pathways. From your slides.']},
+     {h:'The retina: cones for color', p:'Rods work in low light (night vision); cones work in bright light and give you color and detail. Bipolar and ganglion cells process the signal before it leaves the eye. **Memory hint: Cones for Color.**', img:['img/p2/retina.jpg','The eye and retina.', true]},
+     {h:'How sensitive are rods?', p:'A single photon can change the shape of one rhodopsin molecule in a rod. (Technically, the retinal chromophore inside the opsin protein absorbs the light.) In one experiment, people reported a single photon slightly better than chance.', img:['img/p2/rhodopsin.jpg','Rhodopsin and retinal.', true], src:'Tinsley et al., 2016'},
+     {h:'Fun fact: why pirates (probably) wore eye patches', p:'**Probably why:** to keep one eye dark-adapted. Moving from the bright deck to a dark hold, a pirate could switch the patch and see right away. It takes your eyes many minutes to fully adjust to the dark, and each eye adapts on its own. It’s a plausible idea (a 1940s Navy handbook recommends the trick, and MythBusters found it works), but there’s no solid historical record that pirates did it for this reason.', img:['img/p2/pirate.jpg','Why pirates wore eye patches (probably).', true]},
+     {h:'“Brain” blindness', p:'Damage to the occipital lobe can cause **cortical blindness**: healthy eyes, but no sight. Some patients develop **Anton–Babinski syndrome**: they are blind but insist they can see, describing rooms they can’t see. The brain can lose sight and lose the knowledge that it’s lost.', video:['aETCo66P2MY','Occipital lobe damage after stroke']},
+     {h:'Your brain constructs vision', p:'The brain pieces reality together. It fills in edges, prefers simple familiar shapes, and uses what it expects. Try these three.', demo:'kanizsa'},
+     {demo:'muller'},
+     {demo:'hidden'},
+     {h:'Charles Bonnet syndrome', p:'People with major vision loss (from macular degeneration, glaucoma or cataracts) sometimes see vivid hallucinations: patterns, faces, people in costumes, animals. Unlike in many psychiatric conditions, they know the images aren’t real. With less input coming in, the visual brain starts generating its own. Named after Charles Bonnet, an 18th-century Swiss philosopher who described it in his grandfather.', video:['jNhnhD8ecGY','Charles Bonnet syndrome'], video2:['gAZaGikn8PQ','Charles Bonnet syndrome: a first-person account']},
+     {h:'Blindsight', p:'Patient D.B. lost V1 on one side and was blind in the opposite half of his visual field. Yet when asked to guess, he could point to objects there and tell whether lines were vertical or horizontal, far better than chance, while insisting he saw nothing. Some visual information reaches the brain through routes that skip V1, without awareness.', src:'Weiskrantz et al., 1974'}],
+   answer:'You build it. Your eyes send fragments: light levels, edges, movement. V1 and the areas after it assemble those into objects and scenes, filling gaps (Kanizsa), using expectations (the hidden image you can’t un-see), and even generating images with no input (Charles Bonnet). Blindsight shows that some of this processing can happen without awareness, so consciousness seems to add something more: an experience you can report and use.',
+   quiz:[{q:'Which visual area is key for seeing motion?', o:['V5 / MT','V1','V4','The cuneus'], a:0, why:'V5 = five-gear shift = motion.'},
+         {q:'The dorsal visual stream mainly handles…', o:['Where things are and how to reach for them','What things are','Color','Faces'], a:0, why:'Dorsal = “where/how” (to the parietal lobe). Ventral = “what” (to the temporal lobe).'},
+         {q:'The cuneus processes which part of the visual field?', o:['The lower field','The upper field','Only the center','Only color'], a:0, why:'The cuneus sits above the calcarine sulcus and sees the lower half of the world, because the image is flipped.'}],
+   refs:['Kanizsa, G. (1976). Subjective contours. Scientific American.','Weiskrantz, L. et al. (1974). Visual capacity in the hemianopic field following a restricted occipital ablation. Brain.','Tinsley, J. N. et al. (2016). Direct detection of a single photon by humans. Nature Communications.','Menon, G. J. et al. (2003). Complex visual hallucinations in the visually impaired (Charles Bonnet syndrome). Survey of Ophthalmology.']},
+
+ { id:'cerebellum', title:'Cerebellum', short:'Cerebellum', color:'#b05cc0', lobe:null, deep:['cbl'], anchor:[-26,-72,-44],
+   view:{dir:[0.85,0.1,-0.7], dist:3.4, tgt:[-6,-58,-30]},
+   marks:[], paths:[],
+   q:'Why can’t you tickle yourself?',
+   clues:[['Your brain predicts your own touch','When you move, the cerebellum predicts what you’ll feel and turns that feeling down.'],
+          ['Break the prediction, get the tickle','When a robot added a short delay between people’s own movement and the touch, it started to tickle.'],
+          ['A prediction machine','Remember the ballerina and the empty box: the cerebellum compares what you expected with what happened, and corrects.']],
+   hold:'Hold this question: how much of what you experience is your brain’s prediction rather than the world itself?',
+   where:'The “little brain” tucked under the occipital lobe, behind the brainstem. It’s only about 10% of brain volume, yet it holds about 80% of your brain’s neurons.',
+   funcs:[['Balance, posture and timing','keeping you steady and on the beat.'],['Coordination and motor learning','smooth, precise movement that improves with practice.'],['Prediction and error correction','expected vs. actual, then adjust.'],['Eye movements','aiming your gaze accurately.'],['Thinking','it also contributes to planning and timing in thought.']],
+   mim:{img:'img/p2/cbl_mimage.jpg', title:'Sarah Jessica Parker as a Ballerina', lines:[['Balancing on a ticking metronome','balance, posture and timing'],['A thought bubble above her head','cognition'],['She practices a dance routine','coordination and motor learning'],['She lifts a box she thought was full of books, but it’s empty! Her arms fly up, then she adjusts','prediction and error correction'],['She moves her eyes to look inside the box','eye movement control']]},
+   secs:[
+     {h:'Why you can’t tickle yourself', p:'When you move, your brain sends a copy of the command to the cerebellum, which predicts the sensation you’re about to feel. Predicted sensations are turned down, so your own touch feels weaker. In a clever experiment, people tickled themselves through a robot; when the robot added a delay or changed direction, the touch felt more ticklish, because the prediction no longer matched.', src:'Blakemore, Wolpert & Frith, 1998; Blakemore, Frith & Wolpert, 1999'},
+     {h:'Damage to the cerebellum', list:['**Ataxia:** clumsy, uncoordinated movement and a wide, unsteady walk.','**Intention tremor:** shaking that gets worse as you reach for something (the finger-to-nose test).','**Slurred, poorly timed speech.**','Alcohol affects the cerebellum early, which is why roadside sobriety tests look for these signs.'], video:['Txlvuu2byUY','Cerebellar damage']},
+     {h:'Not just movement', p:'Damage to parts of the cerebellum can also affect planning, language and emotion, a pattern called cerebellar cognitive affective syndrome. The same “predict and correct” trick seems to help smooth thinking, not just moving.', src:'Schmahmann & Sherman, 1998'}],
+   answer:'More than you’d think. Your brain constantly predicts what’s coming, including the feel of your own movements, and mostly notices the errors. The cerebellum is a key part of that prediction machine. Much of experience is the brain’s best guess, updated whenever the world disagrees.',
+   quiz:[{q:'A patient’s hand shakes more and more as it approaches a target. Where is the damage most likely?', o:['Cerebellum','Occipital lobe','Hippocampus','Broca’s area'], a:0, why:'Intention tremor is a classic cerebellar sign.'},
+         {q:'Why does self-tickling feel weak?', o:['The cerebellum predicts the sensation and dampens it','Your skin has fewer receptors when you touch it','The thalamus blocks all self-touch','It doesn’t; it’s a myth'], a:0, why:'Predicted sensations are turned down. Add a delay and the prediction fails.'}],
+   refs:['Azevedo, F. A. et al. (2009). Equal numbers of neuronal and nonneuronal cells make the human brain an isometrically scaled-up primate brain. J. Comparative Neurology.','Blakemore, S.-J., Wolpert, D. & Frith, C. (1998). Central cancellation of self-produced tickle sensation. Nature Neuroscience.','Schmahmann, J. D. & Sherman, J. C. (1998). The cerebellar cognitive affective syndrome. Brain.']}
+];
+
+/* ============ Scene: glass cortex (lobes can light up), deep structures, pathways ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const S = (x,y,z) => V(-x/80, (z-10)/80, (y+18)/80);   // MNI mm -> scene; subject's left = +x
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.2; controls.maxDistance = 9;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x554466, 0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 6); scene.add(sun);
+const rim = new THREE.DirectionalLight(0xbcd2ff, 0.45); rim.position.set(-4, 2, -5); scene.add(rim);
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
+
+/* ---- glass cortex with rim light ---- */
+const GLASS = { base: PAGE.glass || 0.05, rim: 0.4 };
+const cortexMat = new THREE.MeshStandardMaterial({color:lin('#e8cfc4'), roughness:0.6, transparent:true, opacity:GLASS.base, depthWrite:false, side:THREE.DoubleSide});
+const CU = { uRim:{value:GLASS.rim} };
+cortexMat.onBeforeCompile = sh => { sh.uniforms.uRim = CU.uRim;
+  sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vN2; varying vec3 vV2;').replace('#include <project_vertex>', '#include <project_vertex>\nvN2 = normalize(normalMatrix*normal); vV2 = normalize(-mvPosition.xyz);');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uRim; varying vec3 vN2; varying vec3 vV2;')
+    .replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'float fr = pow(1.0 - abs(dot(normalize(vN2), normalize(vV2))), 2.5); vec4 diffuseColor = vec4( diffuse, opacity + uRim*fr );'); };
+cortexMat.customProgramCacheKey = () => 'glass';
+const LCOL = ['#5b8cff','#f0a43a','#ec6f86','#36c3a5'];
+const lobeMeshes = [[],[],[],[]], cortex = [];
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer, n = 32492, f = 64980; let off = 0;
+  for (let h=0; h<2; h++){ const pos = new Int16Array(buf, off, n*3); off += n*6; const idx = new Uint16Array(buf, off, f*3); off += f*6; off += n; const lobe = new Uint8Array(buf, off, n); off += n;
+    const P = new Float32Array(n*3); for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, cortexMat); m.renderOrder = 6; scene.add(m); cortex.push(m);
+    for (let L=0; L<4; L++){ const sub = []; for (let t=0;t<f;t++){ const a = idx[t*3], b = idx[t*3+1], c = idx[t*3+2]; if (lobe[a]===L && lobe[b]===L && lobe[c]===L) sub.push(a,b,c); }
+      const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', g.attributes.position); g2.setAttribute('normal', g.attributes.normal); g2.setIndex(sub);
+      const lm = new THREE.Mesh(g2, new THREE.MeshStandardMaterial({color:lin(LCOL[L]), roughness:0.55, transparent:true, opacity:0, depthWrite:false, emissive:lin(LCOL[L]), emissiveIntensity:0.08}));
+      lm.renderOrder = 3; lm.visible = false; lm.userData.lobe = L; if (h === 0){ scene.add(lm); lobeMeshes[L].push(lm); } } } }
+
+/* ---- deep structures ---- */
+const deepMat = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.45, emissive:lin(c), emissiveIntensity:0.05, transparent:true, opacity:0.15, depthWrite:false});
+const DEEP = buildDeep(scene, deepMat);
+Object.values(DEEP).forEach(o => o.meshes.forEach(m => { m.renderOrder = 4; }));
+
+/* ---- extra props: eyes, ears ---- */
+const eyeMat = new THREE.MeshStandardMaterial({color:lin('#f6f3ee'), roughness:0.3, transparent:true, opacity:0});
+const EYES = [[-32,50,-38],[32,50,-38]].map(p => { const e = new THREE.Mesh(new THREE.SphereGeometry(0.11, 28, 20), eyeMat); e.position.copy(S(...p)); scene.add(e); return e; });
+const irisMat = new THREE.MeshStandardMaterial({color:lin('#4f86c6'), transparent:true, opacity:0});
+EYES.forEach(e => { const ir = new THREE.Mesh(new THREE.CircleGeometry(0.05, 24), irisMat); ir.position.set(0, 0, 0.111); e.add(ir); });
+const cochMat = new THREE.MeshStandardMaterial({color:lin('#ffe38a'), emissive:lin('#ffd166'), emissiveIntensity:0.2, transparent:true, opacity:0});
+const COCH = new THREE.Mesh(new THREE.TorusKnotGeometry(0.05, 0.016, 48, 8, 2, 3), cochMat); COCH.position.copy(S(-62,-22,-34)); scene.add(COCH);
+
+/* ---- pathways (left hemisphere, subject's left faces the camera) ---- */
+const PATH_DEF = {
+  optic:   {c:'#7ad7ff', pts:[[-32,50,-38],[-20,32,-28],[0,6,-18]]},
+  opticR:  {c:'#7ad7ff', pts:[[32,50,-38],[20,32,-28],[0,6,-18]]},
+  tract:   {c:'#7ad7ff', pts:[[0,6,-18],[-14,-6,-14],[-22,-24,-6]]},
+  radiation:{c:'#7ad7ff', pts:[[-22,-24,-6],[-32,-42,4],[-26,-66,6],[-10,-90,4]]},
+  dorsal:  {c:'#5fe0a3', pts:[[-10,-90,4],[-30,-84,8],[-46,-70,4],[-38,-62,36],[-30,-58,54]]},
+  ventral: {c:'#c49bff', pts:[[-10,-90,4],[-26,-82,-10],[-36,-66,-16],[-48,-42,-20],[-50,-20,-26]]},
+  auditory:{c:'#ffd166', pts:[[-62,-22,-34],[-30,-30,-34],[-10,-34,-26],[-10,-32,-12],[-16,-26,-4]]},
+  acortex: {c:'#ffd166', pts:[[-16,-26,-4],[-34,-24,4],[-48,-22,8]]},
+  motor:   {c:'#ff8a5c', pts:[[-36,-20,64],[-28,-14,30],[-20,-12,6],[-12,-22,-22],[-4,-38,-60],[-2,-44,-78]]},
+  touch:   {c:'#ffd166', pts:[[-2,-44,-78],[-6,-38,-58],[-10,-26,-24],[-16,-20,2],[-30,-26,30],[-40,-30,56]]},
+  lowroad: {c:'#ff5f7a', pts:[[-22,-24,-6],[-24,-14,-14],[-22,-4,-19]]},
+  highroad:{c:'#ffb547', pts:[[-10,-90,4],[-34,-70,-14],[-48,-40,-20],[-40,-16,-24],[-22,-4,-19]]},
+  smell:   {c:'#7ad7ff', pts:[[-8,42,-28],[-14,24,-24],[-22,6,-20],[-22,-4,-19]]},
+  ofc:     {c:'#7ad7ff', pts:[[-14,24,-24],[-22,36,-18]]},
+  nigro:   {c:'#ffd166', pts:[[-10,-18,-11],[-14,-10,0],[-16,4,10],[-14,12,10]]},
+  meso:    {c:'#ffcc33', pts:[[-4,-16,-12],[-8,-2,-12],[-10,11,-8]]},
+  hpa:     {c:'#ff9f1c', pts:[[0,-4,-11],[0,1,-22],[0,4,-30]]}
+};
+const PATHS = {};
+Object.entries(PATH_DEF).forEach(([k, d]) => { const curve = new THREE.CatmullRomCurve3(d.pts.map(p => S(...p)));
+  const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.012, 8), new THREE.MeshBasicMaterial({color:lin(d.c), transparent:true, opacity:0, depthWrite:false}));
+  m.renderOrder = 7; scene.add(m); PATHS[k] = {curve, mesh:m, c:d.c}; });
+
+/* ---- markers (glow + label) ---- */
+const MARK = {};   // key -> {sp, pos}
+function marker(key, mni, c){ if (MARK[key]) return MARK[key]; const sp = sprite(c, 0.3); sp.position.copy(S(...mni)); sp.material.opacity = 0; scene.add(sp); return (MARK[key] = {sp, pos:sp.position, c}); }
+
+/* ---- pulses ---- */
+const PULSES = [];
+function pulse(key, cb, delay=0, size=0.2, dur){ const P = PATHS[key]; const sp = sprite(P.c, size); sp.visible = false; scene.add(sp); PULSES.push({curve:P.curve, sp, t:-delay, dur:dur || 1.1, cb}); }
+function chain(keys, cb, delay=0, size, dur){ let t = delay; keys.forEach((k, i) => { pulse(k, i === keys.length - 1 ? cb : null, t, size, dur); t += dur || 1.1; }); }
+function updPulses(dt){ for (let i=PULSES.length-1;i>=0;i--){ const p = PULSES[i]; p.t += dt; const k = p.t/p.dur; if (k < 0) continue; p.sp.visible = true;
+  if (k >= 1){ scene.remove(p.sp); PULSES.splice(i,1); if (p.cb) p.cb(); continue; } p.sp.position.copy(p.curve.getPointAt(k)); } }
+
+/* ============ Demos (shared by Part II and Part III) ============ */
+const DEMO = {};
+const setHud = m => { hudMsg = m; };
+
+/* ---- signal routes on the 3D brain ---- */
+DEMO.light = { html: () => `<div class="tries"><button class="try" data-a="see">▶ Send light to V1</button><button class="try" data-a="what">▶ “What” stream</button><button class="try" data-a="where">▶ “Where” stream</button></div>`,
+  bind(root){ root.querySelector('[data-a=see]').onclick = () => { pulse('opticR', null, 0); chain(['optic','tract','radiation'], () => setHud('<b>V1 lights up.</b> Now the image gets taken apart into edges, color and motion, and sent down two streams.')); setHud('<b>Light hits both retinas.</b> Signals travel the optic nerves, partly cross at the chiasm, relay in the LGN (thalamus) and reach V1.'); };
+    root.querySelector('[data-a=what]').onclick = () => { pulse('ventral', null, 0, 0.22, 1.6); setHud('<b>Ventral “what” stream:</b> V1 → V2 → V4 → inferior temporal cortex. Recognizing objects and faces.'); };
+    root.querySelector('[data-a=where]').onclick = () => { pulse('dorsal', null, 0, 0.22, 1.6); setHud('<b>Dorsal “where/how” stream:</b> V1 → V5/MT → posterior parietal cortex. Location, motion, and guiding your hand and eyes.'); }; } };
+DEMO.sound = { html: () => `<div class="tries"><button class="try">▶ Send a sound</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { chain(['auditory','acortex'], () => setHud('<b>Primary auditory cortex.</b> Now you consciously hear it.'), 0, 0.2, 1.3); setHud('<b>Sound bends hair cells in the cochlea.</b> The signal climbs the brainstem, relays in the MGN (thalamus) and reaches auditory cortex.'); }; } };
+DEMO.move = { html: () => `<div class="tries"><button class="try">▶ Send a “move” command</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { pulse('motor', () => setHud('<b>At the muscle:</b> the motor neuron releases acetylcholine and the muscle contracts.'), 0, 0.22, 2.2); setHud('<b>Primary motor cortex fires.</b> The command runs down through the brainstem and spinal cord (ventral = vroom) to motor neurons.'); }; } };
+DEMO.touch = { html: () => `<div class="tries"><button class="try">▶ Touch your hand</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { pulse('touch', () => setHud('<b>Primary somatosensory cortex (S1).</b> Now you feel it, mapped onto the sensory homunculus.'), 0, 0.22, 2.2); setHud('<b>Receptors in the skin fire.</b> The signal enters the spinal cord (dorsal = delivers), climbs to the thalamus, then to S1.'); }; } };
+DEMO.relay = { html: () => `<div class="tries"><button class="try" data-a="all">▶ Send sight, sound and smell</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { chain(['optic','tract','radiation'], null, 0, 0.2, 1.0); chain(['auditory','acortex'], null, 0, 0.2, 1.4); chain(['smell','ofc'], null, 0, 0.2, 1.4);
+    setHud('<b>Watch the thalamus:</b> sight (LGN, the Louvre) and sound (MGN, Madison Square Garden) stop at the thalamus. <b>Smell skips it</b>, going straight to smell cortex and the amygdala.'); }; } };
+DEMO.roads = { html: () => `<div class="tries"><button class="try">▶ Snake! Race the two roads</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { chain(['optic','tract'], () => { pulse('lowroad', () => setHud('<b>Low road arrives first:</b> you jump. The cortex is still working out what it saw…'), 0, 0.24, 0.6);
+      pulse('radiation', () => pulse('highroad', () => setHud('<b>High road arrives:</b> “…it’s a garden hose.” The cortex sends the all-clear.'), 0, 0.24, 1.8), 0, 0.2, 1.2); }, 0, 0.2, 0.7);
+    setHud('Something long and curvy on the path…'); }; } };
+DEMO.dopa = { html: () => `<div class="tries"><button class="try">▶ Release dopamine</button></div>`,
+  bind(root){ root.querySelector('button').onclick = () => { pulse('nigro', null, 0, 0.22, 1.4); pulse('meso', null, 0.2, 0.22, 1.4); setHud('<b>Substantia nigra → striatum</b> (movement and habits) and <b>VTA → nucleus accumbens</b> (reward and motivation).'); }; } };
+
+/* ---- Wisconsin card sorting ---- */
+DEMO.wcst = (() => {
+  const COL = ['#ff5f5f','#5fe08a','#ffd166','#5fa8ff'], SH = ['tri','star','cross','circle'], RULES = ['color','shape','number'];
+  const shape = (s, c, x, y, r) => s === 'circle' ? `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/>` : s === 'tri' ? `<polygon points="${x},${y-r} ${x+r},${y+r*0.8} ${x-r},${y+r*0.8}" fill="${c}"/>`
+    : s === 'cross' ? `<path d="M${x-r*0.35},${y-r}h${r*0.7}v${r*0.65}h${r*0.65}v${r*0.7}h${-r*0.65}v${r*0.65}h${-r*0.7}v${-r*0.65}h${-r*0.65}v${-r*0.7}h${r*0.65}z" fill="${c}"/>`
+    : `<polygon points="${Array.from({length:10}, (_, i) => { const a = -Math.PI/2 + i*Math.PI/5, rr = i % 2 ? r*0.45 : r; return (x + rr*Math.cos(a)).toFixed(1) + ',' + (y + rr*Math.sin(a)).toFixed(1); }).join(' ')}" fill="${c}"/>`;
+  const POS = [[[30,40]],[[18,26],[42,54]],[[16,22],[44,22],[30,58]],[[17,24],[43,24],[17,56],[43,56]]];
+  const card = (k) => `<svg viewBox="0 0 60 80" class="wc"><rect x="1" y="1" width="58" height="78" rx="6" fill="#f6f3ee"/>${POS[k.n].map(([x, y]) => shape(SH[k.s], COL[k.c], x, y, k.n ? 9 : 13)).join('')}</svg>`;
+  let st;
+  const reset = () => { st = {rule:0, streak:0, trials:0, errs:0, pers:0, prev:null, cur:null, log:''}; draw(); };
+  const deal = () => { let k; do { k = {c:Math.random()*4|0, s:Math.random()*4|0, n:Math.random()*4|0}; } while (k.c === k.s && k.s === k.n); return k; };
+  let root;
+  function draw(){ if (!root) return; if (!st.cur) st.cur = deal();
+    root.querySelector('.wtargets').innerHTML = [0,1,2,3].map(i => `<button class="wt" data-i="${i}" aria-label="Target card ${i+1}">${card({c:i, s:i, n:i})}</button>`).join('');
+    root.querySelector('.wcur').innerHTML = card(st.cur);
+    root.querySelector('.wlog').innerHTML = st.log || 'Sort the bottom card onto one of the four top cards. I won’t tell you the rule, only “right” or “wrong.”';
+    root.querySelector('.wstats').textContent = `Trials: ${st.trials} · Errors: ${st.errs} · Rule changes: ${Math.floor(st.rule)}`;
+    root.querySelectorAll('.wt').forEach(b => b.onclick = () => pick(+b.dataset.i)); }
+  function pick(i){ const r = RULES[st.rule % 3], k = st.cur, val = r === 'color' ? k.c : r === 'shape' ? k.s : k.n; const ok = val === i; st.trials++;
+    let pers = false; if (!ok && st.prev){ const pv = st.prev === 'color' ? k.c : st.prev === 'shape' ? k.s : k.n; if (pv === i){ pers = true; st.pers++; } }
+    if (ok){ st.streak++; st.log = '<b class="ok">Right.</b>'; } else { st.errs++; st.streak = 0; st.log = '<b class="bad">Wrong.</b>' + (pers ? ' <span class="muted">(You sorted by the old rule. That’s perseveration.)</span>' : ''); }
+    if (st.streak >= 5){ st.prev = r; st.rule++; st.streak = 0; st.log += ' <span class="muted">(Psst: the rule just changed, silently.)</span>'; }
+    st.cur = deal(); draw(); }
+  return { html: () => `<div class="wcst"><div class="wtargets"></div><div class="wrow"><div class="wcur"></div><div><p class="wlog"></p><p class="wstats muted"></p><button class="btn small wreset">Start over</button></div></div></div>`,
+    bind(r){ root = r; r.querySelector('.wreset').onclick = reset; if (!st) reset(); else draw(); } };
+})();
+
+/* ---- Kanizsa triangle ---- */
+DEMO.kanizsa = { html: () => `<div class="illu"><svg viewBox="0 0 300 260" class="kz" role="img" aria-label="Kanizsa triangle"><rect width="300" height="260" fill="#f6f3ee"/>
+  <g class="pac">${[[150,40,90],[60,200,-30],[240,200,210]].map(([x,y,a]) => `<path transform="translate(${x} ${y}) rotate(${a})" d="M0,0 L28,-16 A32,32 0 1,0 28,16 Z" fill="#111"/>`).join('')}</g>
+  <g fill="none" stroke="#111" stroke-width="3">${(() => { const P = [[150,215],[78,90],[222,90]]; return `<path d="M${P[1][0]+36},${P[1][1]} L${P[1][0]},${P[1][1]} L${P[1][0]+18},${P[1][1]+31}"/><path d="M${P[2][0]-36},${P[2][1]} L${P[2][0]},${P[2][1]} L${P[2][0]-18},${P[2][1]+31}"/><path d="M${P[0][0]-18},${P[0][1]-31} L${P[0][0]},${P[0][1]} L${P[0][0]+18},${P[0][1]-31}"/>`; })()}</g></svg>
+  <div class="tries"><button class="try" aria-pressed="false">↻ Turn the pieces</button></div><p class="muted">Do you see a bright white triangle? It isn’t drawn. Now turn the pieces and watch it vanish.</p></div>`,
+  bind(root){ const b = root.querySelector('.try'); b.onclick = () => { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); root.querySelectorAll('.pac path').forEach((p, i) => { const base = [90,-30,210][i]; p.setAttribute('transform', p.getAttribute('transform').replace(/rotate\([^)]*\)/, `rotate(${on ? base + 180 : base})`)); }); }; } };
+
+/* ---- Müller-Lyer ---- */
+DEMO.muller = { html: () => `<div class="illu"><svg viewBox="0 0 300 170" class="ml" role="img" aria-label="Müller-Lyer illusion"><rect width="300" height="170" fill="#f6f3ee"/>
+  <g stroke="#111" stroke-width="3" fill="none" stroke-linecap="round"><path d="M80,50 H220 M80,50 l18,-14 M80,50 l18,14 M220,50 l-18,-14 M220,50 l-18,14"/>
+  <path class="mlb" d="M80,120 H220"/><path class="fins" d=""/></g><g class="guides" stroke="#e23" stroke-width="1.5" stroke-dasharray="4 4" opacity="0"><path d="M80,20 V150 M220,20 V150"/></g></svg>
+  <label class="slider-row">Bottom line length <input type="range" min="100" max="200" value="140"></label>
+  <div class="tries"><button class="try">Check with rulers</button></div><p class="muted mlmsg">Drag until the two lines look the same length, then check.</p></div>`,
+  bind(root){ const inp = root.querySelector('input'), b = root.querySelector('.mlb'), f = root.querySelector('.fins'), g = root.querySelector('.guides');
+    const draw = () => { const L = +inp.value, x0 = 150 - L/2, x1 = 150 + L/2; b.setAttribute('d', `M${x0},120 H${x1}`); f.setAttribute('d', `M${x0},120 l-18,-14 M${x0},120 l-18,14 M${x1},120 l18,-14 M${x1},120 l18,14`); };
+    inp.oninput = () => { draw(); g.setAttribute('opacity', 0); }; draw();
+    root.querySelector('.try').onclick = () => { g.setAttribute('opacity', 1); const d = (+inp.value - 140); root.querySelector('.mlmsg').innerHTML = d === 0 ? 'Exactly equal. Nice!' : `<b>Your bottom line is ${Math.abs(d)} units ${d < 0 ? 'shorter' : 'longer'} than the top.</b> Most people set it shorter: the outward fins make a line look longer.`; }; } };
+
+/* ---- hidden figure ---- */
+DEMO.hidden = { html: () => `<div class="illu"><img class="hid" src="img/p2/blot.jpg" alt="Black and white blotches with a hidden image"><div class="tries"><button class="try" data-a="show">Show the hidden image</button><button class="try" data-a="back">Back to the blotches</button></div><p class="muted">Look first. Then reveal it, go back, and try to un-see it.</p></div>`,
+  bind(root){ const im = root.querySelector('.hid'); root.querySelector('[data-a=show]').onclick = () => { im.src = 'img/p2/hidden.jpg'; }; root.querySelector('[data-a=back]').onclick = () => { im.src = 'img/p2/blot.jpg'; }; } };
+
+/* ---- heartbeat counting ---- */
+DEMO.heart = { html: () => `<div class="hb"><div class="hbt">30</div><div class="tries"><button class="try" data-a="go">▶ Start 30 seconds: count your heartbeats</button></div>
+  <label class="slider-row hbin" hidden>Beats you counted <input type="number" min="0" max="120" class="num"></label><label class="slider-row hbin" hidden>Beats on your pulse (next 30 s) <input type="number" min="0" max="120" class="num"></label><p class="muted hbmsg">No touching your wrist or neck. Just feel.</p></div>`,
+  bind(root){ const t = root.querySelector('.hbt'); let timer = null;
+    root.querySelector('[data-a=go]').onclick = () => { clearInterval(timer); let s = 30; t.textContent = s; t.classList.add('on'); timer = setInterval(() => { s--; t.textContent = s; if (s <= 0){ clearInterval(timer); t.classList.remove('on'); t.textContent = '✓'; root.querySelectorAll('.hbin').forEach(e => e.hidden = false); root.querySelector('.hbmsg').textContent = 'Now take your pulse for 30 seconds, then type both numbers.'; } }, 1000); };
+    root.querySelectorAll('.num').forEach(n => n.oninput = () => { const [a, b] = [...root.querySelectorAll('.num')].map(x => +x.value); if (a && b){ const acc = Math.max(0, 1 - Math.abs(b - a)/b); root.querySelector('.hbmsg').innerHTML = `<b>Accuracy: ${Math.round(acc*100)}%.</b> ${acc > 0.85 ? 'You’re a good heartbeat perceiver.' : 'Most people undercount. Your insula is getting a quieter signal than you might think.'}`; } }); } };
+
+/* ---- DRM false memory ---- */
+DEMO.drm = (() => { const LIST = ['bed','rest','awake','tired','dream','wake','snooze','blanket','doze','slumber','snore','nap','yawn','drowsy'];
+  const TEST = [['bed',1],['sleep',0],['tired',1],['chair',0],['dream',1],['door',0],['snore',1],['pillow',0]];
+  return { html: () => `<div class="drm"><div class="drmw">Ready?</div><div class="tries"><button class="try" data-a="go">▶ Study the list (one word per second)</button></div><div class="drmt" hidden></div><p class="muted drmmsg">Try to remember as many words as you can.</p></div>`,
+    bind(root){ const w = root.querySelector('.drmw'), t = root.querySelector('.drmt'), msg = root.querySelector('.drmmsg');
+      root.querySelector('[data-a=go]').onclick = () => { t.hidden = true; let i = 0; w.textContent = LIST[0]; const id = setInterval(() => { i++; if (i >= LIST.length){ clearInterval(id); w.textContent = 'Done.'; test(); } else w.textContent = LIST[i]; }, 1000); };
+      function test(){ t.hidden = false; msg.textContent = 'Was each word on the list?'; const ans = {};
+        t.innerHTML = TEST.map(([wd], i) => `<div class="drmq"><b>${wd}</b><button class="qopt" data-i="${i}" data-v="1">Yes</button><button class="qopt" data-i="${i}" data-v="0">No</button></div>`).join('') + '<button class="btn small primary drmcheck">Check</button>';
+        t.querySelectorAll('.qopt').forEach(b => b.onclick = () => { ans[b.dataset.i] = +b.dataset.v; t.querySelectorAll(`.qopt[data-i="${b.dataset.i}"]`).forEach(x => x.setAttribute('aria-pressed', x === b)); });
+        t.querySelector('.drmcheck').onclick = () => { const sl = ans[1] === 1; msg.innerHTML = sl ? '<b>You “remembered” sleep, but it was never on the list.</b> Every word was linked to sleep, so your memory filled it in. About half of people do this.' : '<b>Sleep was never on the list</b>, though every word was linked to it. Many people confidently remember seeing it. You resisted!'; }; }
+    } }; })();
+
+/* ---- HPA stepper ---- */
+DEMO.hpa = (() => { const ST = [['Stressor','You see a final exam on the calendar.'],['Hypothalamus','releases CRH into tiny blood vessels to the pituitary.'],['Pituitary','releases ACTH into the bloodstream.'],['Adrenal glands','(on top of the kidneys) release cortisol.'],['Body','blood sugar up, digestion and repair on hold.'],['Off switch','cortisol tells the hypothalamus and pituitary to stop. Chronic stress keeps the chain on.']];
+  return { html: () => `<div class="steps">${ST.map(([h, t], i) => `<div class="stp" data-i="${i}"><b>${h}</b><span>${t}</span></div>`).join('')}</div><div class="tries"><button class="try">▶ Run the stress chain</button></div>`,
+    bind(root){ root.querySelector('.try').onclick = () => { const s = root.querySelectorAll('.stp'); s.forEach(x => x.classList.remove('on')); pulse('hpa', null, 0, 0.2, 1.2); s.forEach((x, i) => setTimeout(() => x.classList.add('on'), 200 + i*700)); setHud('<b>HPA axis:</b> hypothalamus → pituitary → adrenal glands → cortisol.'); }; } }; })();
+
+/* ---- dopamine prediction error ---- */
+DEMO.rpe = (() => { const C = [['Surprise reward','No cue. Juice arrives.','burst at reward'],['After learning','A light predicts juice.','burst moves to the light'],['Reward missing','The light comes on… no juice.','dip when juice should arrive']];
+  return { html: () => `<div class="rpe"><div class="seg">${C.map((c, i) => `<button data-i="${i}" aria-pressed="${i === 0}">${c[0]}</button>`).join('')}</div><canvas width="640" height="200" aria-label="Dopamine neuron firing"></canvas><p class="muted rpem"></p></div>`,
+    bind(root){ const cv = root.querySelector('canvas'), x = cv.getContext('2d'); let mode = 0;
+      function draw(){ x.clearRect(0, 0, 640, 200); x.fillStyle = '#141a27'; x.fillRect(0, 0, 640, 200); const cueT = 180, rewT = 420;
+        x.font = '600 15px system-ui'; x.fillStyle = '#a3abbc';
+        if (mode > 0){ x.fillStyle = '#7ad7ff'; x.fillRect(cueT - 3, 20, 6, 160); x.fillText('Light (cue)', cueT - 34, 16); }
+        x.fillStyle = mode === 2 ? '#6e7689' : '#ffd166'; x.fillRect(rewT - 3, 20, 6, 160); x.fillText(mode === 2 ? 'No juice' : 'Juice', rewT - 22, 16);
+        for (let row = 0; row < 8; row++){ const y = 40 + row*18; let r = 1;
+          for (let t = 10; t < 630; t += 1){ let rate = 0.035; if (mode === 0 && t > rewT && t < rewT + 50) rate = 0.35; if (mode > 0 && t > cueT && t < cueT + 50) rate = 0.35; if (mode === 2 && t > rewT && t < rewT + 90) rate = 0.0;
+            r = (r*9301 + 49297 + row*7) % 233280; if (r/233280 < rate){ x.fillStyle = '#eceef4'; x.fillRect(t, y, 2, 12); } } }
+        root.querySelector('.rpem').innerHTML = `<b>${C[mode][1]}</b> Dopamine neurons: ${C[mode][2]}. Each row is one trial; each tick is a spike.`; }
+      root.querySelectorAll('.seg button').forEach(b => b.onclick = () => { mode = +b.dataset.i; root.querySelectorAll('.seg button').forEach(z => z.setAttribute('aria-pressed', z === b)); draw(); }); draw(); } }; })();
+
+/* ---- music prediction ---- */
+DEMO.tune = (() => { let ac = null; const N = {C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440};
+  const TW = ['C4','C4','G4','G4','A4','A4','G4','F4','F4','E4','E4','D4','D4'];
+  function play(seq, end){ ac = ac || new (window.AudioContext || window.webkitAudioContext)(); let t = ac.currentTime + 0.05;
+    seq.concat(end ? [end] : []).forEach((n, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = 'triangle'; o.frequency.value = N[n] || n; o.connect(g); g.connect(ac.destination);
+      const d = (i === 6 || i === seq.length) ? 0.7 : 0.35; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + d); o.start(t); o.stop(t + d + 0.05); t += d + 0.05 + (i === seq.length - 1 && end ? 0.6 : 0); }); }
+  return { html: () => `<div class="tries"><button class="try" data-a="stop">▶ Play… and stop</button><button class="try" data-a="right">▶ Expected ending</button><button class="try" data-a="wrong">▶ Surprise ending</button></div><p class="muted">Turn your sound on. Notice the “pull” toward the missing note, then how the surprise ending feels.</p>`,
+    bind(root){ root.querySelector('[data-a=stop]').onclick = () => { play(TW.slice(0, 13)); setHud('Your auditory and frontal networks are already predicting the next note…'); };
+      root.querySelector('[data-a=right]').onclick = () => { play(TW.slice(10, 13), 'C4'); setHud('<b>Prediction confirmed:</b> small error, a feeling of resolution.'); };
+      root.querySelector('[data-a=wrong]').onclick = () => { play(TW.slice(10, 13), 370); setHud('<b>Prediction error!</b> The brain registers the gap between expected and heard. Composers play with this to create tension and chills.'); }; } }; })();
+
+/* ============ State + focus ============ */
+const CHI = Object.fromEntries(CH.map((c, i) => [c.id, i]));
+const state = { ch:null, quiz:{} };
+let T = 0, tween = null;
+const LT = [0,0,0,0], DT = {}, PT = {}, MT = {}; let PROPS = {eyes:0, coch:0};
+function focusTargets(){
+  const c = state.ch ? CH[CHI[state.ch]] : null;
+  for (let L=0; L<4; L++) LT[L] = c ? (c.lobe === L ? 0.62 : 0) : (PAGE.homeLobes ? 0.42 : 0);
+  Object.keys(DEEP).forEach(k => DT[k] = c ? ((c.deep || []).includes(k) ? 1 : (PAGE.dimDeep ?? 0.12)) : (PAGE.homeDeep ? (PAGE.homeDeep.includes(k) ? (PAGE.homeDeepOp || 1) : 0.12) : (PAGE.dimDeep ?? 0.12)));
+  Object.keys(PATHS).forEach(k => PT[k] = c && (c.paths || []).includes(k) ? 0.75 : 0);
+  Object.keys(MARK).forEach(k => MT[k] = 0); if (c) (c.marks || []).forEach(m => MT[m[0]] = 1);
+  PROPS = {eyes: c && c.eyes ? 1 : 0, coch: c && c.coch ? 1 : 0};
+}
+// build all markers up front
+CH.forEach(c => (c.marks || []).forEach(([key, mni, col]) => marker(key, mni, col || c.color)));
+
+/* ============ Labels ============ */
+function mkTag(html, world, show, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = html; labelsEl.appendChild(el); return {el, world, show}; }
+const TAGS = [];
+CH.forEach(c => {
+  TAGS.push(mkTag(`<b>${esc(c.short || c.title)}</b>`, () => S(...c.anchor), () => !state.ch, 'plabel hot'));
+  (c.marks || []).forEach(([key, mni]) => TAGS.push(mkTag(esc(key), () => S(...mni), () => state.ch === c.id, 'plabel')));
+});
+const _v = V();
+function placeTags(){ const w = innerWidth, h = innerHeight; TAGS.forEach(t => { if (!t.show()){ t.el.style.opacity = 0; return; }
+  _v.copy(t.world()).project(camera); if (_v.z > 1){ t.el.style.opacity = 0; return; }
+  t.el.style.opacity = 1; t.el.style.transform = `translate(${(_v.x*0.5+0.5)*w}px, ${(-_v.y*0.5+0.5)*h}px) translate(-50%, -140%)`; }); }
+
+/* ============ Views ============ */
+const isNarrow = () => innerWidth <= 820;
+function viewOf(id){ const c = id ? CH[CHI[id]] : null; const v = c ? c.view : PAGE.homeView; return [S(...(v.tgt || [0,-20,0])), v.dist, V(...v.dir)]; }
+function fly(id){ const [t0, d, dir] = viewOf(id); const P = t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.1 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:t0.clone(), t0:performance.now(), dur:1200}; }
+controls.addEventListener('start', () => { tween = null; });
+function resize(){ const w = innerWidth, h = innerHeight; renderer.setSize(w, h); camera.aspect = w/h;
+  if (isNarrow()) camera.setViewOffset(w, h, 0, Math.round(h*0.22), w, h); else camera.setViewOffset(w, h, Math.round(panel.offsetWidth/2), Math.round(h*0.02), w, h);
+  camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+
+/* ============ Selecting ============ */
+let hudMsg = '';
+function selectCh(id){ state.ch = id; hudMsg = ''; focusTargets(); fly(id); renderPanel(); panel.scrollTop = 0;
+  try { history.replaceState(null, '', id ? '#' + id : location.pathname); } catch(e){} }
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2();
+function pickAt(e){ const r = renderer.domElement.getBoundingClientRect(); mouse.set(((e.clientX - r.left)/r.width)*2 - 1, -((e.clientY - r.top)/r.height)*2 + 1);
+  camera.updateMatrixWorld(); ray.setFromCamera(mouse, camera);
+  const deepHit = ray.intersectObjects(Object.values(DEEP).flatMap(o => o.meshes), false).find(h => CH.some(c => (c.deep || []).includes(h.object.userData.deep) && (PAGE.pickDeep || c.deep.length < 3)));
+  if (deepHit && PAGE.pickDeep){ const k = deepHit.object.userData.deep; const c = CH.find(c => (c.deep || [])[0] === k) || CH.find(c => (c.deep || []).includes(k)); if (c) return c.id; }
+  const hit = ray.intersectObjects(lobeMeshes.flat().filter(m => m.visible).concat(cortex), false)[0];
+  if (hit && hit.object.userData.lobe !== undefined){ const c = CH.find(c => c.lobe === hit.object.userData.lobe); if (c) return c.id; }
+  if (deepHit){ const k = deepHit.object.userData.deep; const c = CH.find(c => (c.deep || []).includes(k)); if (c) return c.id; }
+  return null; }
+let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const id = pickAt(e); if (id && id !== state.ch) selectCh(id); });
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const yt = (id, title) => `<figure class="video" data-yt="${id}"><div class="video-frame"><a class="yt-card" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"><span class="yt-play">▶</span><span class="yt-t">Watch on YouTube</span></a></div><figcaption><b>Video:</b> ${esc(title)} <a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Open on YouTube ↗</a></figcaption></figure>`;
+const fig = (src, cap, narrow) => `<figure class="figure${narrow ? ' narrow' : ''}"><img src="${src}" alt="${esc(cap)}" data-zoom loading="lazy"><figcaption>${fmt(cap)}</figcaption></figure>`;
+function mimageBlock(c){ const m = c.mim; if (!m) return '';
+  const lines = (m.lines || []).map(([s, mean]) => `<li><b>${esc(s)}</b> <span class="mean">${esc(mean)}</span></li>`).join('');
+  if (m.img) return `<section class="sec"><div class="eyebrow">Your Mimage · ${esc(m.title)}</div>${fig(m.img, 'Professor Freed’s Mimage. Tap to enlarge.')}${lines ? `<ul class="mlines">${lines}</ul>` : ''}</section>`;
+  return `<section class="sec"><div class="eyebrow">Mimage · ${esc(m.title)}</div><div class="mim-soon"><b>Art coming soon.</b> Picture the scene:</div><ul class="mlines">${lines}</ul></section>`; }
+function quizBlock(c){ const qs = c.quiz || []; if (!qs.length) return '';
+  return `<section class="quiz" aria-label="Check yourself"><div class="eyebrow">Check yourself</div>${qs.map((q, i) => { const pick = state.quiz[c.id + i];
+    return `<div class="qitem"><p class="q">${fmt(q.q)}</p><div class="qopts">${q.o.map((o, j) => `<button class="qopt" data-q="${i}" data-a="${j}" ${pick !== undefined ? 'disabled' : ''} aria-pressed="${pick === j}">${esc(o)}</button>`).join('')}</div>
+      ${pick !== undefined ? `<p class="qfb ${pick === q.a ? 'ok' : 'bad'}">${pick === q.a ? 'Right.' : `Not quite: it’s “${esc(q.o[q.a])}.”`} ${fmt(q.why)}</p>` : ''}</div>`; }).join('')}</section>`; }
+function secBlock(s){ return `<section class="sec">${s.h ? `<h3>${esc(s.h)}</h3>` : ''}${s.p ? `<p>${fmt(s.p)}</p>` : ''}
+  ${s.list ? `<ul class="blist">${s.list.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>` : ''}
+  ${s.demo ? `<div class="demo" data-demo="${s.demo}">${DEMO[s.demo].html()}</div>` : ''}
+  ${s.img ? fig(s.img[0], s.img[1], s.img[2]) : ''}${s.video ? yt(s.video[0], s.video[1]) : ''}${s.video2 ? yt(s.video2[0], s.video2[1]) : ''}
+  ${s.more ? `<details class="more"><summary>${esc(s.more[0])}</summary><p>${fmt(s.more[1])}</p></details>` : ''}${s.src ? `<p class="src">Source: ${esc(s.src)}</p>` : ''}</section>`; }
+function renderPanel(){
+  const c = state.ch ? CH[CHI[state.ch]] : null;
+  if (!c){
+    panel.style.setProperty('--c', PAGE.color);
+    panel.innerHTML = `<div><div class="eyebrow">${esc(PAGE.eyebrow)}</div><h2>${esc(PAGE.h2)}</h2></div>
+      <p class="lead">${fmt(PAGE.lead)}</p>
+      <div class="howto"><b>How each chapter works:</b> start with a question about the mind, explore the brain area in 3D, learn the Mimage, then come back and answer the question.</div>
+      <ol class="chlist">${CH.map((x, i) => `<li><button class="chrow" data-ch="${x.id}" style="--c:${x.color}"><span class="chn">${i + 1}</span><span><b>${esc(x.title)}</b><span class="chq">${esc(x.q)}</span></span></button></li>`).join('')}</ol>
+      ${PAGE.homeExtra || ''}`;
+  } else {
+    const i = CHI[c.id], prev = CH[i-1], next = CH[i+1];
+    panel.style.setProperty('--c', c.color);
+    panel.innerHTML = `<button class="back" id="toAll">← All chapters</button>
+      <div class="topic-head"><div class="eyebrow">Chapter ${i + 1} · ${esc(c.title)}</div><h2>${esc(c.q)}</h2></div>
+      <section class="mindq"><div class="eyebrow">The mind question</div><ol class="clues">${c.clues.map(([l, t]) => `<li><b>${esc(l)}</b><span>${fmt(t)}</span></li>`).join('')}</ol><p class="hold">${fmt(c.hold)}</p></section>
+      ${c.where ? `<section class="sec"><h3>Where is it, and what does it do?</h3><p><b class="lab-c">Where:</b> ${fmt(c.where)}</p>${c.funcs ? `<ul class="blist">${c.funcs.map(([l, t]) => `<li><b>${esc(l)}:</b> ${fmt(t)}</li>`).join('')}</ul>` : ''}</section>` : ''}
+      ${mimageBlock(c)}
+      ${(c.secs || []).map(secBlock).join('')}
+      <details class="answer"><summary><span class="eyebrow">Back to the question</span><b>${esc(c.q)}</b><span class="reveal">Think it over, then tap to see an answer</span></summary><p>${fmt(c.answer)}</p>${c.next ? `<p class="nextup">${fmt(c.next)}</p>` : ''}</details>
+      ${quizBlock(c)}
+      ${c.refs ? `<details class="refs"><summary>Sources</summary><ol>${c.refs.map(r => `<li>${esc(r)}</li>`).join('')}</ol></details>` : ''}
+      <div class="pager"><button class="btn" id="prevC">${prev ? '← ' + esc(prev.short || prev.title) : '← All chapters'}</button><button class="btn primary" id="nextC">${next ? esc(next.short || next.title) + ' →' : (PAGE.nextUnit ? esc(PAGE.nextUnit[1]) + ' →' : 'All chapters')}</button></div>`;
+    $('#toAll').onclick = () => selectCh(null); $('#prevC').onclick = () => selectCh(prev ? prev.id : null);
+    $('#nextC').onclick = () => { if (next) selectCh(next.id); else if (PAGE.nextUnit) location.href = PAGE.nextUnit[0]; else selectCh(null); };
+  }
+  panel.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => selectCh(b.dataset.ch));
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quiz[c.id + b.dataset.q] = +b.dataset.a; const y = panel.scrollTop; renderPanel(); panel.scrollTop = y; });
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  panel.querySelectorAll('.demo').forEach(d => DEMO[d.dataset.demo].bind(d));
+}
+const lb = $('#lightbox'); lb.onclick = () => { lb.hidden = true; };
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (state.ch) selectCh(null); } });
+
+/* ============ HUD ============ */
+const hudTitle = $('#hudTitle'), hudText = $('#hudText');
+function drawHud(){ const c = state.ch ? CH[CHI[state.ch]] : null;
+  hudTitle.textContent = c ? `Chapter ${CHI[c.id] + 1} · ${c.title}` : PAGE.hudTitle;
+  const msg = hudMsg || (c ? (c.hud || 'Drag to turn the brain. Pinch or scroll to zoom.') : PAGE.hudText);
+  if (hudText.innerHTML !== msg) hudText.innerHTML = msg; }
+
+/* ============ Update ============ */
+const ease = (a, b, k) => a + (b - a)*k;
+function updScene(dt){ const k = Math.min(1, dt*4);
+  lobeMeshes.forEach((ms, L) => ms.forEach(m => { m.material.opacity = ease(m.material.opacity, LT[L], k); m.visible = m.material.opacity > 0.01; m.material.depthWrite = LT[L] > 0.5; }));
+  Object.entries(DEEP).forEach(([key, o]) => o.meshes.forEach(m => { const t = DT[key] ?? 0.12; m.material.opacity = ease(m.material.opacity, t, k); m.material.depthWrite = t > 0.6; m.material.emissiveIntensity = t > 0.6 ? 0.1 + 0.06*Math.sin(T*3) : 0.02; }));
+  Object.entries(PATHS).forEach(([key, p]) => { p.mesh.material.opacity = ease(p.mesh.material.opacity, PT[key] || 0, k); p.mesh.visible = p.mesh.material.opacity > 0.01; });
+  Object.entries(MARK).forEach(([key, m]) => { m.sp.material.opacity = ease(m.sp.material.opacity, (MT[key] || 0)*(0.75 + 0.25*Math.sin(T*3)), k); });
+  eyeMat.opacity = irisMat.opacity = ease(eyeMat.opacity, PROPS.eyes, k); cochMat.opacity = ease(cochMat.opacity, PROPS.coch, k);
+  CU.uRim.value = state.ch ? GLASS.rim*0.8 : GLASS.rim;
+}
+
+/* ============ Loop ============ */
+let last = performance.now();
+function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt;
+  if (tween){ const kk = Math.min(1, (now - tween.t0)/tween.dur), e = kk < 0.5 ? 2*kk*kk : 1 - Math.pow(-2*kk + 2, 2)/2;
+    camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (kk >= 1) tween = null; }
+  controls.update(); updScene(dt); updPulses(dt); drawHud(); renderer.render(scene, camera); placeTags(); requestAnimationFrame(frame); }
+resize();
+const start = (location.hash || '').slice(1); state.ch = CHI[start] !== undefined ? start : null; focusTargets(); renderPanel();
+{ const [t0, d, dir] = viewOf(state.ch); camera.position.copy(t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.1 : 1)))); controls.target.copy(t0); }
+loadCortex().catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
+requestAnimationFrame(frame);
+
+</script>
+<script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
+hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+</body></html>
