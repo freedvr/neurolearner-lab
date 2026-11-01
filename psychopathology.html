@@ -335,6 +335,45 @@ b.ok{color:#5fe08a}b.bad{color:#ff7a7a}
 .drugmsg{font-size:14px;margin:8px 0 0}.agev{color:var(--c);margin:0 6px}
 @media (max-width:820px){ .sidecap{top:calc(env(safe-area-inset-top,0px) + 92px)} .sidecap b{font-size:14px} .hud{width:auto} }
 @media (max-width:820px){ #hudCanvas{display:none} .plabel{font-size:10.5px;padding:2px 6px} }
+
+.stagebtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);z-index:6;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.9);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer;backdrop-filter:blur(8px)}
+.stagebtn:hover{border-color:var(--chalk)}.stagebtn[aria-pressed="true"]{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+@media (max-width:820px){ .stagebtn{right:12px;top:calc(env(safe-area-inset-top,0px) + 14px);font-size:12px;padding:6px 10px} }
+
+.pctrl{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.pctrl .seg{display:flex;flex-wrap:wrap;gap:6px}
+.pctrl .seg button{flex:1 1 45%;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13px;color:var(--fg)}
+.pctrl .seg button[aria-pressed="true"]{background:var(--c);color:#0b0e14;border-color:var(--c)}
+.spv{color:var(--c);margin:0 6px}
+
+#labels .simtag{pointer-events:auto;cursor:pointer;font-weight:700;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;gap:6px}
+#labels .simtag:hover{background:#f4d27a;color:#16130a}
+.sdot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 8px currentColor}
+.simgrid{display:flex;flex-direction:column;gap:8px}.simg{display:flex;flex-direction:column;gap:6px}
+.simbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--sc);background:var(--raise);cursor:pointer;color:var(--fg)}
+.simbtn span{font-size:12.5px;color:var(--muted)}.simbtn[aria-pressed="true"]{background:color-mix(in srgb,var(--sc) 22%,var(--raise));border-color:var(--sc)}
+#sim{position:fixed;top:0;z-index:7;background:rgba(8,10,16,.94);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:10px;padding:96px 22px 22px;overflow:auto}
+#sim .simhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}#sim h3{margin:2px 0 0;font-family:var(--f-display);font-size:24px}
+.simbox{flex:1;min-height:0}.simnote{font-size:13px;color:var(--muted);margin:0}
+.simscene{display:flex;flex-direction:column;gap:12px;height:100%;position:relative}
+.simscene .task{margin:0;color:var(--muted)}.simscene .read{font-size:22px;line-height:1.45;margin:0;font-family:var(--f-display)}
+.whispers{position:absolute;inset:0;pointer-events:none}.whispers span{position:absolute;font-style:italic;color:rgba(255,140,120,.85);font-size:18px;animation:wh 2.6s ease forwards}
+@keyframes wh{0%{opacity:0;filter:blur(4px)}20%{opacity:.9;filter:blur(0)}100%{opacity:0;filter:blur(3px);transform:translateY(-12px)}}
+.salad .typed{font-size:21px;line-height:1.5;font-family:var(--f-display);margin:0;min-height:6em}
+.seeing canvas{width:100%;height:auto;border-radius:12px;display:block}
+.evts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.evts li{display:grid;grid-template-columns:36px 1fr;column-gap:10px;padding:10px 12px;border-radius:10px;background:var(--raise);border:1px solid var(--line);transition:all .8s}
+.evts .em{grid-row:span 2;font-size:26px}.evts .sal{opacity:0;max-height:0;color:#ffcc33;font-weight:700;transition:all .8s}
+.evts li.lit{border-color:#ffcc33;box-shadow:0 0 18px rgba(255,204,51,.35)}.evts li.lit .sal{opacity:1;max-height:3em}
+.flat{transition:filter 1.5s}.msgs{display:flex;flex-direction:column;gap:8px}.bub{align-self:flex-start;background:#2a7cff;color:#fff;padding:9px 13px;border-radius:16px 16px 16px 4px;font-size:16px}
+.meter{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}.meter i{display:block;height:10px;border-radius:5px;background:#5fe0a3;transition:width 1.5s;width:70%}
+.memory .num{font-family:var(--f-mono);font-size:48px;margin:0;letter-spacing:.06em}.num-in{width:140px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:20px}
+.flood .flicks{position:absolute;inset:0;pointer-events:none}.flood .flicks i{position:absolute;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.35),transparent 70%);animation:wh .7s ease forwards}
+@media (max-width:820px){ #sim{padding:60px 12px 12px} .simscene .read{font-size:17px} .salad .typed{font-size:16px} }
+
+#sim{box-sizing:border-box}
+.simbrain{display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--sc);background:var(--raise);border-radius:8px;padding:9px 12px;font-size:13.5px}
+.simbrain b{color:var(--sc)}
 </style>
 </head><body>
 <div id="stage"></div>
@@ -407,13 +446,14 @@ const SYM_ORDER = [['pos','Positive (+)','Added: things that shouldn’t be ther
 
 const CH = [
  { id:'experience', title:'What is it like?', short:'Experience', color:'#f4d27a',
-   view:{dir:[1,0.32,0.42], dist:4.3, tgt:[-4,-14,6]}, state:{},
+   view:{dir:[1,0.22,0.3], dist:5.0, tgt:[-10,-14,6]}, sims:true,
    q:'What is real?',
    clues:[['“She was on the moon”','Jung told Marie-Louise von Franz about a patient who said she had lived on the moon. When von Franz said the girl only imagined it, Jung answered: “Yes, she was on the moon.”'],
           ['Real to the person','Voices sound like sound. Delusions feel like certainty, not guesses. Insight is often reduced, which is part of the illness, not stubbornness.'],
           ['Split from reality, not split personality','Eugen Bleuler coined “schizophrenia” in 1908: “split mind,” meaning thought, feeling and perception split apart. It is not multiple personalities.']],
    hold:'Hold this question: if the brain builds your reality (remember the illusions in Part II), what happens when the builder misfires?',
    secs:[
+     {h:'Experience simulator', p:'Click a region on the **schizophrenia brain** (or a button below). The region lights up on the brain and a simulation plays over the typical brain.', demo:'sims'},
      {h:'The basics', list:['Affects roughly **0.3–0.7% of people** over a lifetime (often rounded to “about 1%”). Usually starts in the late teens to early 30s, a bit earlier in men.','Kraepelin (1899) called it **dementia praecox**, “early dementia,” and separated it from manic-depressive illness (today’s bipolar disorder).','1950s: **chlorpromazine** (klor-PROE-muh-zeen), the first antipsychotic, moves care from asylums toward the community.'], src:'McGrath et al., 2008; Kyziridis, 2005'},
      {h:'Memory hint: add, subtract, compute', list:['**Positive (+) = addition:** a blender adds extra ingredients: voices (hallucinations), false beliefs (delusions), words tossed into a blender (word salad).','**Negative (−) = subtraction:** subtract yourself from friends (withdrawal), subtract movement (catatonia), subtract emotion from your face (flat affect).','**Cognitive = computer:** “Front Office” problems (working memory, prefrontal) and “Temple” problems (language, Wernicke’s area).']},
      {h:'Inside the experience', p:'Simulations and first-person accounts. They give a glimpse, not the whole thing: real symptoms last for months and come with fear, confusion and stigma.', video:['o91-b6vDRRU','what visual distortions can look like'], video2:['63lHuGMbscU','a first-person simulation in a store']},
@@ -457,14 +497,15 @@ const CH = [
 
  { id:'structure', title:'A different brain?', short:'Structure', color:'#7ad7ff',
    view:{dir:[0.55,0.85,0.35], dist:3.9, tgt:[-2,-14,6]},
-   state:{ vent:true, thin:{A:0, B:0.022}, deep:{A:{hip:1, thal:1}, B:{hip:1, thal:1}}, dimDeep:0.06,
-     hot:{B:[H('Prefrontal thinning',HS.dlpfcL,0.35,COOL,22), H('Temporal thinning',HS.stg,0.3,COOL,20)]},
+   state:{ vent:true, thin:{A:0, B:0.022}, deep:{A:{hip:1, thal:0.5}, B:{hip:1, thal:0.5}}, dimDeep:0.04,
+     hot:{B:[H('Prefrontal thinning',HS.dlpfcL,0.6,COOL,24), H('Prefrontal thinning R',HS.dlpfcR,0.6,COOL,24), H('Temporal thinning',HS.stg,0.5,COOL,22), H('Temporal thinning R',[58,-20,4],0.5,COOL,22), H('Medial frontal',[0,40,20],0.4,COOL,20)]},
      marks:{A:[['Ventricles',[-12,-10,22]],['Hippocampus',[-29,-22,-14]],['Thalamus',[-12,-17,8]]], B:[['Ventricles: enlarged',[-18,-10,24]],['Hippocampus: smaller',[-29,-22,-14]],['Thinner cortex',[-42,32,30]]]} },
    q:'Is the schizophrenic brain physically different?',
    clues:[['Bigger fluid spaces','In 1976, some of the first CT scans in psychiatry showed enlarged ventricles in patients.'],['Twins tell the story','When only one identical twin has schizophrenia, the ill twin usually has larger ventricles and a smaller hippocampus.'],['Small, average differences','Total brain volume is only about 2% smaller on average. Many patients’ scans look normal.']],
    hold:'Hold this question: Thomas Szasz said real illness needs a lesion. Do these findings prove him wrong?',
    mim:{title:'Broken V-CHAT', lines:[['V = Ventricles','enlarged: fluid fills space where tissue is lost'],['C = Cortex (prefrontal)','less activity: negative and cognitive symptoms'],['H = Hippocampus','smaller: memory and emotion problems'],['A = Atrophy','thinner gyri, wider sulci'],['T = Thalamus','faulty sensory filter: overload']]},
    secs:[
+     {h:'Exaggerated or realistic?', p:'The right brain starts **exaggerated** so the differences jump out. Flip to realistic size to see how subtle they really are.', demo:'exag'},
      {h:'Compare the scans', img:['img/sz/ventricles.jpg','Enlarged ventricles in schizophrenia (left) versus a healthy brain (right). From your slides. This is a striking example; most differences are much subtler.']},
      {h:'The twin study', p:'Richard Suddath and colleagues scanned 15 pairs of identical twins where only one twin had schizophrenia. Same genes, same family. In 12 of 15 pairs the ill twin had larger ventricles, often visible by eye, and in 14 of 15 a smaller left hippocampus. Genes load the risk, but something during development changed the brain.', src:'Suddath et al., 1990'},
      {h:'What changes, on average', list:['**Ventricles:** larger, the most replicated finding since Johnstone’s CT scans (1976).','**Cortex:** thinner, especially frontal and temporal. On the right brain, the glass is pulled in where gray matter is lost (exaggerated so you can see it).','**Hippocampus:** smaller, particularly at the front.','**Thalamus:** smaller, with weaker connections to the prefrontal cortex.','**White matter:** weaker connections between regions, which is why some call schizophrenia a “disconnection” disorder.'], src:'Johnstone et al., 1976; Haijma et al., 2013; van Erp et al., 2016, 2018'},
@@ -475,14 +516,14 @@ const CH = [
    refs:['Johnstone, E. C. et al. (1976). Cerebral ventricular size and cognitive impairment in chronic schizophrenia. The Lancet.','Suddath, R. L. et al. (1990). Anatomical abnormalities in the brains of monozygotic twins discordant for schizophrenia. NEJM.','Haijma, S. V. et al. (2013). Brain volumes in schizophrenia: a meta-analysis in over 18 000 subjects. Schizophrenia Bulletin.','van Erp, T. G. M. et al. (2018). Cortical brain abnormalities in 4474 individuals with schizophrenia (ENIGMA). Biological Psychiatry.','Shenton, M. E. et al. (2001). A review of MRI findings in schizophrenia. Schizophrenia Research.','Cahn, W. et al. (2002). Brain volume changes in first-episode schizophrenia. Archives of General Psychiatry.']},
 
  { id:'causes', title:'Where does it come from?', short:'Causes', color:'#5fe0a3', prune:true,
-   view:{dir:[0.85,0.45,0.75], dist:3.9, tgt:[-4,-10,10]},
-   state:{ hudMode:'prune', thinAge:true, hot:{A:[], B:[]}, marks:{} },
+   view:{dir:[0.25,0.1,1], dist:10, tgt:[0,0.4,0], raw:true},
+   state:{ neuron:true, hot:{A:[], B:[]}, marks:{} },
    q:'Why does schizophrenia usually start in the late teens?',
    clues:[['The teenage brain prunes','Adolescence trims unused synapses, especially in the prefrontal cortex. It’s normal and makes thinking more efficient.'],['A pruning gene','Variants of the C4 gene, which tags synapses for removal, raise schizophrenia risk.'],['Overactive cleaners','Microglia, the brain’s immune “Microcleaners” from the glia unit, eat tagged synapses, and may eat too many.']],
    hold:'Hold this question: can a normal developmental process go too far?',
    mim:{title:'DING', lines:[['D = Dopamine','neurotransmitter imbalance'],['I = Immune / inflammation','overactive microglia'],['N = Neurodevelopment','prenatal disruption'],['G = Genetics + environment','combined risk']]},
    secs:[
-     {h:'Try it: prune the synapses', p:'Drag the age slider. Both brains prune as they mature (the cortex in the 3D view thins a little). In the schizophrenia model, microglia remove more synapses, especially in the prefrontal cortex.', demo:'prune', src:'Feinberg, 1982 (pruning hypothesis); Thompson et al., 2001 (gray-matter loss in early-onset schizophrenia)'},
+     {h:'Try it: prune the synapses', p:'Each side shows one prefrontal pyramidal neuron: dendrites up and out (with yellow spines, where synapses sit) and the axon with its collateral branches heading down. Drag the age slider. In real teenagers, prefrontal spine density falls by roughly half from childhood to adulthood. In schizophrenia, adult spine density in the prefrontal cortex is lower still (around 10–25% in postmortem studies), consistent with over-pruning.', demo:'prune', src:'Feinberg, 1982; Petanjek et al., 2011; Glantz & Lewis, 2000; Thompson et al., 2001'},
      {h:'Overactive “Microcleaners”', p:'PET scans with a tracer that sticks to activated microglia ([¹¹C]PBR28) found higher signal in people at ultra-high risk and in people with schizophrenia, and it tracked symptom severity in the high-risk group.', img:['img/sz/microglia.jpg','Microglial activity measured with PET (positron emission tomography) in healthy comparison subjects, ultra-high-risk participants and patients. Bloomfield et al. (2016), American Journal of Psychiatry. From your slides.'], more:['Be careful: the evidence is mixed','Later studies and a meta-analysis using similar tracers found the opposite (lower signal) in patients, partly because these tracers are hard to measure. The lab evidence is stronger: microglia-like cells grown from patients’ own cells removed more synapses than those from healthy people (Sellgren et al., 2019). Present this as a leading hypothesis, not a settled fact.'], src:'Bloomfield et al., 2016; Plavén-Sigray et al., 2018; Sellgren et al., 2019'},
      {h:'The C4 gene: a tag for pruning', p:'The strongest genetic signal for schizophrenia sits in the immune MHC (major histocompatibility complex) region of chromosome 6. Steven McCarroll’s team traced it to **C4**, a complement-system gene. Complement proteins tag synapses, and microglia eat what’s tagged. Variants that make more C4 raise risk, and mice with more C4 prune more.', src:'Sekar et al., 2016; Yilmaz et al., 2021'},
      {h:'Genetics: D-GPS', list:['**Heritability ~80%,** but an identical twin of someone with schizophrenia develops it only about **33–50%** of the time. Genes load the gun; environment pulls the trigger.','**Polygenic:** the largest study found 287 regions of the genome, each adding a tiny bit of risk.','**D**opamine (e.g., COMT) · **G**lutamate (NMDA) · **P**runing (C4) · **S**ynaptic communication'], src:'Hilker et al., 2018; Trubetskoy et al., 2022'},
@@ -491,7 +532,7 @@ const CH = [
    answer:'Probably yes. The leading model is two hits: genes and early environment (famine, infection) make a vulnerable brain, then adolescent pruning, possibly overdriven by C4 and microglia, removes too many prefrontal connections. That’s why symptoms usually appear in the late teens and twenties, right when the prefrontal cortex is being finished.',
    quiz:[{q:'What does the C4 gene do?', o:['Tags synapses for removal by microglia','Makes dopamine','Builds myelin','Controls breathing'], a:0, why:'C4 is a complement gene: it tags synapses, and microglia eat them.'},
          {q:'In the Dutch Hunger Winter, when was famine exposure riskiest?', o:['Around conception and early pregnancy','Only in the last month of pregnancy','In adolescence','In old age'], a:0, why:'Susser et al. (1996): children conceived at the height of the famine had about twice the risk.'}],
-   refs:['Feinberg, I. (1982). Schizophrenia: caused by a fault in programmed synaptic elimination during adolescence? J. Psychiatric Research.','Thompson, P. M. et al. (2001). Mapping adolescent brain change reveals dynamic wave of accelerated gray matter loss in very early-onset schizophrenia. PNAS.','Sekar, A. et al. (2016). Schizophrenia risk from complex variation of complement component 4. Nature.','Sellgren, C. M. et al. (2019). Increased synapse elimination by microglia in schizophrenia patient-derived models. Nature Neuroscience.','Bloomfield, P. S. et al. (2016). Microglial activity in people at ultra high risk of psychosis and in schizophrenia: an [11C]PBR28 PET study. American Journal of Psychiatry.','Plavén-Sigray, P. et al. (2018). PET studies of the glial cell marker TSPO in psychosis: a meta-analysis. Biological Psychiatry.','Trubetskoy, V. et al. (2022). Mapping genomic loci implicates genes and synaptic biology in schizophrenia. Nature.','Susser, E. et al. (1996). Schizophrenia after prenatal famine: further evidence. Archives of General Psychiatry.','Brown, A. S. et al. (2004). Serologic evidence of prenatal influenza in the etiology of schizophrenia. Archives of General Psychiatry.','Di Forti, M. et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe. Lancet Psychiatry.']},
+   refs:['Feinberg, I. (1982). Schizophrenia: caused by a fault in programmed synaptic elimination during adolescence? J. Psychiatric Research.','Petanjek, Z. et al. (2011). Extraordinary neoteny of synaptic spines in the human prefrontal cortex. PNAS.','Glantz, L. A. & Lewis, D. A. (2000). Decreased dendritic spine density on prefrontal cortical pyramidal neurons in schizophrenia. Archives of General Psychiatry.','Thompson, P. M. et al. (2001). Mapping adolescent brain change reveals dynamic wave of accelerated gray matter loss in very early-onset schizophrenia. PNAS.','Sekar, A. et al. (2016). Schizophrenia risk from complex variation of complement component 4. Nature.','Sellgren, C. M. et al. (2019). Increased synapse elimination by microglia in schizophrenia patient-derived models. Nature Neuroscience.','Bloomfield, P. S. et al. (2016). Microglial activity in people at ultra high risk of psychosis and in schizophrenia: an [11C]PBR28 PET study. American Journal of Psychiatry.','Plavén-Sigray, P. et al. (2018). PET studies of the glial cell marker TSPO in psychosis: a meta-analysis. Biological Psychiatry.','Trubetskoy, V. et al. (2022). Mapping genomic loci implicates genes and synaptic biology in schizophrenia. Nature.','Susser, E. et al. (1996). Schizophrenia after prenatal famine: further evidence. Archives of General Psychiatry.','Brown, A. S. et al. (2004). Serologic evidence of prenatal influenza in the etiology of schizophrenia. Archives of General Psychiatry.','Di Forti, M. et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe. Lancet Psychiatry.']},
 
  { id:'treatment', title:'Turning down the volume', short:'Treatment', color:'#c49bff',
    view:{dir:[1,0.35,0.55], dist:3.2, tgt:[-12,4,4]},
@@ -570,7 +611,7 @@ const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; renderer.setScissorTest(true); renderer.autoClear = false; stage.appendChild(renderer.domElement);
 const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.4; controls.maxDistance = 9; controls.enablePan = false;
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.4; controls.maxDistance = 12; controls.enablePan = false;
 const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
 const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
 
@@ -599,7 +640,7 @@ const deepMat = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.4
 
 /* ---- ventricles (schematic lateral + third), scaled per side ---- */
 function buildVents(parent, k){
-  const mat = new THREE.MeshStandardMaterial({color:lin('#d9fbff'), roughness:0.25, emissive:lin('#6fe3ff'), emissiveIntensity:0.35, transparent:true, opacity:0, depthWrite:false});
+  const mat = new THREE.MeshStandardMaterial({color:lin('#19d3ff'), roughness:0.25, emissive:lin('#00b8ff'), emissiveIntensity:0.45, transparent:true, opacity:0, depthWrite:false});
   const ms = [];
   const tubeR = (pts, rf) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p))); const g = new THREE.TubeGeometry(curve, 64, 1, 12); const P = g.attributes.position, ctr = V(), v = V();
     for (let i=0;i<=64;i++){ const t = i/64; curve.getPointAt(t, ctr); for (let j=0;j<13;j++){ const idx = i*13 + j; v.fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rf(t)/80); v.y *= 1.0; v.add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
@@ -645,7 +686,7 @@ async function loadCortex(){
     const P = new Float32Array(n*3), A = new Float32Array(n);
     for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z; A[i] = lobe[i] < 4 ? THIN[lobe[i]] : 0.2; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setAttribute('aThin', new THREE.BufferAttribute(A,1)); g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
-    SIDES.forEach(s => { const m = new THREE.Mesh(g, s.glass); m.renderOrder = 6; s.scene.add(m); const a = new THREE.Mesh(g, s.act); a.renderOrder = 8; s.scene.add(a); cortexMeshes.push(m); }); } }
+    SIDES.forEach(s => { const m = new THREE.Mesh(g, s.glass); m.renderOrder = 6; s.scene.add(m); const a = new THREE.Mesh(g, s.act); a.renderOrder = 8; s.scene.add(a); cortexMeshes.push(m); (s.ctx = s.ctx || []).push(m, a); }); } }
 
 /* ---- pulses ---- */
 function pulse(side, key, opts={}){ const P = side.paths[key]; const sp = sprite(opts.c || P.c, opts.size || 0.24); sp.visible = false; side.scene.add(sp);
@@ -655,6 +696,7 @@ function updPulses(side, dt){ for (let i=side.pulses.length-1;i>=0;i--){ const p
   p.sp.position.copy(p.curve.getPointAt(k)); p.sp.material.opacity = p.stopAt < 1 && k > p.stopAt - 0.12 ? (p.stopAt - k)/0.12 : 1; } }
 
 /* ---- real anatomy: BodyParts3D meshes (CC BY-SA 2.1 JP), fitted to MNI space; replace the schematic shapes ---- */
+const MORPH = [];   // schizophrenia-side meshes whose size changes (ventricles, hippocampus)
 const REAL = new Set(['thal','hypo','hip','amy','ins','caud','put','gp','stem','cbl']);
 async function loadRealDeep(){
   const [meta, buf] = await Promise.all([fetch('data/deep.json').then(r => r.json()), fetch('data/deep.b64.txt').then(r => r.text()).then(t => { const bin = atob(t.trim()), u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return u.buffer; })]);
@@ -673,18 +715,194 @@ async function loadRealDeep(){
       const m = new THREE.Mesh(g, mat); m.renderOrder = 4; m.userData.deep = p.g;
       // schizophrenia side: enlarged ventricles, smaller hippocampus (group-level differences, exaggerated a little to be visible)
       // scene axes: x = left–right, y = up–down, z = front–back
-      const scl = !si ? null : p.g === 'hip' ? V(0.86, 0.86, 0.86) : p.k === 'vent3' ? V(1.7, 1.15, 1.0) : p.k === 'vent4' ? V(1.15, 1.1, 1.1) : p.g === 'vent' ? V(1.32, 1.22, 1.03) : null;
-      if (scl){ const c = g.boundingSphere.center; m.scale.copy(scl); m.position.set(c.x*(1 - scl.x), c.y*(1 - scl.y), c.z*(1 - scl.z)); }
+      if (si && (p.g === 'hip' || p.g === 'vent')){ m.userData.kind = p.g === 'hip' ? 'hip' : p.k; m.userData.c = g.boundingSphere.center.clone(); MORPH.push(m); }
       s.scene.add(m); list.push(m); }); });
 }
+
+/* ============ Pruning: a bushy prefrontal pyramidal neuron, one per side (same starting tree) ============ */
+function rng(seed){ let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0)/4294967296; }; }
+function growNeuron(){
+  const R = rng(7), segs = [], tips = [];
+  // ord: 0 = pruned first … 1 = never pruned. Thin distal twigs go first; trunks stay.
+  function branch(p, dir, len, rad, depth, maxDepth, kind){
+    const n = 3 + (R()*2|0); let cur = p.clone(), d = dir.clone();
+    for (let i=0;i<n;i++){
+      d.add(V(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(0.35)).normalize();
+      const nxt = cur.clone().add(d.clone().multiplyScalar(len/n));
+      const ord = depth <= 1 ? 2 : clamp((depth - 2)/(maxDepth - 1), 0, 1)*0.25 + R()*0.75;
+      segs.push({a:cur.clone(), b:nxt.clone(), r:rad*(1 - 0.25*i/n), ord:depth <= 1 ? 2 : 1 - (depth/maxDepth)*0.55 - R()*0.45, kind});
+      // spines along dendrites (synapses)
+      if (kind !== 'axon' && depth >= 2) for (let j=0;j<2;j++){ const t = R(), q = cur.clone().lerp(nxt, t); const off = V(R() - 0.5, R() - 0.5, R() - 0.5).normalize().multiplyScalar(rad + 0.018);
+        tips.push({p:q.add(off), ord:segs[segs.length - 1].ord - 0.05*R()}); }
+      cur = nxt;
+      if (depth < maxDepth - 1 && R() < (depth < 2 ? 0.35 : 0.12)){ const nd = d.clone().add(V(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(1.6)).normalize();
+        branch(cur, nd, len*0.68, rad*0.62, depth + 1, maxDepth, kind); }
+    }
+    if (depth < maxDepth){ for (let k=0;k<2;k++){ const nd = d.clone().add(V(R() - 0.5, R() - 0.5, R() - 0.5).multiplyScalar(1.3)).normalize(); branch(cur, nd, len*0.62, rad*0.6, depth + 1, maxDepth, kind); } }
+    else if (kind === 'axon') tips.push({p:cur.clone(), ord:segs[segs.length - 1].ord, bouton:true});
+  }
+  branch(V(0, 0.08, 0), V(0, 1, 0), 1.1, 0.045, 0, 5, 'apical');                         // apical dendrite (up)
+  for (let i=0;i<6;i++){ const a = i/6*Math.PI*2 + R()*0.4; branch(V(0, -0.02, 0), V(Math.cos(a), -0.35 - R()*0.4, Math.sin(a)).normalize(), 0.62, 0.03, 1, 5, 'basal'); }   // basal dendrites
+  branch(V(0, -0.1, 0), V(0.05, -1, 0.02), 1.05, 0.02, 0, 4, 'axon');                     // axon + collaterals
+  return {segs, tips}; }
+const NEURON = growNeuron();
+function neuronGeometry(segs){ const RS = 6, P = [], N = [], O = [], I = []; const up = V(0,1,0), tmp = V(), u = V(), w = V();
+  segs.forEach(s => { const ax = s.b.clone().sub(s.a), L = ax.length(); ax.normalize(); u.copy(Math.abs(ax.y) > 0.9 ? V(1,0,0) : up).cross(ax).normalize(); w.copy(ax).cross(u);
+    const base = P.length/3;
+    for (let e=0;e<2;e++){ const c = e ? s.b : s.a, r = s.r*(e ? 0.85 : 1); for (let k=0;k<RS;k++){ const t = k/RS*Math.PI*2; tmp.copy(u).multiplyScalar(Math.cos(t)).addScaledVector(w, Math.sin(t)); P.push(c.x + tmp.x*r, c.y + tmp.y*r, c.z + tmp.z*r); N.push(tmp.x, tmp.y, tmp.z); O.push(s.ord); } }
+    for (let k=0;k<RS;k++){ const a = base + k, b = base + (k + 1)%RS, c = a + RS, d = b + RS; I.push(a, c, b, b, c, d); } });
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('aOrd', new THREE.Float32BufferAttribute(O, 1)); g.setIndex(I); return g; }
+function prunable(mat, uCut){ mat.userData.uCut = uCut; mat.onBeforeCompile = sh => { sh.uniforms.uCut = uCut;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aOrd; varying float vOrd;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvOrd = aOrd;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uCut; varying float vOrd;')
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'if (vOrd < uCut) discard; float edge = 1.0 - smoothstep(0.0, 0.05, vOrd - uCut); vec4 diffuseColor = vec4( mix(diffuse, vec3(0.37, 0.88, 0.64), edge*step(0.001, uCut)), opacity );'); };
+  mat.customProgramCacheKey = () => 'prune'; return mat; }
+function buildNeuronScene(side){ const sc = mkScene(); const uCut = {value:0};
+  const geo = neuronGeometry(NEURON.segs);
+  const mat = prunable(new THREE.MeshStandardMaterial({color:lin('#c9a0ff'), roughness:0.45, emissive:lin('#6a3fb0'), emissiveIntensity:0.25}), uCut);
+  sc.add(new THREE.Mesh(geo, mat));
+  const soma = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 18), new THREE.MeshStandardMaterial({color:lin('#d9b8ff'), roughness:0.4, emissive:lin('#6a3fb0'), emissiveIntensity:0.3})); soma.scale.set(1, 1.35, 1); sc.add(soma);
+  // synapses: spines on dendrites (yellow) and boutons on axon tips (pink)
+  const sg = new THREE.SphereGeometry(0.022, 8, 6), smat = prunable(new THREE.MeshStandardMaterial({color:lin('#f4d27a'), emissive:lin('#f4b13a'), emissiveIntensity:0.5}), uCut);
+  const inst = new THREE.InstancedMesh(sg, smat, NEURON.tips.length), ord = new Float32Array(NEURON.tips.length), m4 = new THREE.Matrix4();
+  NEURON.tips.forEach((t, i) => { m4.makeTranslation(t.p.x, t.p.y, t.p.z); if (t.bouton) m4.scale(V(1.6, 1.6, 1.6)); inst.setMatrixAt(i, m4); ord[i] = t.ord; });
+  sg.setAttribute('aOrd', new THREE.InstancedBufferAttribute(ord, 1)); sc.add(inst);
+  // microglia: green cells that drift to the twigs being removed
+  const mg = []; const mgMat = new THREE.MeshStandardMaterial({color:lin('#5fe0a3'), roughness:0.5, emissive:lin('#2fbf7f'), emissiveIntensity:0.35, transparent:true, opacity:0.95});
+  const mgN = side.key === 'B' ? 9 : 4;
+  for (let i=0;i<mgN;i++){ const g = new THREE.IcosahedronGeometry(0.07, 2), P = g.attributes.position, v = V(); for (let j=0;j<P.count;j++){ v.fromBufferAttribute(P, j); v.multiplyScalar(1 + 0.35*Math.sin(v.x*40 + i) * Math.cos(v.y*37 + i*2)); P.setXYZ(j, v.x, v.y, v.z); } g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mgMat); m.visible = false; sc.add(m); mg.push({m, target:null, t:Math.random()*3}); }
+  side.neuron = {scene:sc, uCut, mg}; }
+SIDES.forEach(buildNeuronScene);
+const SEG_TIPS = NEURON.segs.filter(s => s.ord < 1.5).map(s => ({p:s.b, ord:s.ord}));
+function updNeuron(side, si, dt, cut){ const N = side.neuron; N.uCut.value += (cut - N.uCut.value)*Math.min(1, dt*3);
+  N.mg.forEach((g, i) => { g.t -= dt; const c = N.uCut.value;
+    if (c < 0.02){ g.m.visible = false; return; } g.m.visible = true;
+    if (!g.target || g.t <= 0 || g.target.ord < c - 0.02){ const near = SEG_TIPS.filter(s => s.ord >= c && s.ord < c + 0.08); g.target = near.length ? near[(Math.random()*near.length)|0] : null; g.t = 1.5 + Math.random()*1.5; if (!g.target) return; }
+    g.m.position.lerp(g.target.p, Math.min(1, dt*2.2)); g.m.rotation.y += dt*0.8; g.m.scale.setScalar(1 + 0.12*Math.sin(T*4 + i)); }); }
+
+/* ============ Experience simulator: click a region of the schizophrenia brain, feel a rough version of the symptom ============ */
+const SIMS = [
+ { id:'voices', name:'Hearing voices', kind:'Positive', region:'Auditory cortex + Broca’s area', mni:[-58,-20,4], color:HOT,
+   hot:[H('Auditory cortex',HS.stg,1,HOT,16), H('Broca’s area',HS.broca,0.8,HOT)], deep:{hip:0.8},
+   brain:'Auditory cortex (superior temporal gyrus, where the primary auditory cortex sits) and Broca’s area fire together, with no sound in the room. The brain may be hearing its own inner speech as someone else’s voice.',
+   note:'Use headphones or speakers. These voices are mild. Real voices can be constant, loud, insulting, and hard to tell apart from real speech.' },
+ { id:'salad', name:'Word salad', kind:'Positive', region:'Wernicke’s area', mni:[-54,-46,14], color:HOT,
+   hot:[H('Wernicke’s area',HS.wern,0.35), H('Broca’s area',HS.broca,0.5)], flicker:['scatter'],
+   brain:'Wernicke’s area (understanding language and choosing meaningful words) responds weakly and erratically, so words link by sound or loose association instead of meaning.',
+   note:'This is a written illustration of “formal thought disorder,” not a real patient’s words.' },
+ { id:'seeing', name:'Seeing things', kind:'Positive', region:'Visual cortex + fusiform gyrus', mni:[-40,-60,-14], color:HOT,
+   hot:[H('Visual cortex',HS.v1,0.7,HOT,16), H('Fusiform face area',[-40,-52,-20],1,HOT,13)],
+   brain:'Visual areas, including the fusiform gyrus (which recognizes faces), become active without matching input. Visual hallucinations happen in about a quarter to a third of people with schizophrenia, much less often than voices.',
+   note:'Watch the static. Faces and figures may seem to appear.' },
+ { id:'meaning', name:'Everything means something', kind:'Positive', region:'Striatum (dopamine)', mni:[-14,10,6], color:'#ffcc33',
+   hot:[], deep:{caud:1, put:1, nacc:1},
+   brain:'Too much dopamine in the striatum stamps “IMPORTANT” on random things (aberrant salience). Delusions are the mind’s attempt to explain why everything suddenly feels significant.',
+   note:'Ordinary events. Watch how each one starts to feel like a message.' },
+ { id:'flat', name:'Nothing pulls you', kind:'Negative', region:'Prefrontal cortex + reward system', mni:[-4,46,-10], color:COOL,
+   hot:[H('Ventromedial prefrontal cortex',HS.vmpfc,0.25,COOL,14), H('Anterior cingulate',HS.acc,0.2,COOL,14)], deep:{nacc:0.25},
+   brain:'The reward system (nucleus accumbens) and the medial prefrontal cortex respond weakly when a reward is coming. The feeling of “I want to” goes quiet: low motivation (avolition), little pleasure, a flat face.',
+   note:'Negative symptoms are about absence, which is hard to simulate. Notice how little pulls you toward anything.' },
+ { id:'memory', name:'Holding a thought', kind:'Cognitive', region:'Dorsolateral prefrontal cortex', mni:[-42,32,30], color:COOL,
+   hot:[H('Dorsolateral prefrontal cortex',HS.dlpfcL,0.35,COOL,16), H('DLPFC (right)',HS.dlpfcR,0.3,COOL,16)],
+   brain:'The dorsolateral prefrontal cortex (DLPFC), which holds information in mind (working memory), doesn’t ramp up properly. Add distracting voices, and holding a phone number becomes hard.',
+   note:'Remember the number. Something will try to distract you.' },
+ { id:'flood', name:'Too much at once', kind:'Cognitive', region:'Thalamus (sensory filter)', mni:[-12,-17,8], color:'#3d8bff',
+   hot:[], deep:{thal:1},
+   brain:'The thalamus normally filters what reaches the cortex. When the filter weakens (remember the P50 test), every sound arrives at full volume and nothing fades into the background.',
+   note:'Use sound. Try to focus on one thing.' }
+];
+const SIMI = Object.fromEntries(SIMS.map(s => [s.id, s]));
+let SIM = null;   // running simulation {id, stop()}
+const simEl = document.createElement('div'); simEl.id = 'sim'; simEl.hidden = true; document.body.appendChild(simEl);
+
+/* ---- audio helpers ---- */
+let AC = null; const ac = () => (AC = AC || new (window.AudioContext || window.webkitAudioContext)());
+function noise(gain, color='brown'){ const a = ac(), buf = a.createBuffer(1, a.sampleRate*2, a.sampleRate), d = buf.getChannelData(0); let last = 0;
+  for (let i=0;i<d.length;i++){ const w = Math.random()*2 - 1; if (color === 'brown'){ last = (last + 0.02*w)/1.02; d[i] = last*3.5; } else d[i] = w; }
+  const src = a.createBufferSource(); src.buffer = buf; src.loop = true; const g = a.createGain(); g.gain.value = gain; src.connect(g); g.connect(a.destination); src.start(); return {stop(){ try { src.stop(); } catch(e){} }, g}; }
+function tick(t, freq=2400, dur=0.02, vol=0.2, pan=0){ const a = ac(), o = a.createOscillator(), g = a.createGain(), p = a.createStereoPanner ? a.createStereoPanner() : null; o.frequency.value = freq; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); if (p){ p.pan.value = pan; g.connect(p); p.connect(a.destination); } else g.connect(a.destination); o.start(t); o.stop(t + dur + 0.02); }
+const speak = (text, o={}) => { if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(text); u.rate = o.rate || 0.9; u.pitch = o.pitch ?? 1; u.volume = o.volume ?? 0.6;
+  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); if (vs.length) u.voice = vs[(o.voice || 0) % vs.length]; speechSynthesis.speak(u); };
+
+/* ---- the simulations ---- */
+const RUN = {
+  voices(box){ const lines = ['They know.', 'Don’t look at him.', 'You’re being watched.', 'Why did you say that?', 'Not safe here.', 'Listen.', 'They’re talking about you.', 'Stupid.', 'Behind you.'];
+    box.innerHTML = `<div class="simscene voices"><p class="task">Try to read this sentence out loud while the voices play:</p><p class="read">“The museum opens at ten, and the tickets are free on Fridays.”</p><div class="whispers"></div></div>`;
+    const wh = box.querySelector('.whispers'), hum = noise(0.05); let i = 0, alive = true;
+    const say = () => { if (!alive) return; const l = lines[(Math.random()*lines.length)|0]; speak(l, {rate:0.8 + Math.random()*0.3, pitch:0.6 + Math.random()*0.9, volume:0.35 + Math.random()*0.45, voice:i++});
+      const s = document.createElement('span'); s.textContent = l; s.style.left = (5 + Math.random()*70) + '%'; s.style.top = (10 + Math.random()*75) + '%'; wh.appendChild(s); setTimeout(() => s.remove(), 2600);
+      setTimeout(say, 1200 + Math.random()*1800); };
+    say(); return () => { alive = false; hum.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }; },
+  salad(box){ const ans = 'Well, the week was a carousel of telephone weather. The doctor keeps the radio inside the orange, and orange is the reason Tuesday folded itself into the bank. I told them, words go sideways when they’re blue, blue like the glue, the glue in the news, the news is a shoe.';
+    box.innerHTML = `<div class="simscene salad"><p class="task">A friend asks: <b>“How has your week been?”</b></p><p class="typed"></p><p class="muted">Notice: the grammar mostly works, and some words rhyme (“clang associations”), but the meaning keeps slipping.</p></div>`;
+    const el = box.querySelector('.typed'); let n = 0, alive = true; speak(ans, {rate:0.95, volume:0.8});
+    const step = () => { if (!alive) return; n += 2; el.textContent = ans.slice(0, n); if (n < ans.length) setTimeout(step, 45); }; step();
+    return () => { alive = false; if ('speechSynthesis' in window) speechSynthesis.cancel(); }; },
+  seeing(box){ box.innerHTML = `<div class="simscene seeing"><canvas width="640" height="420"></canvas><p class="muted">A dim room. Keep looking at the center.</p></div>`;
+    const cv = box.querySelector('canvas'), x = cv.getContext('2d'); let alive = true, t0 = performance.now(); const faces = [];
+    const face = (fx, fy, s, a) => { x.save(); x.globalAlpha = a; x.translate(fx, fy); x.scale(s, s); x.fillStyle = 'rgba(0,0,0,.55)'; x.beginPath(); x.ellipse(-14, -8, 7, 4, 0, 0, 7); x.ellipse(14, -8, 7, 4, 0, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = 3; x.beginPath(); x.moveTo(-12, 16); x.quadraticCurveTo(0, 22, 12, 16); x.stroke(); x.beginPath(); x.moveTo(0, -2); x.lineTo(-2, 8); x.stroke(); x.restore(); };
+    const fr = () => { if (!alive) return; const t = (performance.now() - t0)/1000; const img = x.createImageData(160, 105); for (let i=0;i<img.data.length;i+=4){ const v = 70 + Math.random()*40; img.data[i] = v; img.data[i+1] = v*0.95; img.data[i+2] = v*0.9; img.data[i+3] = 255; }
+      const off = document.createElement('canvas'); off.width = 160; off.height = 105; off.getContext('2d').putImageData(img, 0, 0); x.imageSmoothingEnabled = true; x.drawImage(off, 0, 0, 640, 420);
+      const g = x.createRadialGradient(320, 210, 60, 320, 210, 380); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.75)'); x.fillStyle = g; x.fillRect(0, 0, 640, 420);
+      if (Math.random() < 0.02 && t > 2) faces.push({x:80 + Math.random()*480, y:60 + Math.random()*300, s:1 + Math.random()*1.8, life:0});
+      for (let i=faces.length-1;i>=0;i--){ const f = faces[i]; f.life += 1/60; const a = Math.sin(Math.min(1, f.life/2.2)*Math.PI)*0.85; face(f.x, f.y, f.s, a); if (f.life > 2.2) faces.splice(i, 1); }
+      if (t > 4){ const a = 0.25 + 0.2*Math.sin(t*0.7); x.fillStyle = `rgba(10,10,14,${a})`; x.beginPath(); x.ellipse(600, 250, 22, 70, 0, 0, 7); x.fill(); x.beginPath(); x.arc(600, 165, 18, 0, 7); x.fill(); }
+      requestAnimationFrame(fr); }; fr();
+    return () => { alive = false; }; },
+  meaning(box){ const items = [['🚗','A red car drives past.','The third red car today. Someone is keeping track of me.'],['📺','A TV host says “good evening.”','He paused before “evening.” He was talking to me.'],['🔢','License plate: 913.','9/13 is my birthday. It’s a sign.'],['🐦','Two birds land on the wire.','Two. Like the two calls I missed. It’s connected.'],['☕','The barista spells your name wrong.','On purpose. It’s a code.']];
+    box.innerHTML = `<div class="simscene meaning"><p class="task">An ordinary afternoon. Read each event, then watch it change.</p><ol class="evts"></ol></div>`;
+    const ol = box.querySelector('.evts'); let i = 0, alive = true;
+    const next = () => { if (!alive || i >= items.length) return; const [e, a, b] = items[i++]; const li = document.createElement('li'); li.innerHTML = `<span class="em">${e}</span><span class="ord">${esc(a)}</span><span class="sal">${esc(b)}</span>`; ol.appendChild(li);
+      setTimeout(() => li.classList.add('lit'), 1400); tick(ac().currentTime + 1.4, 880, 0.25, 0.12); setTimeout(next, 3200); }; next();
+    return () => { alive = false; }; },
+  flat(box){ const msgs = ['Maya: want to grab food later? 🍜', 'Mom: call me when you can ❤️', 'Coach: practice moved to 5', 'Sam: did you see the game?? 😂'];
+    box.innerHTML = `<div class="simscene flat"><p class="task">Your phone buzzes. Notice how much you want to reply.</p><div class="msgs"></div><div class="meter"><span>Drive to respond</span><i></i></div><p class="muted sub"></p></div>`;
+    const m = box.querySelector('.msgs'), bar = box.querySelector('.meter i'), sub = box.querySelector('.sub'); let i = 0, alive = true;
+    const next = () => { if (!alive) return; if (i < msgs.length){ const d = document.createElement('div'); d.className = 'bub'; d.textContent = msgs[i++]; m.appendChild(d); tick(ac().currentTime, 660, 0.12, 0.08); }
+      const lvl = Math.max(6, 70 - i*16); bar.style.width = lvl + '%'; box.querySelector('.simscene').style.filter = `saturate(${Math.max(0, 1 - i*0.28)})`;
+      sub.textContent = i < 2 ? 'You know you should answer…' : i < 4 ? 'You read them. Nothing pulls you to reply. It’s not sadness exactly. It’s more like nothing.' : 'This is avolition (no drive) and anhedonia (little pleasure): often more disabling than voices, and antipsychotics barely help.';
+      if (i <= msgs.length) setTimeout(next, 2400); }; next();
+    return () => { alive = false; }; },
+  memory(box){ const num = String(Math.floor(1000000 + Math.random()*8999999)); const lines = ['Seven.', 'Two, nine.', 'Forget it.', 'Four.', 'Wrong.', 'Eight, eight.'];
+    box.innerHTML = `<div class="simscene memory"><p class="task">Memorize this phone number:</p><p class="num">${num.slice(0,3)}-${num.slice(3)}</p><p class="muted sub">It disappears in 4 seconds.</p></div>`;
+    let alive = true; const sub = box.querySelector('.sub'), nEl = box.querySelector('.num'); const hum = noise(0.04);
+    setTimeout(() => { if (!alive) return; nEl.textContent = '•••-••••'; sub.textContent = 'Hold it in mind…';
+      let k = 0; const say = () => { if (!alive || k > 5) return; speak(lines[k++], {rate:1, pitch:0.7 + Math.random()*0.6, volume:0.6, voice:k}); setTimeout(say, 1100); }; say();
+      setTimeout(() => { if (!alive) return; box.querySelector('.simscene').insertAdjacentHTML('beforeend', `<label class="slider-row">Type it: <input class="num-in" inputmode="numeric" maxlength="8"></label><button class="btn small primary chk">Check</button><p class="res"></p>`);
+        box.querySelector('.chk').onclick = () => { const v = box.querySelector('.num-in').value.replace(/\D/g, ''); let ok = 0; for (let i=0;i<7;i++) if (v[i] === num[i]) ok++;
+          box.querySelector('.res').innerHTML = `<b>${ok}/7 digits right.</b> The number was ${num.slice(0,3)}-${num.slice(3)}. Distractors that sound like numbers interfere with working memory, a hint of what a weaker DLPFC plus intrusive voices feels like.`; }; }, 7000); }, 4000);
+    return () => { alive = false; hum.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }; },
+  flood(box){ box.innerHTML = `<div class="simscene flood"><p class="task">Try to read this paragraph while everything comes in at full volume:</p><p class="read">The bus to Brooklyn leaves from the corner of 23rd and Lexington every twelve minutes. If you miss it, walk two blocks east to the subway.</p><div class="flicks"></div></div>`;
+    const a = ac(), hum = noise(0.09), hiss = noise(0.025, 'white'); let alive = true; const fl = box.querySelector('.flicks');
+    const loop = () => { if (!alive) return; const t = a.currentTime; for (let i=0;i<4;i++) tick(t + i*0.25, 2600, 0.02, 0.25, -0.8); tick(t + 0.1, 180 + Math.random()*120, 0.4, 0.2, 0.6); tick(t + 0.5 + Math.random()*0.4, 900 + Math.random()*900, 0.08, 0.15, Math.random()*2 - 1);
+      if (Math.random() < 0.5) speak(['Excuse me', 'next stop', 'did you hear', 'ha ha', 'over here'][(Math.random()*5)|0], {rate:1.2, volume:0.5, pitch:0.8 + Math.random()*0.6, voice:(Math.random()*5)|0});
+      const s = document.createElement('i'); s.style.left = Math.random()*90 + '%'; s.style.top = Math.random()*90 + '%'; fl.appendChild(s); setTimeout(() => s.remove(), 700); setTimeout(loop, 1000); }; loop();
+    return () => { alive = false; hum.stop(); hiss.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); }; }
+};
+
+function startSim(id){ stopSim(true); const s = SIMI[id]; state.simId = id; applyState(); fly();
+  const vp = viewports()[0]; simEl.style.left = vp.x + 'px'; simEl.style.width = vp.w + 'px'; simEl.style.height = vp.h + 'px'; simEl.hidden = false;
+  simEl.innerHTML = `<div class="simhead"><div><div class="eyebrow">${s.kind} symptom · simulation</div><h3>${esc(s.name)}</h3></div><button class="btn small" id="simStop">■ Stop</button></div><div class="simbox"></div><p class="simnote">${esc(s.note)}</p><div class="simbrain" style="--sc:${s.color}"><b>On the brain → ${esc(s.region)}</b><span>${esc(s.brain)}</span></div>`;
+  simEl.querySelector('#simStop').onclick = () => stopSim();
+  try { if (AC && AC.state === 'suspended') AC.resume(); } catch(e){}
+  SIM = {id, stop:RUN[id](simEl.querySelector('.simbox'))}; hudMsg = `<b>${esc(s.region)}.</b> ${esc(s.brain)}`; refreshSimButtons(); }
+function stopSim(silent){ if (SIM){ try { SIM.stop(); } catch(e){} SIM = null; } simEl.hidden = true; simEl.innerHTML = ''; if (!silent){ state.simId = null; applyState(); refreshSimButtons(); } }
+function refreshSimButtons(){ document.querySelectorAll('[data-sim]').forEach(b => b.setAttribute('aria-pressed', state.simId === b.dataset.sim)); }
 
 /* ============ State ============ */
 const CHI = Object.fromEntries(CH.map((c, i) => [c.id, i]));
 const SYM_VIEW = { hall:{dir:[1,0.22,0.35], dist:3.9, tgt:[-22,-10,2]}, delu:{dir:[1,0.35,0.6], dist:3.1, tgt:[-10,0,0]}, salad:{dir:[1,0.2,0.3], dist:3.9, tgt:[-26,-14,6]},
   flat:{dir:[0.9,0.15,0.9], dist:3.4, tgt:[-8,16,-4]}, wm:{dir:[0.75,0.5,1], dist:3.8, tgt:[-12,18,18]}, gate:{dir:[1,0.4,0.45], dist:3.4, tgt:[-10,-16,4]} };
-const state = { ch:null, sym:'hall', quiz:{}, drug:null, amph:false, age:12 };
+const state = { ch:null, sym:'hall', quiz:{}, drug:null, amph:false, age:12, exag:true, cortex:true, speed:1, focus:'all' };
 let T = 0, tween = null, hudMsg = '';
-const curState = () => { const c = state.ch ? CH[CHI[state.ch]] : null; if (!c) return {}; if (c.symptoms) return SYM[state.sym]; return c.state || {}; };
+const curState = () => { const c = state.ch ? CH[CHI[state.ch]] : null; if (!c) return {}; if (c.symptoms) return SYM[state.sym];
+  if (c.sims){ const s = state.simId && SIMI[state.simId];
+    if (s) return {hot:{B:s.hot}, deep:{B:s.deep || {}}, flicker:{B:s.flicker || []}, marks:{B:[[s.region, s.mni]]}, hud:`<b>${esc(s.region)}.</b> ${esc(s.brain)}`};
+    return {simTags:true, hud:'<b>Click a glowing region on the schizophrenia brain</b> (or a button on the right) to feel a rough version of that symptom.'}; }
+  return c.state || {}; };
 
 /* ============ Applying a scene state ============ */
 const TGT = SIDES.map(() => ({hot:[], deep:{}, paths:{}, vent:0, thin:0, rate:{}}));
@@ -698,7 +916,7 @@ function applyState(){ const st = curState();
     const dim = st.dimDeep ?? 0.1; Object.keys(s.deep).forEach(k => t.deep[k] = ((st.deep || {})[K] || {})[k] ?? dim);
     Object.keys(s.paths).forEach(k => t.paths[k] = (st.paths || []).includes(k) ? 0.6 : 0);
     t.rate = Object.assign({}, ((st.rate || {})[K]) || {});
-    t.vent = st.vent ? 0.55 : 0; t.thin = st.thin ? (st.thin[K] || 0) : 0; t.thinAge = !!st.thinAge; });
+    t.vent = st.vent ? 0.8 : 0; t.thin = st.thin ? (st.thin[K] || 0) : 0; t.thinAge = !!st.thinAge; });
   HUDMODE = st.hudMode || null; hudMsg = st.hud || '';
   buildTags(st); }
 
@@ -707,6 +925,7 @@ let TAGS = [];
 function mkTag(html, world, side, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = html; labelsEl.appendChild(el); return {el, world, side}; }
 function buildTags(st){ labelsEl.innerHTML = ''; TAGS = [];
   SIDES.forEach((s, si) => { ((st.marks || {})[s.key] || []).forEach(([t, mni]) => TAGS.push(mkTag(esc(t), S(...mni), si))); });
+  if (st.simTags) SIMS.forEach(s => { const tg = mkTag(`<span class="sdot" style="background:${s.color}"></span>${esc(s.name)}`, S(...s.mni), 1, 'plabel simtag'); tg.el.onclick = () => startSim(s.id); TAGS.push(tg); });
   if (!state.ch) [['Prefrontal cortex',[-40,34,30]],['Striatum',[-16,8,6]],['Hippocampus',[-29,-22,-14]],['Thalamus',[-12,-17,8]]].forEach(([t, m]) => SIDES.forEach((s, si) => TAGS.push(mkTag(t, S(...m), si)))); }
 const _v = V();
 function placeTags(){ const vp = viewports(); TAGS.forEach(t => { const r = vp[t.side]; _v.copy(t.world).project(camera); if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05){ t.el.style.opacity = 0; return; }
@@ -717,17 +936,24 @@ const isNarrow = () => innerWidth <= 820;
 function viewports(){ const W = innerWidth, Hh = innerHeight; const sw = isNarrow() ? W : W - panel.offsetWidth; const h = isNarrow() ? Math.round(Hh*0.48) : Hh; const w = Math.floor(sw/2);
   return [{x:0, top:0, w, h, y:Hh - h}, {x:w, top:0, w:sw - w, h, y:Hh - h}]; }
 const caps = SIDES.map((s, si) => { const d = document.createElement('div'); d.className = 'sidecap'; d.style.setProperty('--c', s.color); d.innerHTML = `<b>${s.title}</b>${s.sub ? `<span>${s.sub}</span>` : ''}`; document.body.appendChild(d); return d; });
+const ctxBtn = document.createElement('button'); ctxBtn.className = 'stagebtn'; ctxBtn.type = 'button';
+const setCtxBtn = () => { ctxBtn.setAttribute('aria-pressed', !state.cortex); ctxBtn.textContent = state.cortex ? '🧠 Hide outer brain' : '🧠 Show outer brain'; };
+ctxBtn.onclick = () => { state.cortex = !state.cortex; setCtxBtn(); }; document.body.appendChild(ctxBtn); setCtxBtn();
+addEventListener('keydown', e => { if ((e.key === 'c' || e.key === 'C') && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) ctxBtn.click(); });
 const divider = document.createElement('div'); divider.className = 'vdivider'; document.body.appendChild(divider);
 function resize(){ renderer.setSize(innerWidth, innerHeight); const vp = viewports(); camera.aspect = vp[0].w/vp[0].h; camera.updateProjectionMatrix();
-  caps.forEach((c, i) => { c.style.left = (vp[i].x + vp[i].w/2) + 'px'; }); divider.style.left = vp[1].x + 'px'; divider.style.height = vp[0].h + 'px'; }
+  caps.forEach((c, i) => { c.style.left = (vp[i].x + vp[i].w/2) + 'px'; }); if (typeof simEl !== 'undefined'){ simEl.style.left = vp[0].x + 'px'; simEl.style.width = vp[0].w + 'px'; simEl.style.height = vp[0].h + 'px'; } divider.style.left = vp[1].x + 'px'; divider.style.height = vp[0].h + 'px'; }
 addEventListener('resize', resize);
-function viewOf(){ const c = state.ch ? CH[CHI[state.ch]] : null; const v = c ? (c.symptoms ? SYM_VIEW[state.sym] : c.view) : PAGE.homeView; return [S(...(v.tgt || [0,-20,0])), v.dist, V(...v.dir)]; }
+const TIP_ORD = NEURON.tips.map(t => t.ord).sort((a, b) => a - b);
+const pruneCut = q => q <= 0 ? 0 : TIP_ORD[Math.min(TIP_ORD.length - 1, Math.floor(q*TIP_ORD.length))];   // cut so that fraction q of synapses is removed
+const FOCUS_VIEW = { limbic:{dir:[1,0.25,0.45], dist:2.3, tgt:[-8,-2,-10]}, cortical:{dir:[1,0.45,0.75], dist:3.0, tgt:[-20,12,8]}, nigro:{dir:[1,0.3,0.4], dist:2.3, tgt:[-13,-4,0]} };
+function viewOf(){ const c = state.ch ? CH[CHI[state.ch]] : null; const v = c && c.sims && state.simId ? {dir:[1,0.25,0.3], dist:3.4, tgt:SIMI[state.simId].mni.map((x, i) => i ? x : Math.max(x, -20))} : c && c.state && c.state.paths && state.focus !== 'all' ? FOCUS_VIEW[state.focus] : c ? (c.symptoms ? SYM_VIEW[state.sym] : c.view) : PAGE.homeView; return [v.raw ? V(...v.tgt) : S(...(v.tgt || [0,-20,0])), v.dist, V(...v.dir)]; }
 function fly(){ const [t0, d, dir] = viewOf(); const P = t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.3 : 1)));
   tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:t0.clone(), t0:performance.now(), dur:1100}; }
 controls.addEventListener('start', () => { tween = null; });
 
 /* ============ Selecting ============ */
-function selectCh(id){ state.ch = id; state.drug = null; state.amph = false; applyState(); fly(); renderPanel(); panel.scrollTop = 0;
+function selectCh(id){ if (typeof stopSim === 'function') stopSim(true); state.simId = null; state.ch = id; state.drug = null; state.amph = false; state.focus = 'all'; state.speed = 1; applyState(); fly(); renderPanel(); panel.scrollTop = 0;
   try { history.replaceState(null, '', id ? '#' + id : location.pathname); } catch(e){} }
 function selectSym(k){ state.sym = k; applyState(); fly(); const y = panel.scrollTop; renderPanel(); panel.scrollTop = y; }
 
@@ -783,18 +1009,29 @@ function renderPanel(){
   panel.querySelectorAll('.demo').forEach(d => DEMO[d.dataset.demo].bind(d));
 }
 const lb = $('#lightbox'); lb.onclick = () => { lb.hidden = true; };
-addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (state.ch) selectCh(null); } });
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (SIM) stopSim(); else if (state.ch) selectCh(null); } });
 
 /* ============ Demos ============ */
 const DRUGS = { fga:['First-generation (haloperidol)','Blocks D2 receptors strongly, in every pathway it reaches. Hallucinations and delusions quiet down, but the movement pathway is blocked too (tremor, stiffness), and the quiet cortex stays quiet.'],
   sga:['Second-generation (risperidone)','Blocks D2 and serotonin 5-HT2A receptors. Positive symptoms quiet down with less blocking of movement, but more weight gain and metabolic risk. Effects on negative symptoms are modest.'],
   cob:['Cobenfy (xanomeline + trospium)','Activates muscarinic M1/M4 receptors, which turns down how much dopamine is released in the striatum. The loud pathway quiets without directly blocking D2, so movement side effects are rare; nausea and constipation are more common.'] };
+const PATHS_UI = [['all','All three'],['limbic','Mesolimbic: LOUD'],['cortical','Mesocortical: QUIET'],['nigro','Nigrostriatal: movement']];
+function ctrlHtml(){ return `<div class="pctrl"><div class="seg">${PATHS_UI.map(([k, l]) => `<button data-focus="${k}" aria-pressed="${state.focus === k}">${l}</button>`).join('')}</div>
+  <label class="slider-row">Speed <b class="spv">${state.speed}×</b><input type="range" min="0.15" max="1.5" step="0.05" value="${state.speed}"></label></div>`; }
+const FOCUS_MSG = { limbic:'<b>Mesolimbic pathway:</b> VTA (ventral tegmental area, in the midbrain) → nucleus accumbens. Too LOUD in schizophrenia → positive symptoms. This is where antipsychotics help.', cortical:'<b>Mesocortical pathway:</b> VTA → prefrontal cortex. Too QUIET in schizophrenia → negative and cognitive symptoms. Blocking dopamine doesn’t help here.', nigro:'<b>Nigrostriatal pathway:</b> substantia nigra → striatum (caudate and putamen). Not changed by the illness, but blocking it causes movement side effects, the same circuit lost in Parkinson’s.' };
+function bindCtrl(r){ r.querySelectorAll('[data-focus]').forEach(b => b.onclick = () => { state.focus = b.dataset.focus; r.querySelectorAll('[data-focus]').forEach(x => x.setAttribute('aria-pressed', x === b)); hudMsg = FOCUS_MSG[state.focus] || curState().hud || ''; fly(); });
+  const sp = r.querySelector('.pctrl input'); sp.oninput = () => { state.speed = +sp.value; r.querySelector('.spv').textContent = state.speed.toFixed(2).replace(/0$/, '') + '×'; }; }
 const DEMO = {
-  dopa:{ html:() => `<div class="tries"><button class="try" data-a="amph" aria-pressed="${state.amph}">💊 Give amphetamine to both</button></div><p class="muted">Amphetamine releases extra dopamine. Watch the typical brain’s yellow road get busy too, which is why stimulant psychosis can look like schizophrenia.</p>`,
-    bind(r){ const b = r.querySelector('[data-a=amph]'); b.onclick = () => { state.amph = !state.amph; b.setAttribute('aria-pressed', state.amph); hudMsg = state.amph ? '<b>Amphetamine:</b> dopamine release goes up in both brains. In healthy people, high doses can produce paranoia and hallucinations; in schizophrenia, it can worsen symptoms.' : (curState().hud || ''); }; } },
-  drugs:{ html:() => `<div class="chips">${[['','No medication'],['fga','First-generation'],['sga','Second-generation'],['cob','Cobenfy']].map(([k, l]) => `<button class="chip" data-drug="${k}" aria-pressed="${(state.drug || '') === k}"><span class="dot"></span>${l}</button>`).join('')}</div><p class="drugmsg">${state.drug ? `<b>${DRUGS[state.drug][0]}:</b> ${DRUGS[state.drug][1]}` : 'Untreated: the yellow (mesolimbic) road is loud, the blue (mesocortical) road is quiet.'}</p>`,
-    bind(r){ r.querySelectorAll('[data-drug]').forEach(b => b.onclick = () => { state.drug = b.dataset.drug || null; r.innerHTML = DEMO.drugs.html(); DEMO.drugs.bind(r); hudMsg = state.drug ? `<b>${DRUGS[state.drug][0]}</b> given to the schizophrenia brain.` : ''; }); } },
-  prune:{ html:() => `<label class="slider-row">Age <b class="agev">${state.age}</b><input type="range" min="12" max="25" step="1" value="${state.age}"></label><p class="muted">The panel at bottom left zooms into one prefrontal dendrite from each brain. Microglia (green) remove tagged synapses.</p>`,
+  sims:{ html:() => `<div class="simgrid">${['Positive','Negative','Cognitive'].map(k => `<div class="simg"><div class="eyebrow">${k}</div>${SIMS.filter(s => s.kind === k).map(s => `<button class="simbtn" data-sim="${s.id}" aria-pressed="${state.simId === s.id}" style="--sc:${s.color}"><b>${esc(s.name)}</b><span>${esc(s.region)}</span></button>`).join('')}</div>`).join('')}</div>
+    <p class="muted">Simulations are rough sketches built from first-person reports, a glimpse rather than the real thing. Sound helps. Press <b>Esc</b> or <b>Stop</b> anytime.</p>`,
+    bind(r){ r.querySelectorAll('[data-sim]').forEach(b => b.onclick = () => state.simId === b.dataset.sim ? stopSim() : startSim(b.dataset.sim)); } },
+  dopa:{ html:() => ctrlHtml() + `<div class="tries"><button class="try" data-a="amph" aria-pressed="${state.amph}">💊 Give amphetamine to both</button></div><p class="muted">Amphetamine releases extra dopamine. Watch the typical brain’s yellow road get busy too, which is why stimulant psychosis can look like schizophrenia.</p>`,
+    bind(r){ bindCtrl(r); const b = r.querySelector('[data-a=amph]'); b.onclick = () => { state.amph = !state.amph; b.setAttribute('aria-pressed', state.amph); hudMsg = state.amph ? '<b>Amphetamine:</b> dopamine release goes up in both brains. In healthy people, high doses can produce paranoia and hallucinations; in schizophrenia, it can worsen symptoms.' : (curState().hud || ''); }; } },
+  drugs:{ html:() => ctrlHtml() + `<div class="chips">${[['','No medication'],['fga','First-generation'],['sga','Second-generation'],['cob','Cobenfy']].map(([k, l]) => `<button class="chip" data-drug="${k}" aria-pressed="${(state.drug || '') === k}"><span class="dot"></span>${l}</button>`).join('')}</div><p class="drugmsg">${state.drug ? `<b>${DRUGS[state.drug][0]}:</b> ${DRUGS[state.drug][1]}` : 'Untreated: the yellow (mesolimbic) road is loud, the blue (mesocortical) road is quiet.'}</p>`,
+    bind(r){ bindCtrl(r); r.querySelectorAll('[data-drug]').forEach(b => b.onclick = () => { state.drug = b.dataset.drug || null; r.innerHTML = DEMO.drugs.html(); DEMO.drugs.bind(r); hudMsg = state.drug ? `<b>${DRUGS[state.drug][0]}</b> given to the schizophrenia brain.` : ''; }); } },
+  exag:{ html:() => `<div class="tries"><button class="try" aria-pressed="${state.exag}">${state.exag ? '🔍 Exaggerated ×3 (tap for realistic size)' : '📏 Realistic size (tap to exaggerate)'}</button></div><p class="muted">${state.exag ? 'Exaggerated so you can see it: ventricles nearly double, hippocampus a third smaller, cortex visibly thinner.' : 'Closer to the real group averages: ventricles roughly 20–25% larger, hippocampus about 5–8% smaller, cortex a few percent thinner. Hard to see, which is the point: you can’t diagnose from one scan.'}</p>`,
+    bind(r){ r.querySelector('button').onclick = () => { state.exag = !state.exag; r.innerHTML = DEMO.exag.html(); DEMO.exag.bind(r); }; } },
+  prune:{ html:() => `<label class="slider-row">Age <b class="agev">${state.age}</b><input type="range" min="12" max="25" step="1" value="${state.age}"></label><p class="muted">Both brains start with the same bushy neuron. Slide toward 25 and watch twigs, spines (yellow) and axon branches get cut. Green cells are microglia doing the cutting. Pruning is exaggerated so you can see it.</p>`,
     bind(r){ const inp = r.querySelector('input'); inp.oninput = () => { state.age = +inp.value; r.querySelector('.agev').textContent = state.age; }; } }
 };
 
@@ -842,26 +1079,31 @@ function updSide(s, si, dt){ const t = TGT[si], k = Math.min(1, dt*3.5), U = s.a
   if (t.flick.includes('scatter')){ scatterT -= dt; const n = t.hot.length;
     if (scatterT <= 0){ scatterT = 0.7; for (let i=n;i<Math.min(NH, n + 3);i++){ const p = S(-52 + 30*Math.random(), -60 + 90*Math.random(), -10 + 40*Math.random()); U.uP.value[i].set(p.x, p.y, p.z, 8/80); U.uC.value[i].set(1, 0.55, 0.25); U.uI.value[i] = 0.3*Math.random() + 0.2; } }
     for (let i=n;i<NH;i++) U.uI.value[i] *= Math.max(0, 1 - dt*1.6); }
-  Object.entries(s.deep).forEach(([key, o]) => o.meshes.forEach(m => { const g = t.deep[key] ?? 0.1; m.material.opacity = ease(m.material.opacity, g, k); m.material.depthWrite = g > 0.6; m.material.emissiveIntensity = g > 0.6 ? 0.1 + 0.06*Math.sin(T*3) : 0.02; }));
-  Object.entries(s.paths).forEach(([key, p]) => { p.mesh.material.opacity = ease(p.mesh.material.opacity, t.paths[key] || 0, k); p.mesh.visible = p.mesh.material.opacity > 0.01; });
+  Object.entries(s.deep).forEach(([key, o]) => o.meshes.forEach(m => { const g = t.deep[key] ?? 0.1; const gg = state.focus !== 'all' && curState().paths ? g*0.35 : g; m.material.opacity = ease(m.material.opacity, gg, k); m.material.depthWrite = gg > 0.6; m.material.emissiveIntensity = g > 0.6 ? 0.1 + 0.06*Math.sin(T*3) : 0.02; }));
+  Object.entries(s.paths).forEach(([key, p]) => { p.mesh.material.opacity = ease(p.mesh.material.opacity, (t.paths[key] || 0)*(state.focus === 'all' || state.focus === key ? 1 : 0.15), k); p.mesh.visible = p.mesh.material.opacity > 0.01; });
   s.vent.mat.opacity = ease(s.vent.mat.opacity, t.vent, k); s.vent.meshes.forEach(m => m.visible = s.vent.mat.opacity > 0.01);
-  const thin = t.thinAge ? ((state.age - 12)/13)*(si ? 0.026 : 0.007) : t.thin; s.glass.userData.u.uThin.value = ease(s.glass.userData.u.uThin.value, thin, k); U.uThin.value = s.glass.userData.u.uThin.value;
+  const thin = (t.thinAge ? ((state.age - 12)/13)*(si ? 0.026 : 0.007) : t.thin)*(state.exag ? 2.2 : 0.6); s.glass.userData.u.uThin.value = ease(s.glass.userData.u.uThin.value, thin, k); U.uThin.value = s.glass.userData.u.uThin.value;
   // dopamine pulses
   const B = si === 1, drug = B ? state.drug : null; let blocked = false;
-  Object.keys(s.paths).forEach(key => { let r = t.rate[key] || 0; if (!r) return;
+  const sdt = dt*state.speed;
+  Object.keys(s.paths).forEach(key => { let r = t.rate[key] || 0; if (!r) return; const foc = state.focus === 'all' || state.focus === key;
     if (state.amph && key !== 'cortical') r *= 2.2;
     if (drug === 'cob' && key === 'limbic') r *= 0.45;
     if (drug === 'sga' && key === 'cortical') r *= 1.4;
-    s.spawn[key] += dt*r;
+    if (foc) s.spawn[key] += sdt*r;
     while (s.spawn[key] >= 1){ s.spawn[key] -= 1;
       let stopAt = 1; if ((drug === 'fga' && key !== 'cortical') || (drug === 'sga' && (key === 'limbic' || (key === 'nigro' && Math.random() < 0.4)))){ stopAt = 0.86; }
-      pulse(s, key, {stopAt, dur:key === 'cortical' ? 1.8 : 1.3}); }
+      pulse(s, key, {stopAt, dur:key === 'cortical' ? 1.8 : 1.3, size:state.speed < 0.7 ? 0.3 : 0.24}); }
     const eff = r*((drug === 'fga' && key !== 'cortical') ? 0.25 : (drug === 'sga' && key === 'limbic') ? 0.3 : (drug === 'sga' && key === 'nigro') ? 0.65 : 1);
     SIG[s.key][key] = ease(SIG[s.key][key], eff, Math.min(1, dt*2));
     if ((drug === 'fga' || drug === 'sga') && key === 'limbic') blocked = true; });
   if (!Object.values(t.rate).some(Boolean)) Object.keys(SIG[s.key]).forEach(kk => SIG[s.key][kk] = 0);
   const bs = blocked ? 0.32 + 0.05*Math.sin(T*6) : 0; s.block.scale.setScalar(ease(s.block.scale.x, bs, k)); s.block.visible = s.block.scale.x > 0.02;
-  updPulses(s, dt); U.uT.value = T; }
+  if (si){ const ex = state.exag; MORPH.forEach(m => { const kd = m.userData.kind;
+      const g = kd === 'hip' ? (ex ? [0.66,0.66,0.66] : [0.93,0.93,0.93]) : kd === 'vent3' ? (ex ? [2.6,1.3,1.05] : [1.3,1.05,1]) : kd === 'vent4' ? (ex ? [1.4,1.3,1.2] : [1.1,1.05,1.05]) : (ex ? [1.9,1.65,1.08] : [1.2,1.12,1.02]);
+      m.scale.set(ease(m.scale.x, g[0], k), ease(m.scale.y, g[1], k), ease(m.scale.z, g[2], k)); const c = m.userData.c; m.position.set(c.x*(1 - m.scale.x), c.y*(1 - m.scale.y), c.z*(1 - m.scale.z)); }); }
+  const cv = state.cortex ? 1 : 0; s.cv = ease(s.cv ?? 1, cv, k); s.glass.userData.u.uRim.value = 0.38*s.cv; s.glass.opacity = 0.035*s.cv; (s.ctx || []).forEach(m => m.visible = s.cv > 0.03);
+  updPulses(s, sdt); U.uT.value = T; }
 
 /* ============ Loop ============ */
 let last = performance.now();
@@ -870,7 +1112,10 @@ function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; T
     camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (kk >= 1) tween = null; }
   controls.update(); SIDES.forEach((s, si) => updSide(s, si, dt)); drawHud();
   renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
-  viewports().forEach((r, i) => { renderer.setViewport(r.x, r.y, r.w, r.h); renderer.setScissor(r.x, r.y, r.w, r.h); renderer.render(SIDES[i].scene, camera); });
+  const nm = !!curState().neuron, f = (state.age - 12)/13; if (nm) SIDES.forEach((s, si) => updNeuron(s, si, dt, pruneCut(si ? 0.78*f : 0.45*f)));
+  if (nm){ const kept = si => Math.round(100*NEURON.tips.filter(t => t.ord >= pruneCut(si ? 0.78*f : 0.45*f)).length/NEURON.tips.length);
+    hudMsg = `<b>Age ${state.age}.</b> Synapses kept: typical <b>${kept(0)}%</b>, schizophrenia model <b>${kept(1)}%</b>. Green cells are microglia removing the branches being cut.`; }
+  viewports().forEach((r, i) => { renderer.setViewport(r.x, r.y, r.w, r.h); renderer.setScissor(r.x, r.y, r.w, r.h); renderer.render(nm ? SIDES[i].neuron.scene : SIDES[i].scene, camera); });
   placeTags(); requestAnimationFrame(frame); }
 resize();
 const start = (location.hash || '').slice(1); state.ch = CHI[start] !== undefined ? start : null; applyState(); renderPanel();
