@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Psychopathology: Schizophrenia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: two glass brains side by side (typical | schizophrenia) share one camera; chapter notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 75% 70% at 38% 42%,#1a2034 0%,#0d1018 66%,#090b10 100%)}
+.video{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000}
+.video-frame{position:relative;aspect-ratio:16/9}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video figcaption{background:var(--raise);padding:9px 12px;font-size:13px;color:var(--muted)}
+.video figcaption b{color:var(--fg)}
+.yt-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at center,#2a1420 0%,#0b0e14 75%)}
+.yt-card .yt-play{width:74px;height:52px;border-radius:14px;background:#ff0033;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 30px rgba(255,0,51,.35)}
+.yt-card .yt-t{font-weight:700;font-size:14px}
+.sec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.sec h3{margin:0;font-family:var(--f-display);font-size:19px;line-height:1.2}
+.sec p{margin:0}
+.lab-c{color:var(--c)}
+.src{font-size:12px;color:var(--faint)}
+.muted{color:var(--muted)}
+.more summary{cursor:pointer;color:var(--c);font-weight:700;font-size:14px}
+.more p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.mindq{background:color-mix(in srgb,var(--c) 12%,var(--raise));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.mindq .eyebrow{color:var(--c)}
+.clues{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:9px}
+.clues li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;column-gap:10px}
+.clues li::before{content:counter(c);grid-row:span 2;width:26px;height:26px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center;font-size:14px}
+.clues b{font-size:15px}.clues span{color:var(--muted);font-size:14px}
+.hold{margin:0;font-style:italic;color:var(--fg)}
+.mlines{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.mlines li::marker{color:var(--c)}
+.mlines .mean{color:var(--chalk);font-size:13.5px}
+.mim-soon{font-size:14px;color:var(--muted);background:var(--raise);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
+.answer{border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;background:var(--raise);padding:12px 16px}
+.answer summary{cursor:pointer;display:flex;flex-direction:column;gap:3px;list-style:none}
+.answer summary::-webkit-details-marker{display:none}
+.answer summary .eyebrow{color:var(--c)}
+.answer summary b{font-family:var(--f-display);font-size:17px}
+.answer .reveal{font-size:13px;color:var(--c);font-weight:700}
+.answer[open] .reveal{display:none}
+.answer p{margin:10px 0 0}
+.nextup{font-weight:700;color:var(--chalk);font-size:14px}
+.howto{font-size:14px;color:var(--muted);background:var(--raise);border-radius:10px;padding:10px 12px}
+.howto b{color:var(--fg)}
+.chlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.chrow{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:9px 11px;border-radius:11px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.chrow:hover,.chrow:focus-visible{border-color:var(--c)}
+.chn{width:30px;height:30px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center}
+.chrow b{display:block;font-family:var(--f-display);font-size:16px}
+.chq{display:block;color:var(--muted);font-size:13.5px}
+.demo{display:flex;flex-direction:column;gap:8px}
+.wcst{display:flex;flex-direction:column;gap:10px}
+.wtargets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.wt{padding:0;border:2px solid transparent;border-radius:9px;background:none;cursor:pointer}
+.wt:hover,.wt:focus-visible{border-color:var(--c)}
+.wc{display:block;width:100%;height:auto}
+.wrow{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:start}
+.wcur svg{width:80px}
+.wlog{margin:0}.wstats{margin:4px 0 8px;font-size:13px}
+b.ok{color:#5fe08a}b.bad{color:#ff7a7a}
+.illu{display:flex;flex-direction:column;gap:8px}
+.illu svg,.illu img{width:100%;height:auto;border-radius:10px;display:block;background:#f6f3ee}
+.hb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.hbt{font-family:var(--f-display);font-size:44px;font-weight:800;color:var(--muted)}
+.hbt.on{color:var(--c)}
+.hb .num{width:80px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+.drmw{font-family:var(--f-display);font-size:34px;font-weight:800;text-align:center;padding:14px;background:var(--raise);border-radius:12px}
+.drmt{display:flex;flex-direction:column;gap:6px}
+.drmq{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}
+.drmq .qopt{padding:5px 12px}
+.steps{display:flex;flex-direction:column;gap:6px}
+.stp{display:flex;flex-direction:column;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--raise);opacity:.45;transition:opacity .4s,border-color .4s}
+.stp.on{opacity:1;border-color:var(--c)}
+.stp span{font-size:13.5px;color:var(--muted)}
+.rpe canvas{width:100%;height:auto;border-radius:10px;display:block}
+.rpe .seg{display:flex;flex-wrap:wrap;gap:6px}
+.qitem{display:flex;flex-direction:column;gap:8px}
+.quiz{gap:14px}
+.figure img{background:#f6f3ee}
+.figure.narrow img{max-height:300px;object-fit:contain}
+.plabel{font-size:12px}
+
+#hudCanvas{width:100%;height:auto;display:block}
+#hudCanvas[hidden]{display:none}
+.hud{width:min(560px,calc(100vw - var(--panel-w) - 40px))}
+#panel .chips{position:static;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;overflow:visible;padding:0}
+.sidecap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:1px}
+.sidecap b{font-family:var(--f-display);font-size:18px;color:var(--c);background:rgba(11,14,20,.7);padding:3px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
+.sidecap span{font-size:12px;color:var(--muted)}
+.vdivider{position:fixed;top:0;width:1px;background:linear-gradient(transparent,var(--line) 20%,var(--line) 80%,transparent);z-index:3;pointer-events:none}
+.symgroups{display:flex;flex-direction:column;gap:10px}
+.symg{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--raise)}
+.symh{display:flex;flex-direction:column;margin-bottom:6px}.symh b{font-family:var(--f-display);font-size:15px}.symh span{font-size:12.5px;color:var(--muted)}
+.sym-pos .chip{--c:#ff8a5c}.sym-neg .chip{--c:#7ad7ff}.sym-cog .chip{--c:#c49bff}
+.symcard{border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:12px;padding:12px 14px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.symcard h4{margin:4px 0 6px;font-family:var(--f-display);font-size:17px}.symcard p{margin:0 0 6px;font-size:14px}
+.legend2{font-size:12.5px;color:var(--muted);margin:0}.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#ff9a3c}
+.caveat{font-size:13.5px;color:var(--muted);background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.caveat b{color:var(--fg)}
+.soon{font-size:13.5px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.drugmsg{font-size:14px;margin:8px 0 0}.agev{color:var(--c);margin:0 6px}
+@media (max-width:820px){ .sidecap{top:calc(env(safe-area-inset-top,0px) + 92px)} .sidecap b{font-size:14px} .hud{width:auto} }
+@media (max-width:820px){ #hudCanvas{display:none} .plabel{font-size:10.5px;padding:2px 6px} }
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building two brains…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Psychopathology</h1>
+  <div class="brand-sub">Schizophrenia: two brains</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle"></div>
+  <canvas id="hudCanvas" width="900" height="240" aria-label="Live comparison of the two brains" hidden></canvas>
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="lightbox" hidden><img alt="Image, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Content: Psychopathology · Schizophrenia ============ */
+const PAGE = { color:'#ff8a5c', eyebrow:'Unit 11 · Psychopathology', h2:'Schizophrenia: two brains, side by side',
+  lead:'On the left, a typical brain. On the right, what studies find in schizophrenia, **on average across many people**. Click a symptom or a theory and watch both brains change.',
+  homeView:{dir:[1,0.32,0.42], dist:4.3, tgt:[-4,-14,6]}, hudTitle:'Two brains, one camera', hudText:'Drag either brain and both turn together. Brightness = activity. Pick a chapter on the right.' };
+
+const WARM = '#ff9a3c', HOT = '#ff5f3c', COOL = '#5ab8ff';
+/* Hotspot: [label, MNI mm, intensity 0–1, color, radius mm] */
+const H = (label, mni, i, c=WARM, r=14) => ({label, mni, i, c, r});
+const HS = {
+  dlpfcL:[-42,32,30], dlpfcR:[42,32,30], broca:[-48,16,8], stg:[-58,-20,4], wern:[-54,-46,14], ins:[-38,6,2], acc:[-4,32,22], vmpfc:[-4,46,-10], v1:[-10,-94,4]
+};
+
+/* Each scene state: hot (cortex glow), deep (structure opacities), paths + pulse rates, ventricles, gray-matter thinning, HUD mode, labels */
+const SYM = {
+  hall:{ name:'Hallucinations', kind:'pos',
+    hot:{A:[], B:[H('Superior temporal gyrus',HS.stg,1,HOT,16), H('Broca’s area',HS.broca,0.8,HOT), H('Insula',HS.ins,0.55,HOT,12)]},
+    deep:{B:{hip:1}}, flicker:{B:['stg','broca']},
+    marks:{B:[['Auditory cortex (STG): “hearing” the voice',HS.stg],['Broca’s area: inner speech',HS.broca],['Hippocampus',[-29,-22,-14]]]},
+    hud:'<b>While patients hear voices,</b> speech-production and hearing areas switch on, with no sound in the room. One idea: the brain fails to tag its own inner speech as “mine,” so it’s heard as someone else’s voice.',
+    card:{h:'Voices come from the brain’s own speech system', p:'Researchers used fMRI (functional magnetic resonance imaging, which tracks blood flow to active areas) to scan patients again and again, asking each time whether they were hearing voices. Scans taken during voices showed activity in Broca’s area, the insula, the superior temporal gyrus (auditory cortex) and the hippocampus. A meta-analysis of studies like this found the same network.', src:'Shergill et al., 2000; Jardri et al., 2011'} },
+  delu:{ name:'Delusions', kind:'pos', paths:['limbic'], rate:{A:{limbic:0.8}, B:{limbic:2.6}},
+    deep:{A:{nacc:0.6, caud:0.5, put:0.5}, B:{nacc:1, caud:1, put:1}},
+    marks:{B:[['Striatum: extra dopamine',[-14,12,10]],['Nucleus accumbens',[-10,11,-8]],['VTA (dopamine source)',[-4,-16,-12]]]},
+    hud:'<b>Aberrant salience:</b> dopamine normally flags what matters (“pay attention to this”). With too much, random things feel loaded with meaning: a license plate, a song on the radio, a stranger’s glance. A delusion is the brain’s attempt to explain that feeling.',
+    card:{h:'Too much dopamine, in the wrong place', p:'PET (positron emission tomography, which tracks a radioactive tracer) shows people with schizophrenia make and release more dopamine in the striatum, even before their first full episode. Psychiatrist Shitij Kapur proposed this makes ordinary things feel strangely significant (“aberrant salience”).', src:'Howes et al., 2012 (meta-analysis); Kapur, 2003'} },
+  salad:{ name:'Word salad', kind:'pos',
+    hot:{A:[H('Wernicke’s area',HS.wern,0.85), H('Broca’s area',HS.broca,0.7)], B:[H('Wernicke’s area',HS.wern,0.28), H('Broca’s area',HS.broca,0.45)]},
+    flicker:{B:['scatter']},
+    marks:{A:[['Wernicke’s area: meaning',HS.wern],['Broca’s area: speech',HS.broca]], B:[['Wernicke’s area: less active',HS.wern]]},
+    hud:'<b>Formal thought disorder (“word salad”):</b> ideas slip from one to the next by sound or loose association. The more severe the thought disorder, the less the left superior temporal (Wernicke’s) area responds while the person speaks.',
+    card:{h:'Less language-area activity, more disorganized speech', p:'Researchers scanned patients while they described inkblots. The more disorganized their speech, the less activity in the left superior temporal gyrus, near Wernicke’s area.', src:'Kircher et al., 2001'} },
+  flat:{ name:'Flat affect and low motivation', kind:'neg', paths:['cortical'], rate:{A:{cortical:1.2}, B:{cortical:0.35}},
+    hot:{A:[H('Ventromedial prefrontal cortex',HS.vmpfc,0.55,WARM,12)], B:[H('Ventromedial prefrontal cortex',HS.vmpfc,0.2,WARM,12)]},
+    deep:{A:{nacc:1}, B:{nacc:0.3}},
+    marks:{A:[['Nucleus accumbens: “something good is coming”',[-10,11,-8]]], B:[['Nucleus accumbens: muted',[-10,11,-8]]]},
+    hud:'<b>Expecting a reward</b> (here: a chance to win money) lights up the reward system in the typical brain. In schizophrenia that response is weaker, and the weaker it is, the stronger the negative symptoms: less motivation (avolition), less pleasure, a flatter face.',
+    card:{h:'A quieter reward system', p:'In the monetary incentive delay task, people see a cue that a reward might be coming. Patients showed less ventral striatum (nucleus accumbens) activity during that anticipation, and the reduction tracked their negative symptoms.', src:'Juckel et al., 2006'} },
+  wm:{ name:'Working memory', kind:'cog', paths:['cortical'], rate:{A:{cortical:1.4}, B:{cortical:0.4}},
+    hot:{A:[H('Dorsolateral prefrontal cortex',HS.dlpfcL,1,WARM,16), H('DLPFC (right)',HS.dlpfcR,0.8,WARM,16)], B:[H('Dorsolateral prefrontal cortex',HS.dlpfcL,0.35,WARM,16), H('DLPFC (right)',HS.dlpfcR,0.3,WARM,16)]},
+    marks:{A:[['DLPFC: holding information in mind',HS.dlpfcL]], B:[['DLPFC: “hypofrontality”',HS.dlpfcL]]},
+    hud:'<b>Hypofrontality:</b> during a working-memory task, the typical prefrontal cortex ramps up. In schizophrenia it often ramps up less. (Some studies find it works harder for the same result, an inefficient rather than a simply “off” cortex.)',
+    card:{h:'The prefrontal cortex that doesn’t ramp up', p:'Daniel Weinberger’s team measured blood flow while patients did the Wisconsin Card Sorting Test (the card game in Part II). Healthy people increased blood flow to the dorsolateral prefrontal cortex (DLPFC); patients didn’t. Later fMRI meta-analyses confirmed reduced DLPFC activation during working memory. EEG (electroencephalography) adds a timing clue: frontal gamma rhythms, which help neurons work in sync, are weaker during cognitive control.', src:'Weinberger et al., 1986; Glahn et al., 2005; Cho et al., 2006'} },
+  gate:{ name:'Sensory overload', kind:'cog', hudMode:'p50',
+    deep:{A:{thal:1}, B:{thal:1}},
+    marks:{A:[['Thalamus: sensory filter',[-12,-17,8]]], B:[['Thalamus: weaker filter',[-12,-17,8]]]},
+    hud:'<b>Sensory gating (P50):</b> play two clicks half a second apart. A typical brain answers the second click much more quietly: “already heard that.” In many people with schizophrenia the second response stays big, so the world keeps coming in at full volume.',
+    card:{h:'An EEG test of the brain’s filter', p:'The P50 is a small EEG wave about 50 milliseconds after a click. In the paired-click test, typical brains suppress the second response; people with schizophrenia (and some of their relatives) often don’t. It’s one of the most studied EEG markers of schizophrenia.', src:'Adler et al., 1982; Freedman et al., 1987'} }
+};
+const SYM_ORDER = [['pos','Positive (+)','Added: things that shouldn’t be there',['hall','delu','salad']],['neg','Negative (−)','Subtracted: normal things taken away',['flat']],['cog','Cognitive','“Computer” problems: thinking and filtering',['wm','gate']]];
+
+const CH = [
+ { id:'experience', title:'What is it like?', short:'Experience', color:'#f4d27a',
+   view:{dir:[1,0.32,0.42], dist:4.3, tgt:[-4,-14,6]}, state:{},
+   q:'What is real?',
+   clues:[['“She was on the moon”','Jung told Marie-Louise von Franz about a patient who said she had lived on the moon. When von Franz said the girl only imagined it, Jung answered: “Yes, she was on the moon.”'],
+          ['Real to the person','Voices sound like sound. Delusions feel like certainty, not guesses. Insight is often reduced, which is part of the illness, not stubbornness.'],
+          ['Split from reality, not split personality','Eugen Bleuler coined “schizophrenia” in 1908: “split mind,” meaning thought, feeling and perception split apart. It is not multiple personalities.']],
+   hold:'Hold this question: if the brain builds your reality (remember the illusions in Part II), what happens when the builder misfires?',
+   secs:[
+     {h:'The basics', list:['Affects roughly **0.3–0.7% of people** over a lifetime (often rounded to “about 1%”). Usually starts in the late teens to early 30s, a bit earlier in men.','Kraepelin (1899) called it **dementia praecox**, “early dementia,” and separated it from manic-depressive illness (today’s bipolar disorder).','1950s: **chlorpromazine** (klor-PROE-muh-zeen), the first antipsychotic, moves care from asylums toward the community.'], src:'McGrath et al., 2008; Kyziridis, 2005'},
+     {h:'Memory hint: add, subtract, compute', list:['**Positive (+) = addition:** a blender adds extra ingredients: voices (hallucinations), false beliefs (delusions), words tossed into a blender (word salad).','**Negative (−) = subtraction:** subtract yourself from friends (withdrawal), subtract movement (catatonia), subtract emotion from your face (flat affect).','**Cognitive = computer:** “Front Office” problems (working memory, prefrontal) and “Temple” problems (language, Wernicke’s area).']},
+     {h:'Inside the experience', p:'Simulations and first-person accounts. They give a glimpse, not the whole thing: real symptoms last for months and come with fear, confusion and stigma.', video:['o91-b6vDRRU','what visual distortions can look like'], video2:['63lHuGMbscU','a first-person simulation in a store']},
+     {p:'', video:['FUIn-ZLdtkk','living with schizophrenia'], video2:['IehtMYlOuIk','a classic patient interview: listen for disorganized speech']},
+     {h:'Jung: “Yes, she was on the moon”', video:['Roboo6mls-g','Marie-Louise von Franz tells the story, from A Matter of Heart (1986)']},
+     {h:'DSM-5 diagnosis: “Doctor Helps Diagnosed Brains Now”', list:['**2 or more symptoms for at least 1 month**, and at least one must be from the Big 3: **D**elusions, **H**allucinations, **D**isorganized speech. The others: grossly disorganized or catatonic **B**ehavior, **N**egative symptoms.','**Functional decline:** work, relationships or self-care.','**At least 6 months** of signs in total, including the prodrome (PROH-drohm: early warning signs) or residual phase.','**Rule-outs:** not better explained by bipolar disorder or depression with psychotic features, substances or a medical condition.'], src:'American Psychiatric Association, DSM-5 (2013)'},
+     {h:'Myths', list:['**“They’re violent.”** Most people with schizophrenia are never violent, and they are far more likely to be victims of violence than perpetrators. Only a small share of violence (often estimated around 3–5%) is linked to serious mental illness.','**“It’s split personality.”** No: that’s dissociative identity disorder. Schizophrenia is about psychosis.','**“They can’t function.”** Many improve substantially with treatment, and some recover fully.','**“Bad parenting causes it.”** No. It’s strongly heritable (around 80%) with environmental triggers.','**“They could snap out of it.”** No more than someone could snap out of epilepsy.'], src:'Swanson, 1994; Teplin et al., 2005; Hilker et al., 2018'}],
+   answer:'For the person, the voices and beliefs are as real as anything else they perceive, because the same brain systems that build everyone’s reality are producing them. That’s why arguing someone out of a delusion rarely works, and why treatment aims at the systems, not just the beliefs. Jung’s point: take the experience seriously as an experience, even when it isn’t true of the outside world.',
+   quiz:[{q:'“Schizophrenia” literally means “split mind.” What is split?', o:['Thought, emotion and perception, from each other and from reality','The person into multiple personalities','The left and right hemispheres','The brain from the spinal cord'], a:0, why:'Bleuler meant a splitting of mental functions. Multiple personalities is dissociative identity disorder.'},
+         {q:'Which must be present for a DSM-5 diagnosis?', o:['At least one of: delusions, hallucinations or disorganized speech','Catatonia','Flat affect','A family history'], a:0, why:'Two or more symptoms, and one has to be from the Big 3.'}],
+   refs:['Bleuler, E. (1911/1950). Dementia Praecox or the Group of Schizophrenias.','McGrath, J. et al. (2008). Schizophrenia: a concise overview of incidence, prevalence, and mortality. Epidemiologic Reviews.','Hilker, R. et al. (2018). Heritability of schizophrenia… Danish twin register. Biological Psychiatry.','Teplin, L. A. et al. (2005). Crime victimization in adults with severe mental illness. Archives of General Psychiatry.']},
+
+ { id:'symptoms', title:'Symptoms on the brain', short:'Symptoms', color:'#ff8a5c', symptoms:true,
+   view:{dir:[1,0.3,0.45], dist:4.0, tgt:[-6,-8,4]},
+   q:'Where do the voices come from?',
+   clues:[['No one is speaking','Yet the brain’s auditory cortex is active, as if it were hearing a real voice.'],['It’s the brain’s own speech','Broca’s area, which you use to talk (and to talk silently to yourself), is active at the same time.'],['A tagging error','Normally your brain tags inner speech as “mine.” If that tag fails, your own thoughts can sound like someone else.']],
+   hold:'Hold this question: how do you know that the voice in your head is you?',
+   secs:[{h:'Pick a symptom', p:'Each one changes both brains. Watch the left (typical) and right (schizophrenia) and read the study underneath.', symPicker:true}],
+   answer:'From the brain’s own speech system. During voices, Broca’s area (speech production) and the auditory cortex (hearing) are both active. Many researchers think the brain fails to recognize self-generated inner speech as its own, the same kind of prediction failure that explains why you can’t tickle yourself (Part II). Your voice is “you” because your brain predicted it.',
+   quiz:[{q:'Which symptom type is “flat affect”?', o:['Negative','Positive','Cognitive','None, it’s a side effect'], a:0, why:'Negative = subtraction: emotion is taken away from the face.'},
+         {q:'In the P50 test, the typical brain’s response to the second click is…', o:['Smaller: the thalamus and cortex filter it','Bigger','Identical','Absent in both groups'], a:0, why:'Sensory gating suppresses repeated input. In schizophrenia it’s often weaker.'},
+         {q:'Hypofrontality means…', o:['Less prefrontal activation during thinking tasks','Too much dopamine in the frontal lobe','A smaller hippocampus','Enlarged ventricles'], a:0, why:'Hypo = under. The prefrontal cortex fails to ramp up, linked to cognitive and negative symptoms.'}],
+   refs:['Shergill, S. S. et al. (2000). Mapping auditory hallucinations in schizophrenia using fMRI. Archives of General Psychiatry.','Jardri, R. et al. (2011). Cortical activations during auditory verbal hallucinations: a meta-analysis. American Journal of Psychiatry.','Howes, O. D. et al. (2012). The nature of dopamine dysfunction in schizophrenia. Archives of General Psychiatry.','Kapur, S. (2003). Psychosis as a state of aberrant salience. American Journal of Psychiatry.','Kircher, T. T. et al. (2001). Neural correlates of formal thought disorder in schizophrenia. Archives of General Psychiatry.','Juckel, G. et al. (2006). Dysfunction of ventral striatal reward prediction in schizophrenia. NeuroImage.','Weinberger, D. R., Berman, K. F. & Zec, R. F. (1986). Physiologic dysfunction of dorsolateral prefrontal cortex in schizophrenia. Archives of General Psychiatry.','Glahn, D. C. et al. (2005). Beyond hypofrontality: a quantitative meta-analysis of functional neuroimaging studies of working memory in schizophrenia. Human Brain Mapping.','Cho, R. Y., Konecky, R. O. & Carter, C. S. (2006). Impairments in frontal cortical gamma synchrony and cognitive control in schizophrenia. PNAS.','Adler, L. E. et al. (1982). Neurophysiological evidence for a defect in neuronal mechanisms involved in sensory gating in schizophrenia. Biological Psychiatry.']},
+
+ { id:'dopamine', title:'Dopamine and glutamate', short:'Neurotransmitters', color:'#ffcc33',
+   view:{dir:[1,0.35,0.55], dist:3.2, tgt:[-12,4,4]},
+   state:{ paths:['limbic','cortical','nigro'], rate:{A:{limbic:1, cortical:1, nigro:1}, B:{limbic:2.8, cortical:0.35, nigro:1}}, deep:{A:{nacc:0.8, caud:0.5, put:0.5, sn:0.6}, B:{nacc:1, caud:0.7, put:0.7, sn:0.6}}, hudMode:'dopa', dimDeep:0.035,
+     marks:{A:[['VTA',[-4,-16,-12]],['Nucleus accumbens',[-10,11,-8]],['Prefrontal cortex',[-38,34,28]]], B:[['Mesolimbic: LOUD',[-10,11,-8]],['Mesocortical: QUIET',[-38,34,28]]]} },
+   q:'Why does everything feel meaningful?',
+   clues:[['Amphetamine can cause psychosis','Drugs that flood the brain with dopamine can produce hallucinations and paranoia in healthy people.'],['Antipsychotics block dopamine','The stronger a drug blocks D2 dopamine receptors, the lower the dose needed to treat psychosis.'],['Dopamine marks importance','It doesn’t just mean pleasure; it tags things as “worth noticing.”']],
+   hold:'Hold this question: if a chemical makes things feel important, can feeling meaningful be trusted?',
+   mim:{title:'Limbic Loud, Cortex Quiet', lines:[['Mesolimbic pathway (VTA → nucleus accumbens): the volume is up too LOUD','positive symptoms: hallucinations, delusions'],['Mesocortical pathway (VTA → prefrontal cortex): the volume is too QUIET','negative and cognitive symptoms: flat affect, poor thinking']]},
+   secs:[
+     {h:'Watch the three dopamine pathways', p:'Each glowing dot is a burst of dopamine. Yellow: **mesolimbic** (reward and salience). Blue: **mesocortical** (thinking). Purple: **nigrostriatal** (movement). On the right, the yellow road is busy and the blue road is nearly empty.', demo:'dopa'},
+     {h:'The evidence', list:['**Amphetamine** (which releases dopamine) can trigger psychosis in healthy people and worsen it in patients.','**Antipsychotic potency matches D2 blocking:** drugs that bind D2 receptors more tightly work at lower doses (Seeman, 1976; Creese, 1976).','**PET studies:** the strongest finding is more dopamine *made and released* in the striatum (presynaptic). Differences in D2 receptor numbers are smaller and less consistent than older textbooks suggest.'], src:'Seeman et al., 1976; Creese et al., 1976; Howes et al., 2012'},
+     {h:'Not just dopamine: glutamate and GABA', list:['**Glutamate (NMDA receptors):** ketamine and PCP (“angel dust”) block NMDA receptors and can produce positive, negative *and* cognitive symptoms in healthy people, something amphetamine doesn’t do. NMDA (N-methyl-D-aspartate) is named after the chemical that activates it best in the lab.','**GABA:** inhibitory interneurons that keep brain rhythms in sync (the gamma rhythms on EEG) work less well, which may explain disorganized thinking.','**One story ties them together:** weaker glutamate signaling in the cortex may release the brake on midbrain dopamine neurons.'], src:'Javitt & Zukin, 1991; Krystal et al., 1994; Lewis et al., 2005'}],
+   answer:'Because dopamine is the brain’s “this matters” signal. In the mesolimbic pathway, too much of it makes random coincidences feel significant, and delusions are the mind’s attempt to explain them. Meanwhile too little in the mesocortical pathway quiets the prefrontal cortex that would normally check those explanations. The feeling of meaning is real; its source isn’t the world.',
+   quiz:[{q:'“Limbic loud, cortex quiet”: the loud pathway runs from the VTA to…', o:['The nucleus accumbens','The prefrontal cortex','The cerebellum','The hippocampus'], a:0, why:'Mesolimbic: VTA → nucleus accumbens. Too much dopamine there → positive symptoms.'},
+         {q:'Why is ketamine important to the glutamate hypothesis?', o:['It blocks NMDA receptors and can mimic positive, negative and cognitive symptoms','It increases dopamine like amphetamine','It cures schizophrenia','It blocks D2 receptors'], a:0, why:'Amphetamine mostly mimics positive symptoms; NMDA blockers mimic all three types.'}],
+   refs:['Seeman, P. et al. (1976). Antipsychotic drug doses and neuroleptic/dopamine receptors. Nature.','Creese, I., Burt, D. R. & Snyder, S. H. (1976). Dopamine receptor binding predicts clinical and pharmacological potencies of antischizophrenic drugs. Science.','Howes, O. D. & Kapur, S. (2009). The dopamine hypothesis of schizophrenia: version III. Schizophrenia Bulletin.','Javitt, D. C. & Zukin, S. R. (1991). Recent advances in the phencyclidine model of schizophrenia. American Journal of Psychiatry.','Krystal, J. H. et al. (1994). Subanesthetic effects of ketamine in humans. Archives of General Psychiatry.','Lewis, D. A., Hashimoto, T. & Volk, D. W. (2005). Cortical inhibitory neurons and schizophrenia. Nature Reviews Neuroscience.']},
+
+ { id:'structure', title:'A different brain?', short:'Structure', color:'#7ad7ff',
+   view:{dir:[0.55,0.85,0.35], dist:3.9, tgt:[-2,-14,6]},
+   state:{ vent:true, thin:{A:0, B:0.022}, deep:{A:{hip:1, thal:1}, B:{hip:1, thal:1}}, dimDeep:0.06,
+     hot:{B:[H('Prefrontal thinning',HS.dlpfcL,0.35,COOL,22), H('Temporal thinning',HS.stg,0.3,COOL,20)]},
+     marks:{A:[['Ventricles',[-12,-10,22]],['Hippocampus',[-29,-22,-14]],['Thalamus',[-12,-17,8]]], B:[['Ventricles: enlarged',[-18,-10,24]],['Hippocampus: smaller',[-29,-22,-14]],['Thinner cortex',[-42,32,30]]]} },
+   q:'Is the schizophrenic brain physically different?',
+   clues:[['Bigger fluid spaces','In 1976, some of the first CT scans in psychiatry showed enlarged ventricles in patients.'],['Twins tell the story','When only one identical twin has schizophrenia, the ill twin usually has larger ventricles and a smaller hippocampus.'],['Small, average differences','Total brain volume is only about 2% smaller on average. Many patients’ scans look normal.']],
+   hold:'Hold this question: Thomas Szasz said real illness needs a lesion. Do these findings prove him wrong?',
+   mim:{title:'Broken V-CHAT', lines:[['V = Ventricles','enlarged: fluid fills space where tissue is lost'],['C = Cortex (prefrontal)','less activity: negative and cognitive symptoms'],['H = Hippocampus','smaller: memory and emotion problems'],['A = Atrophy','thinner gyri, wider sulci'],['T = Thalamus','faulty sensory filter: overload']]},
+   secs:[
+     {h:'Compare the scans', img:['img/sz/ventricles.jpg','Enlarged ventricles in schizophrenia (left) versus a healthy brain (right). From your slides. This is a striking example; most differences are much subtler.']},
+     {h:'The twin study', p:'Richard Suddath and colleagues scanned 15 pairs of identical twins where only one twin had schizophrenia. Same genes, same family. In 12 of 15 pairs the ill twin had larger ventricles, often visible by eye, and in 14 of 15 a smaller left hippocampus. Genes load the risk, but something during development changed the brain.', src:'Suddath et al., 1990'},
+     {h:'What changes, on average', list:['**Ventricles:** larger, the most replicated finding since Johnstone’s CT scans (1976).','**Cortex:** thinner, especially frontal and temporal. On the right brain, the glass is pulled in where gray matter is lost (exaggerated so you can see it).','**Hippocampus:** smaller, particularly at the front.','**Thalamus:** smaller, with weaker connections to the prefrontal cortex.','**White matter:** weaker connections between regions, which is why some call schizophrenia a “disconnection” disorder.'], src:'Johnstone et al., 1976; Haijma et al., 2013; van Erp et al., 2016, 2018'},
+     {h:'Careful: what scans can and can’t tell you', p:'These are **group averages**. The ranges overlap heavily, and you can’t diagnose schizophrenia from one person’s MRI. Some changes also come partly from antipsychotic medication, smoking, stress or inactivity, not only the illness.'}],
+   answer:'On average, yes: larger ventricles, a thinner frontal and temporal cortex, a smaller hippocampus and weaker connections. But the differences are small and overlap with healthy people, so there’s no single lesion. Szasz was wrong that there’s “nothing there,” but right that you can’t point to one spot and say “that’s the illness.” It’s a brain network disorder.',
+   quiz:[{q:'The most replicated structural finding in schizophrenia is…', o:['Enlarged ventricles','A missing amygdala','A larger frontal lobe','A smaller cerebellum only'], a:0, why:'Since Johnstone et al. (1976), larger ventricles have been found again and again.'},
+         {q:'Why was the Suddath twin study so powerful?', o:['Identical twins share genes, so differences point to non-genetic causes','It scanned thousands of people','It used EEG instead of MRI','It proved schizophrenia is purely genetic'], a:0, why:'Same DNA, different illness, different brains.'}],
+   refs:['Johnstone, E. C. et al. (1976). Cerebral ventricular size and cognitive impairment in chronic schizophrenia. The Lancet.','Suddath, R. L. et al. (1990). Anatomical abnormalities in the brains of monozygotic twins discordant for schizophrenia. NEJM.','Haijma, S. V. et al. (2013). Brain volumes in schizophrenia: a meta-analysis in over 18 000 subjects. Schizophrenia Bulletin.','van Erp, T. G. M. et al. (2018). Cortical brain abnormalities in 4474 individuals with schizophrenia (ENIGMA). Biological Psychiatry.','Shenton, M. E. et al. (2001). A review of MRI findings in schizophrenia. Schizophrenia Research.','Cahn, W. et al. (2002). Brain volume changes in first-episode schizophrenia. Archives of General Psychiatry.']},
+
+ { id:'causes', title:'Where does it come from?', short:'Causes', color:'#5fe0a3', prune:true,
+   view:{dir:[0.85,0.45,0.75], dist:3.9, tgt:[-4,-10,10]},
+   state:{ hudMode:'prune', thinAge:true, hot:{A:[], B:[]}, marks:{} },
+   q:'Why does schizophrenia usually start in the late teens?',
+   clues:[['The teenage brain prunes','Adolescence trims unused synapses, especially in the prefrontal cortex. It’s normal and makes thinking more efficient.'],['A pruning gene','Variants of the C4 gene, which tags synapses for removal, raise schizophrenia risk.'],['Overactive cleaners','Microglia, the brain’s immune “Microcleaners” from the glia unit, eat tagged synapses, and may eat too many.']],
+   hold:'Hold this question: can a normal developmental process go too far?',
+   mim:{title:'DING', lines:[['D = Dopamine','neurotransmitter imbalance'],['I = Immune / inflammation','overactive microglia'],['N = Neurodevelopment','prenatal disruption'],['G = Genetics + environment','combined risk']]},
+   secs:[
+     {h:'Try it: prune the synapses', p:'Drag the age slider. Both brains prune as they mature (the cortex in the 3D view thins a little). In the schizophrenia model, microglia remove more synapses, especially in the prefrontal cortex.', demo:'prune', src:'Feinberg, 1982 (pruning hypothesis); Thompson et al., 2001 (gray-matter loss in early-onset schizophrenia)'},
+     {h:'Overactive “Microcleaners”', p:'PET scans with a tracer that sticks to activated microglia ([¹¹C]PBR28) found higher signal in people at ultra-high risk and in people with schizophrenia, and it tracked symptom severity in the high-risk group.', img:['img/sz/microglia.jpg','Microglial activity measured with PET (positron emission tomography) in healthy comparison subjects, ultra-high-risk participants and patients. Bloomfield et al. (2016), American Journal of Psychiatry. From your slides.'], more:['Be careful: the evidence is mixed','Later studies and a meta-analysis using similar tracers found the opposite (lower signal) in patients, partly because these tracers are hard to measure. The lab evidence is stronger: microglia-like cells grown from patients’ own cells removed more synapses than those from healthy people (Sellgren et al., 2019). Present this as a leading hypothesis, not a settled fact.'], src:'Bloomfield et al., 2016; Plavén-Sigray et al., 2018; Sellgren et al., 2019'},
+     {h:'The C4 gene: a tag for pruning', p:'The strongest genetic signal for schizophrenia sits in the immune MHC (major histocompatibility complex) region of chromosome 6. Steven McCarroll’s team traced it to **C4**, a complement-system gene. Complement proteins tag synapses, and microglia eat what’s tagged. Variants that make more C4 raise risk, and mice with more C4 prune more.', src:'Sekar et al., 2016; Yilmaz et al., 2021'},
+     {h:'Genetics: D-GPS', list:['**Heritability ~80%,** but an identical twin of someone with schizophrenia develops it only about **33–50%** of the time. Genes load the gun; environment pulls the trigger.','**Polygenic:** the largest study found 287 regions of the genome, each adding a tiny bit of risk.','**D**opamine (e.g., COMT) · **G**lutamate (NMDA) · **P**runing (C4) · **S**ynaptic communication'], src:'Hilker et al., 2018; Trubetskoy et al., 2022'},
+     {h:'The Hunger Winter (1944–1945)', p:'A Nazi blockade starved the western Netherlands. Children conceived at the height of the famine had about **twice** the risk of schizophrenia as adults. The risk was highest for exposure **around conception and early pregnancy** (the first trimester). Prenatal infections like influenza, especially in the first half of pregnancy, raise risk too.', img:['img/sz/hunger.jpg','The Dutch Hunger Winter, 1944–1945. From your slides.', true], src:'Susser et al., 1996; Brown et al., 2004'},
+     {h:'Other risk factors', list:['**Heavy cannabis use** in adolescence, especially high-potency cannabis (about 4–5 times the odds of psychosis for daily high-potency use in one large study).','**Urban upbringing** and **migration** (social stress and adversity).','**Older paternal age** and **childhood trauma**.'], src:'Di Forti et al., 2019; van Os et al., 2010'}],
+   answer:'Probably yes. The leading model is two hits: genes and early environment (famine, infection) make a vulnerable brain, then adolescent pruning, possibly overdriven by C4 and microglia, removes too many prefrontal connections. That’s why symptoms usually appear in the late teens and twenties, right when the prefrontal cortex is being finished.',
+   quiz:[{q:'What does the C4 gene do?', o:['Tags synapses for removal by microglia','Makes dopamine','Builds myelin','Controls breathing'], a:0, why:'C4 is a complement gene: it tags synapses, and microglia eat them.'},
+         {q:'In the Dutch Hunger Winter, when was famine exposure riskiest?', o:['Around conception and early pregnancy','Only in the last month of pregnancy','In adolescence','In old age'], a:0, why:'Susser et al. (1996): children conceived at the height of the famine had about twice the risk.'}],
+   refs:['Feinberg, I. (1982). Schizophrenia: caused by a fault in programmed synaptic elimination during adolescence? J. Psychiatric Research.','Thompson, P. M. et al. (2001). Mapping adolescent brain change reveals dynamic wave of accelerated gray matter loss in very early-onset schizophrenia. PNAS.','Sekar, A. et al. (2016). Schizophrenia risk from complex variation of complement component 4. Nature.','Sellgren, C. M. et al. (2019). Increased synapse elimination by microglia in schizophrenia patient-derived models. Nature Neuroscience.','Bloomfield, P. S. et al. (2016). Microglial activity in people at ultra high risk of psychosis and in schizophrenia: an [11C]PBR28 PET study. American Journal of Psychiatry.','Plavén-Sigray, P. et al. (2018). PET studies of the glial cell marker TSPO in psychosis: a meta-analysis. Biological Psychiatry.','Trubetskoy, V. et al. (2022). Mapping genomic loci implicates genes and synaptic biology in schizophrenia. Nature.','Susser, E. et al. (1996). Schizophrenia after prenatal famine: further evidence. Archives of General Psychiatry.','Brown, A. S. et al. (2004). Serologic evidence of prenatal influenza in the etiology of schizophrenia. Archives of General Psychiatry.','Di Forti, M. et al. (2019). The contribution of cannabis use to variation in the incidence of psychotic disorder across Europe. Lancet Psychiatry.']},
+
+ { id:'treatment', title:'Turning down the volume', short:'Treatment', color:'#c49bff',
+   view:{dir:[1,0.35,0.55], dist:3.2, tgt:[-12,4,4]},
+   state:{ paths:['limbic','cortical','nigro'], rate:{A:{limbic:1, cortical:1, nigro:1}, B:{limbic:2.8, cortical:0.35, nigro:1}}, deep:{A:{nacc:0.8, caud:0.5, put:0.5, sn:0.6}, B:{nacc:1, caud:0.7, put:0.7, sn:0.6}}, hudMode:'dopa', dimDeep:0.035, drugs:true,
+     marks:{B:[['D2 receptors: nucleus accumbens',[-10,11,-8]],['Nigrostriatal: movement',[-14,12,10]]]} },
+   q:'Can you turn down the volume without turning off the music?',
+   clues:[['Blocking works…','Antipsychotics block D2 dopamine receptors and quiet hallucinations and delusions.'],['…everywhere','The same blocking hits the movement pathway (tremor, stiffness) and doesn’t fix the “quiet cortex.”'],['A new key','Cobenfy (2024) lowers dopamine without directly blocking its receptors.']],
+   hold:'Hold this question: what would an ideal antipsychotic do differently?',
+   secs:[
+     {h:'Try it: give a medication', p:'Pick a drug and watch the right brain. Notice what quiets down and what gets caught in the crossfire.', demo:'drugs'},
+     {h:'Antipsychotics', list:['**First generation (FGAs, 1950s+, e.g., haloperidol):** strong D2 blockers. Good for positive symptoms; more movement side effects (EPS: extrapyramidal symptoms, named after the motor pathways outside the main “pyramidal” tract).','**Second generation (SGAs, e.g., risperidone, olanzapine):** block dopamine and serotonin. Fewer movement effects, more weight gain and diabetes risk.','**Clozapine:** the most effective for treatment-resistant schizophrenia (Kane et al., 1988), but needs blood monitoring.','**Long-acting injectables:** steady medication for weeks or months when taking daily pills is hard.']},
+     {h:'CATIE: is newer better?', p:'The CATIE trial (Clinical Antipsychotic Trials of Intervention Effectiveness) followed about 1,500 patients. **74% stopped their assigned drug within 18 months**, from side effects or lack of benefit. The older drug, perphenazine, did about as well as most newer ones. Takeaway: no single best drug; treatment has to be individualized.', src:'Lieberman et al., 2005'},
+     {h:'Side effects: tardive dyskinesia', p:'Long-term dopamine blocking can cause tardive (“late”) dyskinesia (“abnormal movement”): involuntary movements of the mouth, face and limbs. The risk is higher with older drugs.', video:['7GYbXYMLgzw','tardive dyskinesia movements']},
+     {h:'Cobenfy (xanomeline + trospium)', p:'Approved by the FDA in **September 2024**, the first antipsychotic that doesn’t work by directly blocking dopamine receptors. **Xanomeline** activates muscarinic (acetylcholine) M1 and M4 receptors in the brain, which turns down dopamine release in the striatum. **Trospium** blocks muscarinic receptors in the body (but doesn’t enter the brain), reducing nausea and other side effects. Developed by Karuna Therapeutics, bought by Bristol Myers Squibb for about $14 billion.', img:['img/sz/cobenfy.jpg','“F.D.A. Approves the First New Schizophrenia Drug in Decades.” The New York Times, Sept. 26, 2024. From your slides.', true], src:'Kaul et al., 2024 (EMERGENT-2, The Lancet)'},
+     {h:'Beyond medication', list:['**CBT for psychosis** (cognitive behavioral therapy): testing beliefs and coping with voices.','**Family interventions:** lower stress at home and reduce relapse.','**Social skills training** and supported employment.','**Coordinated specialty care** after a first episode (e.g., the RAISE study) improves outcomes when started early.'], src:'Pharoah et al., 2010 (Cochrane); Kane et al., 2016'},
+     {h:'Metabolic therapies? Highly speculative, but interesting', p:'Psychiatrist Christopher Palmer argues that some mental illnesses involve problems with brain energy metabolism, and reports cases improving on a ketogenic diet. This is based on case reports and small pilot studies; controlled trials are still underway.', video:['CSGXYg9_fZ4','Dr. Christopher Palmer on The Tim Ferriss Show']}],
+   answer:'Not perfectly, yet. Today’s antipsychotics turn down dopamine everywhere they reach: they quiet the loud mesolimbic pathway, but also the movement pathway (side effects) and do little for the already-quiet cortex. An ideal drug would turn down the loud pathway, turn up the quiet one and leave movement alone. Cobenfy is a step: it lowers dopamine release in a more targeted way. Medication works best alongside therapy and support.',
+   quiz:[{q:'Why do older antipsychotics cause tremor and stiffness?', o:['They also block dopamine in the nigrostriatal (movement) pathway','They damage the cerebellum','They raise serotonin','They block acetylcholine in the body'], a:0, why:'Same mechanism as Parkinson’s: less dopamine signaling in the striatum.'},
+         {q:'What’s new about Cobenfy?', o:['It lowers dopamine release via muscarinic receptors instead of blocking D2 directly','It’s a stronger D2 blocker','It’s a vaccine','It’s the first antipsychotic ever'], a:0, why:'Xanomeline acts on M1/M4 receptors; trospium blocks side effects outside the brain.'}],
+   refs:['Lieberman, J. A. et al. (2005). Effectiveness of antipsychotic drugs in patients with chronic schizophrenia (CATIE). NEJM.','Kane, J. et al. (1988). Clozapine for the treatment-resistant schizophrenic. Archives of General Psychiatry.','Kaul, I. et al. (2024). Efficacy and safety of xanomeline–trospium chloride in schizophrenia (EMERGENT-2). The Lancet.','Kane, J. M. et al. (2016). Comprehensive versus usual community care for first-episode psychosis (RAISE-ETP). American Journal of Psychiatry.','Pharoah, F. et al. (2010). Family intervention for schizophrenia. Cochrane Database of Systematic Reviews.','Palmer, C. M. (2022). Brain Energy. BenBella Books.']}
+];
+
+/* ============ Deep structures (schematic, MNI-placed) ============ */
+// S(x,y,z): MNI mm -> scene units. +x scene = subject's right? (S flips x) — we draw both hemispheres.
+const DEEP_DEF = {
+  thal:  {name:'Thalamus', color:'#3d8bff'},
+  hypo:  {name:'Hypothalamus', color:'#ff9f1c'},
+  pit:   {name:'Pituitary', color:'#ff6a2c'},
+  hip:   {name:'Hippocampus', color:'#22c77a'},
+  amy:   {name:'Amygdala', color:'#ff3355'},
+  ins:   {name:'Insula', color:'#a066ff'},
+  caud:  {name:'Caudate', color:'#2fc7d9'},
+  put:   {name:'Putamen', color:'#3a7bff'},
+  gp:    {name:'Globus pallidus', color:'#8fb8ff'},
+  nacc:  {name:'Nucleus accumbens', color:'#ffcc33'},
+  sn:    {name:'Substantia nigra', color:'#4a4a5e'},
+  stem:  {name:'Brainstem', color:'#c99a8a'},
+  cbl:   {name:'Cerebellum', color:'#b05cc0'}
+};
+function buildDeep(parent, mkMat){
+  const out = {}; Object.keys(DEEP_DEF).forEach(k => out[k] = {meshes:[], def:DEEP_DEF[k]});
+  const add = (k, m) => { m.userData.deep = k; parent.add(m); out[k].meshes.push(m); return m; };
+  const blob = (k, c, r, rot) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), mkMat(DEEP_DEF[k].color)); m.position.copy(S(...c)); m.scale.set(r[0]/80, r[2]/80, r[1]/80); if (rot) m.rotation.set(...rot); return add(k, m); };
+  const tubeK = (k, pts, r0, r1) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p)));
+    const g = new THREE.TubeGeometry(curve, 64, 1, 14); const P = g.attributes.position, n = 65, rs = 15, ctr = V();
+    for (let i=0;i<=64;i++){ const t = i/64, rad = (r0 + (r1 - r0)*t)/80; curve.getPointAt(t, ctr); for (let j=0;j<rs;j++){ const idx = i*rs + j; const v = V().fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rad).add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
+    g.computeVertexNormals(); const m = new THREE.Mesh(g, mkMat(DEEP_DEF[k].color)); m.userData.curve = curve; return add(k, m); };
+  [1, -1].forEach(s => {
+    blob('thal', [s*11,-17,6], [7,15,8]);
+    tubeK('hip', [[s*24,-8,-22],[s*28,-18,-16],[s*30,-28,-8],[s*27,-36,-1],[s*20,-40,6]], 6.5, 3);
+    blob('amy', [s*22,-4,-19], [7,8,7]);
+    blob('ins', [s*37,-4,4], [2.5,19,11]);
+    tubeK('caud', [[s*12,14,8],[s*14,4,16],[s*17,-10,20],[s*22,-24,16],[s*28,-32,6],[s*30,-26,-6]], 7, 2.2);
+    blob('put', [s*25,2,1], [6,14,9]);
+    blob('gp', [s*18,-3,-1], [4,8,5.5]);
+    blob('nacc', [s*10,11,-8], [4,5,4]);
+    blob('sn', [s*10,-18,-11], [3,6,2.2]);
+  });
+  blob('hypo', [0,-4,-11], [7,9,5.5]);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.12, 12), mkMat(DEEP_DEF.pit.color)); stalk.position.copy(S(0,1,-22)); stalk.rotation.x = 0.35; add('pit', stalk);
+  blob('pit', [0,4,-30], [6,5,4.5]);
+  tubeK('stem', [[0,-20,-6],[0,-26,-24],[0,-31,-40],[0,-38,-60],[0,-42,-72]], 12, 8);
+  blob('cbl', [0,-66,-36], [44,23,17]);
+  return out;
+}
+
+/* ============ Scene: two glass brains (typical | schizophrenia), one camera, split viewports ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const S = (x,y,z) => V(-x/80, (z-10)/80, (y+18)/80);   // MNI mm -> scene; subject's left = +x
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; renderer.setScissorTest(true); renderer.autoClear = false; stage.appendChild(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.4; controls.maxDistance = 9; controls.enablePan = false;
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
+
+/* ---- per-side materials ---- */
+function glassMat(){
+  const m = new THREE.MeshStandardMaterial({color:lin('#e8cfc4'), roughness:0.6, transparent:true, opacity:0.035, depthWrite:false, side:THREE.DoubleSide});
+  m.userData.u = { uRim:{value:0.38}, uThin:{value:0} };
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, m.userData.u);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aThin; uniform float uThin; varying vec3 vN2; varying vec3 vV2;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed -= normal * uThin * aThin;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvN2 = normalize(normalMatrix*normal); vV2 = normalize(-mvPosition.xyz);');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uRim; varying vec3 vN2; varying vec3 vV2;')
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'float fr = pow(1.0 - abs(dot(normalize(vN2), normalize(vV2))), 2.5); vec4 diffuseColor = vec4( diffuse, opacity + uRim*fr );'); };
+  m.customProgramCacheKey = () => 'szglass'; return m; }
+const NH = 8;   // activity hotspots per brain
+function actMat(){
+  return new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+    uniforms:{ uP:{value:Array.from({length:NH}, () => new THREE.Vector4(0,0,0,0.1))}, uC:{value:Array.from({length:NH}, () => new THREE.Vector3(1,0.5,0.2))}, uI:{value:new Float32Array(NH)}, uThin:{value:0}, uT:{value:0} },
+    vertexShader:`attribute float aThin; uniform float uThin; varying vec3 vW; varying vec3 vN; varying vec3 vV;
+      void main(){ vec3 p = position - normal*uThin*aThin; vec4 w = modelMatrix*vec4(p,1.0); vW = w.xyz; vN = normalize(normalMatrix*normal); vec4 mv = viewMatrix*w; vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+    fragmentShader:`uniform vec4 uP[${NH}]; uniform vec3 uC[${NH}]; uniform float uI[${NH}]; uniform float uT; varying vec3 vW; varying vec3 vN; varying vec3 vV;
+      void main(){ vec3 col = vec3(0.0); for (int i=0;i<${NH};i++){ float d = length(vW - uP[i].xyz)/uP[i].w; col += uC[i]*uI[i]*exp(-d*d); }
+        float face = 0.55 + 0.45*abs(dot(normalize(vN), normalize(vV)));
+        gl_FragColor = vec4(col*face*1.25, 1.0); }` }); }
+const deepMat = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.45, emissive:lin(c), emissiveIntensity:0.05, transparent:true, opacity:0.12, depthWrite:false});
+
+/* ---- ventricles (schematic lateral + third), scaled per side ---- */
+function buildVents(parent, k){
+  const mat = new THREE.MeshStandardMaterial({color:lin('#7ad7ff'), roughness:0.3, emissive:lin('#2a8fd0'), emissiveIntensity:0.25, transparent:true, opacity:0, depthWrite:false});
+  const ms = [];
+  const tubeR = (pts, rf) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p))); const g = new THREE.TubeGeometry(curve, 64, 1, 12); const P = g.attributes.position, ctr = V(), v = V();
+    for (let i=0;i<=64;i++){ const t = i/64; curve.getPointAt(t, ctr); for (let j=0;j<13;j++){ const idx = i*13 + j; v.fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rf(t)/80); v.y *= 1.0; v.add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
+    g.computeVertexNormals(); const m = new THREE.Mesh(g, mat); parent.add(m); ms.push(m); return m; };
+  [1, -1].forEach(s => {
+    // body + frontal horn + occipital horn + temporal horn, width grows with k
+    tubeR([[s*(8+2*k),26,8],[s*(10+3*k),10,18],[s*(12+4*k),-10,20],[s*(16+4*k),-30,14],[s*(20+3*k),-46,6],[s*(18+2*k),-58,2]], t => (t < 0.7 ? 3.2 + 3.4*Math.sin(Math.PI*Math.min(1, t/0.7)) : 3.5*(1 - (t - 0.7)/0.3) + 1)*(0.65 + 0.45*k));
+    tubeR([[s*(20+3*k),-40,8],[s*(28+2*k),-34,-4],[s*(30+2*k),-22,-14],[s*(28+2*k),-10,-20]], t => (2.6 - 1.4*t)*(0.65 + 0.45*k));
+  });
+  tubeR([[0,-4,0],[0,-14,2],[0,-24,0]], t => (1.4 + 0.8*Math.sin(Math.PI*t))*(0.6 + 0.5*k));
+  return {meshes:ms, mat}; }
+
+/* ---- dopamine pathways (left hemisphere) ---- */
+const PATH_DEF = {
+  limbic:  {c:'#ffcc33', pts:[[-4,-16,-12],[-6,-6,-13],[-8,4,-12],[-10,11,-8]]},
+  cortical:{c:'#7ad7ff', pts:[[-4,-16,-12],[-6,-4,-6],[-10,18,0],[-20,36,14],[-38,34,28]]},
+  nigro:   {c:'#c49bff', pts:[[-10,-18,-11],[-14,-10,0],[-16,4,10],[-14,12,10]]}
+};
+function buildPaths(parent){ const out = {};
+  Object.entries(PATH_DEF).forEach(([k, d]) => { const curve = new THREE.CatmullRomCurve3(d.pts.map(p => S(...p)));
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.017, 8), new THREE.MeshBasicMaterial({color:lin(d.c), transparent:true, opacity:0, depthWrite:false}));
+    m.renderOrder = 7; parent.add(m); out[k] = {curve, mesh:m, c:d.c}; }); return out; }
+
+/* ---- the two sides ---- */
+function mkScene(){ const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x554466, 0.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 6); sc.add(sun); const rim = new THREE.DirectionalLight(0xbcd2ff, 0.45); rim.position.set(-4, 2, -5); sc.add(rim); return sc; }
+const SIDES = [{key:'A', title:'Typical brain', color:'#7ad7ff'}, {key:'B', title:'Schizophrenia', sub:'group average', color:'#ff8a5c'}];
+SIDES.forEach(s => { s.scene = mkScene(); s.glass = glassMat(); s.act = actMat();
+  s.deep = buildDeep(s.scene, deepMat); Object.values(s.deep).forEach(o => o.meshes.forEach(m => { m.renderOrder = 4; }));
+  s.vent = buildVents(s.scene, s.key === 'B' ? 1.75 : 1); s.paths = buildPaths(s.scene); s.pulses = []; s.spawn = {limbic:0, cortical:0, nigro:0};
+  s.block = sprite('#ff5f7a', 0.0); s.block.position.copy(S(-10,11,-8)); s.scene.add(s.block); });
+// schizophrenia side: slightly smaller hippocampus (group-level ~5–10% volume reduction, exaggerated a little so it's visible)
+SIDES[1].deep.hip.meshes.forEach(m => { m.geometry.computeBoundingSphere(); const c = m.geometry.boundingSphere.center.clone(); if (m.geometry.type === 'TubeGeometry' || c.length() > 0.01){ m.geometry.translate(-c.x, -c.y, -c.z); m.position.add(c); } m.scale.multiplyScalar(0.86); });
+
+/* ---- cortex (shared geometry) ---- */
+const cortexMeshes = [];
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer, n = 32492, f = 64980; let off = 0;
+  const THIN = [1.0, 0.45, 0.9, 0.25];   // frontal, parietal, temporal, occipital (where gray-matter loss is greatest)
+  for (let h=0; h<2; h++){ const pos = new Int16Array(buf, off, n*3); off += n*6; const idx = new Uint16Array(buf, off, f*3); off += f*6; off += n; const lobe = new Uint8Array(buf, off, n); off += n;
+    const P = new Float32Array(n*3), A = new Float32Array(n);
+    for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z; A[i] = lobe[i] < 4 ? THIN[lobe[i]] : 0.2; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setAttribute('aThin', new THREE.BufferAttribute(A,1)); g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
+    SIDES.forEach(s => { const m = new THREE.Mesh(g, s.glass); m.renderOrder = 6; s.scene.add(m); const a = new THREE.Mesh(g, s.act); a.renderOrder = 8; s.scene.add(a); cortexMeshes.push(m); }); } }
+
+/* ---- pulses ---- */
+function pulse(side, key, opts={}){ const P = side.paths[key]; const sp = sprite(opts.c || P.c, opts.size || 0.24); sp.visible = false; side.scene.add(sp);
+  side.pulses.push({curve:P.curve, sp, t:-(opts.delay || 0), dur:opts.dur || 1.3, stopAt:opts.stopAt || 1, cb:opts.cb}); }
+function updPulses(side, dt){ for (let i=side.pulses.length-1;i>=0;i--){ const p = side.pulses[i]; p.t += dt; const k = p.t/p.dur; if (k < 0) continue; p.sp.visible = true;
+  if (k >= p.stopAt){ side.scene.remove(p.sp); side.pulses.splice(i,1); if (p.cb) p.cb(); continue; }
+  p.sp.position.copy(p.curve.getPointAt(k)); p.sp.material.opacity = p.stopAt < 1 && k > p.stopAt - 0.12 ? (p.stopAt - k)/0.12 : 1; } }
+
+/* ============ State ============ */
+const CHI = Object.fromEntries(CH.map((c, i) => [c.id, i]));
+const SYM_VIEW = { hall:{dir:[1,0.22,0.35], dist:3.9, tgt:[-22,-10,2]}, delu:{dir:[1,0.35,0.6], dist:3.1, tgt:[-10,0,0]}, salad:{dir:[1,0.2,0.3], dist:3.9, tgt:[-26,-14,6]},
+  flat:{dir:[0.9,0.15,0.9], dist:3.4, tgt:[-8,16,-4]}, wm:{dir:[0.75,0.5,1], dist:3.8, tgt:[-12,18,18]}, gate:{dir:[1,0.4,0.45], dist:3.4, tgt:[-10,-16,4]} };
+const state = { ch:null, sym:'hall', quiz:{}, drug:null, amph:false, age:12 };
+let T = 0, tween = null, hudMsg = '';
+const curState = () => { const c = state.ch ? CH[CHI[state.ch]] : null; if (!c) return {}; if (c.symptoms) return SYM[state.sym]; return c.state || {}; };
+
+/* ============ Applying a scene state ============ */
+const TGT = SIDES.map(() => ({hot:[], deep:{}, paths:{}, vent:0, thin:0, rate:{}}));
+function applyState(){ const st = curState();
+  SIDES.forEach((s, si) => { const t = TGT[si], K = s.key;
+    // hotspots: reset slots, then fill
+    const hs = ((st.hot || {})[K] || []).slice(0, NH);
+    for (let i=0;i<NH;i++){ const h = hs[i]; s.act.uniforms.uI.value[i] = 0;
+      if (h){ const p = S(...h.mni); s.act.uniforms.uP.value[i].set(p.x, p.y, p.z, h.r/80); s.act.uniforms.uC.value[i].copy(new THREE.Vector3(...lin(h.c).toArray())); } }
+    t.hot = hs.map(h => h.i); t.flick = ((st.flicker || {})[K]) || [];
+    const dim = st.dimDeep ?? 0.1; Object.keys(s.deep).forEach(k => t.deep[k] = ((st.deep || {})[K] || {})[k] ?? dim);
+    Object.keys(s.paths).forEach(k => t.paths[k] = (st.paths || []).includes(k) ? 0.6 : 0);
+    t.rate = Object.assign({}, ((st.rate || {})[K]) || {});
+    t.vent = st.vent ? 0.55 : 0; t.thin = st.thin ? (st.thin[K] || 0) : 0; t.thinAge = !!st.thinAge; });
+  HUDMODE = st.hudMode || null; hudMsg = st.hud || '';
+  buildTags(st); }
+
+/* ============ Labels ============ */
+let TAGS = [];
+function mkTag(html, world, side, cls='plabel'){ const el = document.createElement('div'); el.className = cls; el.innerHTML = html; labelsEl.appendChild(el); return {el, world, side}; }
+function buildTags(st){ labelsEl.innerHTML = ''; TAGS = [];
+  SIDES.forEach((s, si) => { ((st.marks || {})[s.key] || []).forEach(([t, mni]) => TAGS.push(mkTag(esc(t), S(...mni), si))); });
+  if (!state.ch) [['Prefrontal cortex',[-40,34,30]],['Striatum',[-16,8,6]],['Hippocampus',[-29,-22,-14]],['Thalamus',[-12,-17,8]]].forEach(([t, m]) => SIDES.forEach((s, si) => TAGS.push(mkTag(t, S(...m), si)))); }
+const _v = V();
+function placeTags(){ const vp = viewports(); TAGS.forEach(t => { const r = vp[t.side]; _v.copy(t.world).project(camera); if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05){ t.el.style.opacity = 0; return; }
+  t.el.style.opacity = 1; t.el.style.transform = `translate(${r.x + (_v.x*0.5+0.5)*r.w}px, ${r.top + (-_v.y*0.5+0.5)*r.h}px) translate(-50%, -140%)`; }); }
+
+/* ============ Viewports (left = typical, right = schizophrenia) ============ */
+const isNarrow = () => innerWidth <= 820;
+function viewports(){ const W = innerWidth, Hh = innerHeight; const sw = isNarrow() ? W : W - panel.offsetWidth; const h = isNarrow() ? Math.round(Hh*0.48) : Hh; const w = Math.floor(sw/2);
+  return [{x:0, top:0, w, h, y:Hh - h}, {x:w, top:0, w:sw - w, h, y:Hh - h}]; }
+const caps = SIDES.map((s, si) => { const d = document.createElement('div'); d.className = 'sidecap'; d.style.setProperty('--c', s.color); d.innerHTML = `<b>${s.title}</b>${s.sub ? `<span>${s.sub}</span>` : ''}`; document.body.appendChild(d); return d; });
+const divider = document.createElement('div'); divider.className = 'vdivider'; document.body.appendChild(divider);
+function resize(){ renderer.setSize(innerWidth, innerHeight); const vp = viewports(); camera.aspect = vp[0].w/vp[0].h; camera.updateProjectionMatrix();
+  caps.forEach((c, i) => { c.style.left = (vp[i].x + vp[i].w/2) + 'px'; }); divider.style.left = vp[1].x + 'px'; divider.style.height = vp[0].h + 'px'; }
+addEventListener('resize', resize);
+function viewOf(){ const c = state.ch ? CH[CHI[state.ch]] : null; const v = c ? (c.symptoms ? SYM_VIEW[state.sym] : c.view) : PAGE.homeView; return [S(...(v.tgt || [0,-20,0])), v.dist, V(...v.dir)]; }
+function fly(){ const [t0, d, dir] = viewOf(); const P = t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.3 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:t0.clone(), t0:performance.now(), dur:1100}; }
+controls.addEventListener('start', () => { tween = null; });
+
+/* ============ Selecting ============ */
+function selectCh(id){ state.ch = id; state.drug = null; state.amph = false; applyState(); fly(); renderPanel(); panel.scrollTop = 0;
+  try { history.replaceState(null, '', id ? '#' + id : location.pathname); } catch(e){} }
+function selectSym(k){ state.sym = k; applyState(); fly(); const y = panel.scrollTop; renderPanel(); panel.scrollTop = y; }
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>');
+const yt = (id, title) => `<figure class="video" data-yt="${id}"><div class="video-frame"><a class="yt-card" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"><span class="yt-play">▶</span><span class="yt-t">Watch on YouTube</span></a></div><figcaption><b>Video:</b> ${esc(title)} <a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Open on YouTube ↗</a></figcaption></figure>`;
+const fig = (src, cap, narrow) => `<figure class="figure${narrow ? ' narrow' : ''}"><img src="${src}" alt="${esc(cap)}" data-zoom loading="lazy"><figcaption>${fmt(cap)}</figcaption></figure>`;
+function mimageBlock(c){ const m = c.mim; if (!m) return '';
+  return `<section class="sec"><div class="eyebrow">Memory hint · ${esc(m.title)}</div><ul class="mlines">${m.lines.map(([s, mean]) => `<li><b>${esc(s)}</b> <span class="mean">${esc(mean)}</span></li>`).join('')}</ul></section>`; }
+function quizBlock(c){ const qs = c.quiz || []; if (!qs.length) return '';
+  return `<section class="quiz" aria-label="Check yourself"><div class="eyebrow">Check yourself</div>${qs.map((q, i) => { const pick = state.quiz[c.id + i];
+    return `<div class="qitem"><p class="q">${fmt(q.q)}</p><div class="qopts">${q.o.map((o, j) => `<button class="qopt" data-q="${i}" data-a="${j}" ${pick !== undefined ? 'disabled' : ''} aria-pressed="${pick === j}">${esc(o)}</button>`).join('')}</div>
+      ${pick !== undefined ? `<p class="qfb ${pick === q.a ? 'ok' : 'bad'}">${pick === q.a ? 'Right.' : `Not quite: it’s “${esc(q.o[q.a])}.”`} ${fmt(q.why)}</p>` : ''}</div>`; }).join('')}</section>`; }
+function symPicker(){ const s = SYM[state.sym];
+  return `<div class="symgroups">${SYM_ORDER.map(([k, l, d, ids]) => `<div class="symg sym-${k}"><div class="symh"><b>${l}</b><span>${d}</span></div><div class="chips">${ids.map(id => `<button class="chip" data-sym="${id}" aria-pressed="${state.sym === id}"><span class="dot"></span>${esc(SYM[id].name)}</button>`).join('')}</div></div>`).join('')}</div>
+    <div class="symcard"><div class="eyebrow">${esc(s.name)} · the study</div><h4>${esc(s.card.h)}</h4><p>${fmt(s.card.p)}</p><p class="src">Source: ${esc(s.card.src)}</p></div>
+    <p class="legend2"><span class="sw warm"></span>brightness = activity · left: typical · right: schizophrenia</p>`; }
+function secBlock(s){ return `<section class="sec">${s.h ? `<h3>${esc(s.h)}</h3>` : ''}${s.p ? `<p>${fmt(s.p)}</p>` : ''}
+  ${s.symPicker ? symPicker() : ''}
+  ${s.list ? `<ul class="blist">${s.list.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>` : ''}
+  ${s.demo ? `<div class="demo" data-demo="${s.demo}">${DEMO[s.demo].html()}</div>` : ''}
+  ${s.img ? fig(s.img[0], s.img[1], s.img[2]) : ''}${s.video ? yt(s.video[0], s.video[1]) : ''}${s.video2 ? yt(s.video2[0], s.video2[1]) : ''}
+  ${s.more ? `<details class="more"><summary>${esc(s.more[0])}</summary><p>${fmt(s.more[1])}</p></details>` : ''}${s.src ? `<p class="src">Source: ${esc(s.src)}</p>` : ''}</section>`; }
+function renderPanel(){
+  const c = state.ch ? CH[CHI[state.ch]] : null;
+  if (!c){
+    panel.style.setProperty('--c', PAGE.color);
+    panel.innerHTML = `<div><div class="eyebrow">${esc(PAGE.eyebrow)}</div><h2>${esc(PAGE.h2)}</h2></div>
+      <p class="lead">${fmt(PAGE.lead)}</p>
+      <div class="howto"><b>How each chapter works:</b> start with a question about the mind, compare the two brains, then come back and answer the question.</div>
+      <ol class="chlist">${CH.map((x, i) => `<li><button class="chrow" data-ch="${x.id}" style="--c:${x.color}"><span class="chn">${i + 1}</span><span><b>${esc(x.title)}</b><span class="chq">${esc(x.q)}</span></span></button></li>`).join('')}</ol>
+      <div class="caveat"><b>Read the brains carefully.</b> The right brain shows what studies find <i>on average</i>. Real brains vary a lot, the ranges overlap with healthy people, and no scan can diagnose schizophrenia on its own. Differences are exaggerated a little so you can see them.</div>
+      <div class="soon"><div class="eyebrow">Coming next in Psychopathology</div><span>Bipolar disorder · Depression · Anxiety · Personality disorders</span></div>`;
+  } else {
+    const i = CHI[c.id], prev = CH[i-1], next = CH[i+1];
+    panel.style.setProperty('--c', c.color);
+    panel.innerHTML = `<button class="back" id="toAll">← All chapters</button>
+      <div class="topic-head"><div class="eyebrow">Chapter ${i + 1} · ${esc(c.title)}</div><h2>${esc(c.q)}</h2></div>
+      <section class="mindq"><div class="eyebrow">The mind question</div><ol class="clues">${c.clues.map(([l, t]) => `<li><b>${esc(l)}</b><span>${fmt(t)}</span></li>`).join('')}</ol><p class="hold">${fmt(c.hold)}</p></section>
+      ${mimageBlock(c)}
+      ${(c.secs || []).map(secBlock).join('')}
+      <details class="answer"><summary><span class="eyebrow">Back to the question</span><b>${esc(c.q)}</b><span class="reveal">Think it over, then tap to see an answer</span></summary><p>${fmt(c.answer)}</p></details>
+      ${quizBlock(c)}
+      ${c.refs ? `<details class="refs"><summary>Sources</summary><ol>${c.refs.map(r => `<li>${esc(r)}</li>`).join('')}</ol></details>` : ''}
+      <div class="pager"><button class="btn" id="prevC">${prev ? '← ' + esc(prev.short || prev.title) : '← All chapters'}</button><button class="btn primary" id="nextC">${next ? esc(next.short || next.title) + ' →' : 'All chapters'}</button></div>`;
+    $('#toAll').onclick = () => selectCh(null); $('#prevC').onclick = () => selectCh(prev ? prev.id : null); $('#nextC').onclick = () => selectCh(next ? next.id : null);
+  }
+  panel.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => selectCh(b.dataset.ch));
+  panel.querySelectorAll('[data-sym]').forEach(b => b.onclick = () => selectSym(b.dataset.sym));
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quiz[c.id + b.dataset.q] = +b.dataset.a; const y = panel.scrollTop; renderPanel(); panel.scrollTop = y; });
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  panel.querySelectorAll('.demo').forEach(d => DEMO[d.dataset.demo].bind(d));
+}
+const lb = $('#lightbox'); lb.onclick = () => { lb.hidden = true; };
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (state.ch) selectCh(null); } });
+
+/* ============ Demos ============ */
+const DRUGS = { fga:['First-generation (haloperidol)','Blocks D2 receptors strongly, in every pathway it reaches. Hallucinations and delusions quiet down, but the movement pathway is blocked too (tremor, stiffness), and the quiet cortex stays quiet.'],
+  sga:['Second-generation (risperidone)','Blocks D2 and serotonin 5-HT2A receptors. Positive symptoms quiet down with less blocking of movement, but more weight gain and metabolic risk. Effects on negative symptoms are modest.'],
+  cob:['Cobenfy (xanomeline + trospium)','Activates muscarinic M1/M4 receptors, which turns down how much dopamine is released in the striatum. The loud pathway quiets without directly blocking D2, so movement side effects are rare; nausea and constipation are more common.'] };
+const DEMO = {
+  dopa:{ html:() => `<div class="tries"><button class="try" data-a="amph" aria-pressed="${state.amph}">💊 Give amphetamine to both</button></div><p class="muted">Amphetamine releases extra dopamine. Watch the typical brain’s yellow road get busy too, which is why stimulant psychosis can look like schizophrenia.</p>`,
+    bind(r){ const b = r.querySelector('[data-a=amph]'); b.onclick = () => { state.amph = !state.amph; b.setAttribute('aria-pressed', state.amph); hudMsg = state.amph ? '<b>Amphetamine:</b> dopamine release goes up in both brains. In healthy people, high doses can produce paranoia and hallucinations; in schizophrenia, it can worsen symptoms.' : (curState().hud || ''); }; } },
+  drugs:{ html:() => `<div class="chips">${[['','No medication'],['fga','First-generation'],['sga','Second-generation'],['cob','Cobenfy']].map(([k, l]) => `<button class="chip" data-drug="${k}" aria-pressed="${(state.drug || '') === k}"><span class="dot"></span>${l}</button>`).join('')}</div><p class="drugmsg">${state.drug ? `<b>${DRUGS[state.drug][0]}:</b> ${DRUGS[state.drug][1]}` : 'Untreated: the yellow (mesolimbic) road is loud, the blue (mesocortical) road is quiet.'}</p>`,
+    bind(r){ r.querySelectorAll('[data-drug]').forEach(b => b.onclick = () => { state.drug = b.dataset.drug || null; r.innerHTML = DEMO.drugs.html(); DEMO.drugs.bind(r); hudMsg = state.drug ? `<b>${DRUGS[state.drug][0]}</b> given to the schizophrenia brain.` : ''; }); } },
+  prune:{ html:() => `<label class="slider-row">Age <b class="agev">${state.age}</b><input type="range" min="12" max="25" step="1" value="${state.age}"></label><p class="muted">The panel at bottom left zooms into one prefrontal dendrite from each brain. Microglia (green) remove tagged synapses.</p>`,
+    bind(r){ const inp = r.querySelector('input'); inp.oninput = () => { state.age = +inp.value; r.querySelector('.agev').textContent = state.age; }; } }
+};
+
+/* ============ HUD canvas ============ */
+let HUDMODE = null;
+const hud = $('#hudCanvas'), hx = hud.getContext('2d'), HW = hud.width, HH = hud.height, hudTitle = $('#hudTitle'), hudText = $('#hudText');
+const SIG = {A:{limbic:0, cortical:0, nigro:0}, B:{limbic:0, cortical:0, nigro:0}};
+function drawDopa(){ const rows = [['limbic','Mesolimbic','#ffcc33'],['cortical','Mesocortical','#7ad7ff'],['nigro','Nigrostriatal','#c49bff']];
+  hx.font = '700 17px "Atkinson Hyperlegible", system-ui'; hx.textBaseline = 'middle';
+  hx.fillStyle = '#a3abbc'; hx.fillText('Typical', 210, 18); hx.fillText('Schizophrenia', 560, 18);
+  rows.forEach(([k, l, c], i) => { const y = 58 + i*62; hx.fillStyle = '#eceef4'; hx.fillText(l, 12, y);
+    ['A','B'].forEach((K, j) => { const x0 = 200 + j*350, w = 300; hx.fillStyle = '#1a2030'; hx.fillRect(x0, y - 14, w, 28); const v = clamp(SIG[K][k]/3, 0, 1); hx.fillStyle = c; hx.globalAlpha = 0.9; hx.fillRect(x0, y - 14, w*v, 28); hx.globalAlpha = 1;
+      hx.strokeStyle = '#6e7689'; hx.setLineDash([4,4]); hx.beginPath(); hx.moveTo(x0 + w/3, y - 18); hx.lineTo(x0 + w/3, y + 18); hx.stroke(); hx.setLineDash([]); }); });
+  hx.fillStyle = '#6e7689'; hx.font = '600 13px "Atkinson Hyperlegible", system-ui'; hx.fillText('dashed line = typical level · bars = dopamine reaching its target', 200, 228); }
+function drawP50(){ const t = (T % 2.4)/2.4; hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; hx.textBaseline = 'middle';
+  [['Typical', 1, 0.22, '#7ad7ff'], ['Schizophrenia', 0.8, 0.72, '#ff8a5c']].forEach(([l, a1, a2, c], j) => { const x0 = 20 + j*445, w = 415, y0 = 140;
+    hx.fillStyle = '#eceef4'; hx.fillText(l, x0, 20);
+    hx.strokeStyle = '#283044'; hx.beginPath(); hx.moveTo(x0, y0); hx.lineTo(x0 + w, y0); hx.stroke();
+    [0.15, 0.6].forEach((cx, k) => { hx.fillStyle = '#f4d27a'; hx.fillRect(x0 + cx*w - 1, 40, 2, 16); hx.fillText(k ? 'click 2' : 'click 1', x0 + cx*w - 24, 66); });
+    hx.strokeStyle = c; hx.lineWidth = 3; hx.beginPath();
+    for (let i=0;i<=200;i++){ const u = i/200; if (u > t) break; const x = x0 + u*w; let y = y0 + 3*Math.sin(u*90 + j);
+      const bump = (cx, a) => a*70*Math.exp(-Math.pow((u - cx - 0.04)/0.018, 2)); y -= bump(0.15, a1) + bump(0.6, a2); i ? hx.lineTo(x, y) : hx.moveTo(x, y); }
+    hx.stroke(); hx.lineWidth = 1;
+    hx.fillStyle = '#a3abbc'; hx.font = '600 14px "Atkinson Hyperlegible", system-ui'; hx.fillText(`2nd response: ${Math.round(a2/a1*100)}% of the 1st`, x0, 222); hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; }); }
+const SPINES = Array.from({length:44}, (_, i) => ({x:0.04 + 0.92*(i/43) + 0.01*Math.sin(i*7.1), up:i % 2 ? 1 : -1, len:0.6 + 0.4*Math.abs(Math.sin(i*3.3)), ord:Math.abs(Math.sin(i*12.9898)*43758.5453) % 1}));
+function drawPrune(){ const f = (state.age - 12)/13; hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; hx.textBaseline = 'middle';
+  [['Typical', 0.38], ['Schizophrenia', 0.6]].forEach(([l, maxCut], j) => { const x0 = 20 + j*445, w = 415, y0 = 125, cut = maxCut*f; let kept = 0;
+    hx.fillStyle = '#eceef4'; hx.fillText(l, x0, 18);
+    hx.strokeStyle = '#c9a0ff'; hx.lineWidth = 9; hx.lineCap = 'round'; hx.beginPath(); hx.moveTo(x0, y0); hx.bezierCurveTo(x0 + w*0.3, y0 - 12, x0 + w*0.7, y0 + 12, x0 + w, y0); hx.stroke();
+    SPINES.forEach(s => { const x = x0 + s.x*w, yb = y0 + 12*Math.sin((s.x - 0.5)*3), gone = s.ord < cut; if (gone){ if (j && s.ord > cut - 0.12){ hx.fillStyle = '#5fe0a3'; hx.globalAlpha = 0.85; hx.beginPath(); hx.arc(x, yb + s.up*30, 9 + 2*Math.sin(T*6 + s.x*20), 0, 7); hx.fill(); hx.globalAlpha = 1; } return; }
+      kept++; hx.strokeStyle = '#c9a0ff'; hx.lineWidth = 3; hx.beginPath(); hx.moveTo(x, yb); hx.lineTo(x, yb + s.up*30*s.len); hx.stroke(); hx.fillStyle = '#f4d27a'; hx.beginPath(); hx.arc(x, yb + s.up*(30*s.len + 4), 5, 0, 7); hx.fill(); });
+    hx.lineWidth = 1; hx.fillStyle = '#a3abbc'; hx.font = '600 14px "Atkinson Hyperlegible", system-ui'; hx.fillText(`Age ${state.age} · synapses kept: ${Math.round(kept/SPINES.length*100)}%`, x0, 222); hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; }); }
+function drawHud(){ const c = state.ch ? CH[CHI[state.ch]] : null; hud.hidden = !HUDMODE; hx.clearRect(0, 0, HW, HH);
+  if (HUDMODE === 'dopa') drawDopa(); else if (HUDMODE === 'p50') drawP50(); else if (HUDMODE === 'prune') drawPrune();
+  hudTitle.textContent = c ? (c.symptoms ? `Symptom · ${SYM[state.sym].name}` : `Chapter ${CHI[c.id] + 1} · ${c.title}`) : PAGE.hudTitle;
+  const msg = hudMsg || (c ? 'Drag to turn both brains. Pinch or scroll to zoom.' : PAGE.hudText); if (hudText.innerHTML !== msg) hudText.innerHTML = msg; }
+
+/* ============ Update ============ */
+const ease = (a, b, k) => a + (b - a)*k;
+let scatterT = 0;
+function updSide(s, si, dt){ const t = TGT[si], k = Math.min(1, dt*3.5), U = s.act.uniforms;
+  for (let i=0;i<NH;i++){ let goal = t.hot[i] || 0;
+    if (goal && t.flick.length && t.flick.some(f => f !== 'scatter')) goal *= 0.72 + 0.28*Math.sin(T*5.3 + i*2.1)*Math.sin(T*2.7 + i);
+    U.uI.value[i] = ease(U.uI.value[i], goal, k); }
+  if (t.flick.includes('scatter')){ scatterT -= dt; const n = t.hot.length;
+    if (scatterT <= 0){ scatterT = 0.7; for (let i=n;i<Math.min(NH, n + 3);i++){ const p = S(-52 + 30*Math.random(), -60 + 90*Math.random(), -10 + 40*Math.random()); U.uP.value[i].set(p.x, p.y, p.z, 8/80); U.uC.value[i].set(1, 0.55, 0.25); U.uI.value[i] = 0.3*Math.random() + 0.2; } }
+    for (let i=n;i<NH;i++) U.uI.value[i] *= Math.max(0, 1 - dt*1.6); }
+  Object.entries(s.deep).forEach(([key, o]) => o.meshes.forEach(m => { const g = t.deep[key] ?? 0.1; m.material.opacity = ease(m.material.opacity, g, k); m.material.depthWrite = g > 0.6; m.material.emissiveIntensity = g > 0.6 ? 0.1 + 0.06*Math.sin(T*3) : 0.02; }));
+  Object.entries(s.paths).forEach(([key, p]) => { p.mesh.material.opacity = ease(p.mesh.material.opacity, t.paths[key] || 0, k); p.mesh.visible = p.mesh.material.opacity > 0.01; });
+  s.vent.mat.opacity = ease(s.vent.mat.opacity, t.vent, k); s.vent.meshes.forEach(m => m.visible = s.vent.mat.opacity > 0.01);
+  const thin = t.thinAge ? ((state.age - 12)/13)*(si ? 0.026 : 0.007) : t.thin; s.glass.userData.u.uThin.value = ease(s.glass.userData.u.uThin.value, thin, k); U.uThin.value = s.glass.userData.u.uThin.value;
+  // dopamine pulses
+  const B = si === 1, drug = B ? state.drug : null; let blocked = false;
+  Object.keys(s.paths).forEach(key => { let r = t.rate[key] || 0; if (!r) return;
+    if (state.amph && key !== 'cortical') r *= 2.2;
+    if (drug === 'cob' && key === 'limbic') r *= 0.45;
+    if (drug === 'sga' && key === 'cortical') r *= 1.4;
+    s.spawn[key] += dt*r;
+    while (s.spawn[key] >= 1){ s.spawn[key] -= 1;
+      let stopAt = 1; if ((drug === 'fga' && key !== 'cortical') || (drug === 'sga' && (key === 'limbic' || (key === 'nigro' && Math.random() < 0.4)))){ stopAt = 0.86; }
+      pulse(s, key, {stopAt, dur:key === 'cortical' ? 1.8 : 1.3}); }
+    const eff = r*((drug === 'fga' && key !== 'cortical') ? 0.25 : (drug === 'sga' && key === 'limbic') ? 0.3 : (drug === 'sga' && key === 'nigro') ? 0.65 : 1);
+    SIG[s.key][key] = ease(SIG[s.key][key], eff, Math.min(1, dt*2));
+    if ((drug === 'fga' || drug === 'sga') && key === 'limbic') blocked = true; });
+  if (!Object.values(t.rate).some(Boolean)) Object.keys(SIG[s.key]).forEach(kk => SIG[s.key][kk] = 0);
+  const bs = blocked ? 0.32 + 0.05*Math.sin(T*6) : 0; s.block.scale.setScalar(ease(s.block.scale.x, bs, k)); s.block.visible = s.block.scale.x > 0.02;
+  updPulses(s, dt); U.uT.value = T; }
+
+/* ============ Loop ============ */
+let last = performance.now();
+function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt;
+  if (tween){ const kk = Math.min(1, (now - tween.t0)/tween.dur), e = kk < 0.5 ? 2*kk*kk : 1 - Math.pow(-2*kk + 2, 2)/2;
+    camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (kk >= 1) tween = null; }
+  controls.update(); SIDES.forEach((s, si) => updSide(s, si, dt)); drawHud();
+  renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
+  viewports().forEach((r, i) => { renderer.setViewport(r.x, r.y, r.w, r.h); renderer.setScissor(r.x, r.y, r.w, r.h); renderer.render(SIDES[i].scene, camera); });
+  placeTags(); requestAnimationFrame(frame); }
+resize();
+const start = (location.hash || '').slice(1); state.ch = CHI[start] !== undefined ? start : null; applyState(); renderPanel();
+{ const [t0, d, dir] = viewOf(); camera.position.copy(t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.3 : 1)))); controls.target.copy(t0); }
+loadCortex().catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
+requestAnimationFrame(frame);
+
+</script>
+<script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
+hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+</body></html>
