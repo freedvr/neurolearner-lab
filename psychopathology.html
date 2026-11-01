@@ -599,7 +599,7 @@ const deepMat = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.4
 
 /* ---- ventricles (schematic lateral + third), scaled per side ---- */
 function buildVents(parent, k){
-  const mat = new THREE.MeshStandardMaterial({color:lin('#7ad7ff'), roughness:0.3, emissive:lin('#2a8fd0'), emissiveIntensity:0.25, transparent:true, opacity:0, depthWrite:false});
+  const mat = new THREE.MeshStandardMaterial({color:lin('#d9fbff'), roughness:0.25, emissive:lin('#6fe3ff'), emissiveIntensity:0.35, transparent:true, opacity:0, depthWrite:false});
   const ms = [];
   const tubeR = (pts, rf) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p))); const g = new THREE.TubeGeometry(curve, 64, 1, 12); const P = g.attributes.position, ctr = V(), v = V();
     for (let i=0;i<=64;i++){ const t = i/64; curve.getPointAt(t, ctr); for (let j=0;j<13;j++){ const idx = i*13 + j; v.fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rf(t)/80); v.y *= 1.0; v.add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
@@ -653,6 +653,30 @@ function pulse(side, key, opts={}){ const P = side.paths[key]; const sp = sprite
 function updPulses(side, dt){ for (let i=side.pulses.length-1;i>=0;i--){ const p = side.pulses[i]; p.t += dt; const k = p.t/p.dur; if (k < 0) continue; p.sp.visible = true;
   if (k >= p.stopAt){ side.scene.remove(p.sp); side.pulses.splice(i,1); if (p.cb) p.cb(); continue; }
   p.sp.position.copy(p.curve.getPointAt(k)); p.sp.material.opacity = p.stopAt < 1 && k > p.stopAt - 0.12 ? (p.stopAt - k)/0.12 : 1; } }
+
+/* ---- real anatomy: BodyParts3D meshes (CC BY-SA 2.1 JP), fitted to MNI space; replace the schematic shapes ---- */
+const REAL = new Set(['thal','hypo','hip','amy','ins','caud','put','gp','stem','cbl']);
+async function loadRealDeep(){
+  const [meta, buf] = await Promise.all([fetch('data/deep.json').then(r => r.json()), fetch('data/deep.b64.txt').then(r => r.text()).then(t => { const bin = atob(t.trim()), u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return u.buffer; })]);
+  const geos = meta.map(p => { const q = new Int16Array(buf, p.off, p.nv*3), ix = new Uint16Array(buf, p.off + p.nv*6, p.nf*3), P = new Float32Array(p.nv*3);
+    for (let i=0;i<p.nv;i++){ const v = S(q[i*3]/50, q[i*3+1]/50, q[i*3+2]/50); P[i*3] = v.x; P[i*3+1] = v.y; P[i*3+2] = v.z; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setIndex(new THREE.BufferAttribute(ix, 1)); g.computeVertexNormals(); g.computeBoundingSphere();
+    return {p, g}; });
+  SIDES.forEach((s, si) => {
+    REAL.forEach(k => { const o = s.deep[k]; if (!o) return; const mat = o.meshes[0].material; o.meshes.forEach(m => s.scene.remove(m)); o.meshes = []; o.mat = mat; });
+    s.vent.meshes.forEach(m => s.scene.remove(m)); s.vent.meshes = [];
+    s.deep.cc = {meshes:[], def:{name:'Corpus callosum', color:'#e8dcc8'}}; const ccMat = deepMat('#e8dcc8');
+    geos.forEach(({p, g}) => { let mat, list;
+      if (p.g === 'vent'){ mat = s.vent.mat; list = s.vent.meshes; }
+      else if (p.g === 'cc'){ mat = ccMat; list = s.deep.cc.meshes; }
+      else if (s.deep[p.g]){ mat = s.deep[p.g].mat; list = s.deep[p.g].meshes; } else return;
+      const m = new THREE.Mesh(g, mat); m.renderOrder = 4; m.userData.deep = p.g;
+      // schizophrenia side: enlarged ventricles, smaller hippocampus (group-level differences, exaggerated a little to be visible)
+      // scene axes: x = left–right, y = up–down, z = front–back
+      const scl = !si ? null : p.g === 'hip' ? V(0.86, 0.86, 0.86) : p.k === 'vent3' ? V(1.7, 1.15, 1.0) : p.k === 'vent4' ? V(1.15, 1.1, 1.1) : p.g === 'vent' ? V(1.32, 1.22, 1.03) : null;
+      if (scl){ const c = g.boundingSphere.center; m.scale.copy(scl); m.position.set(c.x*(1 - scl.x), c.y*(1 - scl.y), c.z*(1 - scl.z)); }
+      s.scene.add(m); list.push(m); }); });
+}
 
 /* ============ State ============ */
 const CHI = Object.fromEntries(CH.map((c, i) => [c.id, i]));
@@ -736,6 +760,7 @@ function renderPanel(){
       <div class="howto"><b>How each chapter works:</b> start with a question about the mind, compare the two brains, then come back and answer the question.</div>
       <ol class="chlist">${CH.map((x, i) => `<li><button class="chrow" data-ch="${x.id}" style="--c:${x.color}"><span class="chn">${i + 1}</span><span><b>${esc(x.title)}</b><span class="chq">${esc(x.q)}</span></span></button></li>`).join('')}</ol>
       <div class="caveat"><b>Read the brains carefully.</b> The right brain shows what studies find <i>on average</i>. Real brains vary a lot, the ranges overlap with healthy people, and no scan can diagnose schizophrenia on its own. Differences are exaggerated a little so you can see them.</div>
+      <p class="src">3D deep structures: BodyParts3D, © The Database Center for Life Science, licensed under CC Attribution-Share Alike 2.1 Japan, fitted to MNI space. Cortex: Conte69 (Van Essen et al.). Nucleus accumbens, substantia nigra, VTA and pituitary are simplified shapes.</p>
       <div class="soon"><div class="eyebrow">Coming next in Psychopathology</div><span>Bipolar disorder · Depression · Anxiety · Personality disorders</span></div>`;
   } else {
     const i = CHI[c.id], prev = CH[i-1], next = CH[i+1];
@@ -850,7 +875,7 @@ function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; T
 resize();
 const start = (location.hash || '').slice(1); state.ch = CHI[start] !== undefined ? start : null; applyState(); renderPanel();
 { const [t0, d, dir] = viewOf(); camera.position.copy(t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 2.3 : 1)))); controls.target.copy(t0); }
-loadCortex().catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
+Promise.all([loadCortex(), loadRealDeep().then(applyState)]).catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
 requestAnimationFrame(frame);
 
 </script>
