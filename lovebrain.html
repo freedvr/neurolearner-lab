@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Love and Bonding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one glass brain with clickable social-brain regions; real MRI inset top-left; notes docked right; bottom sheet on phones. */
+:root{
+  color-scheme: dark;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
+  --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --panel-w:460px;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;overflow:hidden}
+img{max-width:100%}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--chalk);outline-offset:2px}
+
+#stage{position:fixed;inset:0;background:radial-gradient(ellipse 75% 70% at 38% 42%,var(--bg-2) 0%,var(--bg) 72%)}
+#stage canvas{display:block;touch-action:none;cursor:grab}
+#stage canvas.hovering{cursor:pointer}
+
+.brand{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);left:20px;z-index:5;pointer-events:none}
+.home-link{pointer-events:auto;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.home-link:hover{color:var(--fg)}
+.brand-sub{font-size:13px;font-weight:600;color:#ffd166;margin-top:2px}
+.brand h1{font-family:var(--f-display);font-weight:800;font-size:22px;letter-spacing:-.01em;margin:2px 0 0}
+
+/* scenario chips */
+.chips{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);left:300px;z-index:5;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.78);backdrop-filter:blur(6px);cursor:pointer;font-size:13.5px;white-space:nowrap}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--c,var(--chalk));background:color-mix(in srgb,var(--c,var(--chalk)) 24%,rgba(17,21,30,.9));font-weight:700}
+.chip .dot{width:9px;height:9px;border-radius:50%;background:var(--c,var(--chalk))}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(17,21,30,.78);backdrop-filter:blur(6px)}
+.seg button{border:0;background:none;padding:7px 12px;font-size:13.5px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--chalk);color:#16130a;font-weight:700}
+.toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 106px);left:20px;max-width:340px;z-index:5;background:rgba(17,21,30,.92);border:1px solid var(--line);border-left:3px solid var(--c,var(--chalk));border-radius:0 10px 10px 0;padding:10px 12px;font-size:13.5px;color:var(--fg);backdrop-filter:blur(6px)}
+.toast b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:2px}
+.toast .term{margin-top:4px;display:inline-block}
+
+/* lab instruments */
+.lab{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(420px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:10px}
+.lab-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.readout{font-family:var(--f-display);font-weight:800;font-size:34px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.readout small{font-size:15px;color:var(--muted);font-weight:600;margin-left:3px}
+.phase{font-size:13px;color:var(--muted);min-height:20px}
+.phase b{color:var(--fg)}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
+.btn{padding:9px 15px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+.btn.small{padding:6px 11px;font-size:13px}
+.states{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.state{padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--faint)}
+.state.on{color:#16130a;font-weight:700}
+.state.closed.on{background:#8ea3c4}.state.open.on{background:var(--na)}.state.inact.on{background:#ff8f8f}
+.state.k.on{background:var(--k)}
+#trace{width:100%;height:120px;display:block;border-radius:8px;background:#0b0e14}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:0}
+
+.mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
+.mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
+.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+
+/* labels on the neuron */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.plabel{width:max-content;position:absolute;left:0;top:0;transform:translate(-50%,-140%);font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:rgba(11,14,20,.85);border:1px solid var(--line);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.plabel.hot{border-color:var(--chalk);color:var(--chalk)}
+.plabel.ion{font-weight:400;font-family:var(--f-mono);font-size:11.5px}
+
+/* panel */
+#panel{box-sizing:border-box;position:fixed;top:0;right:0;bottom:0;width:var(--panel-w);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;z-index:6;padding:calc(env(safe-area-inset-top,0px) + 24px) 26px calc(env(safe-area-inset-bottom,0px) + 26px);display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+#panel h2{font-family:var(--f-display);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.015em;margin:4px 0 0;text-wrap:balance}
+#panel p{margin:0;color:var(--fg);max-width:62ch}
+#panel .lead{color:var(--muted)}
+.topic-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.topic-btn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.topic-btn:hover{border-color:var(--c)}
+.topic-btn .k{font-family:var(--f-mono);font-size:11px;color:var(--c);letter-spacing:.06em}
+.topic-btn b{font-family:var(--f-display);font-size:17px}
+.back{align-self:flex-start;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:14px}
+.back:hover{color:var(--fg)}
+.topic-head .eyebrow{color:var(--c)}
+.blist{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.blist li::marker{color:var(--c)}
+.figure{margin:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;display:flex;flex-direction:column;gap:8px}
+.figure img{display:block;width:100%;border-radius:7px;cursor:zoom-in;background:#fff}
+.figure.narrow img{width:auto;max-height:300px;margin:0 auto}
+.figure figcaption{font-size:12.5px;color:var(--muted)}
+.mn{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mn-title{padding:8px 12px;background:color-mix(in srgb,var(--c) 18%,var(--raise));font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase}
+.mn-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.mn-row .L{font-family:var(--f-display);font-weight:800;font-size:28px;line-height:1;color:var(--c);text-align:center}
+.mn-row b{font-family:var(--f-display);font-size:16px}
+.mn-row .mem{display:block;color:var(--chalk);font-weight:700;font-size:14px}
+.mn-row .det{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+.pairs{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pairs div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;padding:8px 12px;border-top:1px solid var(--line);font-size:14px}
+.pairs div:first-child{border-top:0}
+.see3d{display:inline-block;margin-top:4px;background:none;border:0;padding:0;color:var(--c,#f4d27a);font:inherit;font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pairs dt{color:var(--muted);margin:0}.pairs dd{margin:0}
+.tries{display:flex;flex-wrap:wrap;gap:8px}
+.try{border:1px dashed var(--c);background:color-mix(in srgb,var(--c) 10%,transparent);color:var(--fg);padding:8px 13px;border-radius:9px;cursor:pointer;font-weight:700;font-size:13.5px}
+.try:hover{background:color-mix(in srgb,var(--c) 22%,transparent)}
+.parts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.part{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--raise)}
+.part b{display:block;font-size:14px}
+.part span{display:block;font-size:12.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.part:hover,.part:focus-visible{border-color:var(--c)}
+.part[aria-pressed="true"]{border-color:var(--chalk);background:color-mix(in srgb,var(--chalk) 14%,var(--raise))}
+.case{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;cursor:pointer;border-left:3px solid var(--c);padding:10px 12px;background:rgba(0,0,0,.22);border-radius:0 8px 8px 0;font-size:14px}
+.case:hover,.case:focus-visible{background:color-mix(in srgb,var(--c) 14%,rgba(0,0,0,.2))}
+.case .eyebrow{color:var(--c)}
+.go-card{display:flex;flex-direction:column;gap:3px;text-decoration:none;color:var(--fg);border:1px solid var(--c);border-radius:10px;padding:12px 14px;background:color-mix(in srgb,var(--c) 14%,var(--raise))}
+.go-card b{font-family:var(--f-display);font-size:17px}
+.go-card:hover{background:color-mix(in srgb,var(--c) 24%,var(--raise))}
+.case-go{font-size:12.5px;color:var(--c);font-weight:700;margin-top:2px}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.qa .q{font-weight:700}
+.qa .a{color:var(--muted);font-size:14px}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:6px}
+.note{font-size:12.5px;color:var(--faint)}
+.term{all:unset;cursor:pointer;font-weight:700;border-bottom:2px solid var(--c,var(--chalk));padding:0 1px;border-radius:2px;background:color-mix(in srgb,var(--c,var(--chalk)) 14%,transparent)}
+.term:hover,.term:focus-visible{background:color-mix(in srgb,var(--c,var(--chalk)) 30%,transparent)}
+
+/* cards */
+#card[hidden]{display:none}
+#card{position:fixed;inset:0;right:var(--panel-w);z-index:8;display:grid;place-items:center;padding:24px;background:rgba(8,10,14,.55);backdrop-filter:blur(3px)}
+.card-sheet{width:min(640px,100%);max-height:100%;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.5);overscroll-behavior:contain}
+.card-top{position:sticky;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 20px 12px;background:var(--panel);border-bottom:1px solid var(--line);z-index:1}
+.card-top .eyebrow{color:var(--c)}
+.card-top h3{font-family:var(--f-display);font-weight:800;font-size:24px;line-height:1.1;margin:3px 0 0;text-wrap:balance}
+.close{flex:none;width:36px;height:36px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-size:20px;line-height:1}
+.card-body{padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.cfig{margin:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.cfig svg{display:block;width:100%;height:auto}.cfig figcaption{font-size:13px;color:var(--muted);padding:8px 12px}
+.card-body p{margin:0;max-width:62ch}
+.refs{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.refs summary{cursor:pointer;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+.refs ol{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;overflow-wrap:anywhere}
+#lightbox[hidden]{display:none}
+#lightbox{position:fixed;inset:0;background:rgba(5,7,10,.94);z-index:12;display:grid;place-items:center;padding:24px;cursor:zoom-out}
+#lightbox img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;background:#fff}
+#loading{position:fixed;left:0;right:var(--panel-w);top:46%;text-align:center;font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);z-index:1}
+
+.plabel.big{font-size:15px;padding:4px 11px}
+.plabel .eyebrow{font-size:10px}
+.scene-hud{display:none}
+#panel > *{flex-shrink:0}
+body[data-scene="bump"] .lab-only, body[data-scene="membrane"] .lab-only{display:none!important}
+body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:flex}
+.hud-row{display:flex;flex-wrap:wrap;gap:8px}
+.hud-btn{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13.5px}
+.hud-btn[aria-pressed="true"]{background:var(--c,var(--chalk));color:#16130a;border-color:var(--c,var(--chalk))}
+.hud-btn:hover{border-color:var(--muted)}
+.bump-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.bump-pick button{padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;text-align:center}
+.bump-pick b{display:block;font-family:var(--f-display);font-size:24px;line-height:1;color:var(--c)}
+.bump-pick span{font-size:11.5px;color:var(--muted)}
+.bump-pick button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--raise))}
+.mn-pick{all:unset;box-sizing:border-box;cursor:pointer;width:100%}
+.mn-pick:hover .mn-row,.mn-pick:focus-visible .mn-row{background:color-mix(in srgb,var(--c) 10%,transparent)}
+.mn-pick[aria-pressed="true"] .mn-row{background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mn-hint{font-size:12px;color:var(--faint);padding:6px 12px;border-top:1px solid var(--line)}
+@media (max-width:1180px){ .mimage{display:none} }
+@media (max-width:820px){
+  :root{--panel-w:0px}
+  #panel{width:auto;top:auto;left:0;height:46%;border-left:0;border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:18px 18px calc(env(safe-area-inset-bottom,0px) + 20px)}
+  #panel h2{font-size:24px}
+  .brand h1{font-size:17px}
+  .chips{left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:4px}
+  .toast{display:none}
+  .lab{left:10px;right:10px;width:auto;bottom:calc(46% + 8px);padding:10px 12px;gap:7px}
+  #trace,.states{display:none}
+  .phase{font-size:12.5px}
+  .readout{font-size:26px}
+  .legend{display:none}
+  #card{right:0;padding:0} .card-sheet{border-radius:0;height:100%;max-height:none}
+  .pairs div{grid-template-columns:110px minmax(0,1fr)}
+  .parts{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.hud{position:fixed;left:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:min(520px,calc(100vw - var(--panel-w) - 40px));background:rgba(15,19,28,.92);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px);display:flex;flex-direction:column;gap:8px}
+#hudCanvas{width:100%;height:auto;display:block;border-radius:8px}
+#hudText{font-size:13.5px;color:var(--muted);min-height:40px}
+#hudText b{color:var(--fg)}
+.plabel{width:max-content}
+.plabel.elec{font-family:var(--f-mono);font-size:10.5px;padding:1px 5px;font-weight:500;background:rgba(11,14,20,.75)}
+.mlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.mbtn{width:100%;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;text-align:left;padding:10px 13px;border-radius:10px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.mbtn:hover,.mbtn:focus-visible{border-color:var(--c)}
+.mbtn .mn{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:#0b0e14;font-family:var(--f-display);font-weight:800;font-size:16px}
+.mbtn b{display:block;font-family:var(--f-display);font-size:16.5px}
+.mbtn span span{display:block;font-size:12.5px;color:var(--muted)}
+.rw{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.rw::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--k)}
+.rwkey{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.chart svg{width:100%;height:auto;display:block}
+.chart .pt{cursor:pointer}
+.chart .pt:hover text,.chart .pt:focus text{fill:var(--chalk)}
+.chart{background:var(--bg)}
+.long{color:var(--muted);font-size:14px;margin-top:2px}
+.mem-line{font-family:var(--f-display);font-weight:700;font-size:17px;color:var(--chalk);line-height:1.3}
+.specs dt{color:var(--muted)}
+.cases{display:flex;flex-direction:column;gap:8px}
+.try[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 30%,transparent);border-style:solid}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.quiz .q{font-weight:700;margin:0}
+.qopts{display:flex;flex-wrap:wrap;gap:6px}
+.qopt{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:700;font-size:13px}
+.qopt:hover:not(:disabled){border-color:var(--chalk)}
+.qopt[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+.qfb{margin:0;font-size:14px}
+.qfb.ok{color:#5fe0a3}.qfb.bad{color:#ffb0a0}
+.fm{border:1px solid var(--c);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.fm-steps{display:flex;flex-direction:column;gap:6px}
+.fms{padding:8px 10px;border-radius:8px;border:1px solid var(--line);opacity:.45;font-size:13.5px}
+.fms b{display:block}
+.fms.on{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+.fms.done{opacity:.75}
+#panel a{color:var(--chalk)}
+.qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
+@media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+#stage{background:radial-gradient(ellipse 75% 70% at 38% 42%,#1a2034 0%,#0d1018 66%,#090b10 100%)}
+.video{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#000}
+.video-frame{position:relative;aspect-ratio:16/9}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video figcaption{background:var(--raise);padding:9px 12px;font-size:13px;color:var(--muted)}
+.video figcaption b{color:var(--fg)}
+.yt-card{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-decoration:none;color:#fff;background:radial-gradient(ellipse at center,#2a1420 0%,#0b0e14 75%)}
+.yt-card .yt-play{width:74px;height:52px;border-radius:14px;background:#ff0033;display:grid;place-items:center;font-size:26px;box-shadow:0 8px 30px rgba(255,0,51,.35)}
+.yt-card .yt-t{font-weight:700;font-size:14px}
+.sec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--line)}
+.sec h3{margin:0;font-family:var(--f-display);font-size:19px;line-height:1.2}
+.sec p{margin:0}
+.lab-c{color:var(--c)}
+.src{font-size:12px;color:var(--faint)}
+.muted{color:var(--muted)}
+.more summary{cursor:pointer;color:var(--c);font-weight:700;font-size:14px}
+.more p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.mindq{background:color-mix(in srgb,var(--c) 12%,var(--raise));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.mindq .eyebrow{color:var(--c)}
+.clues{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:9px}
+.clues li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;column-gap:10px}
+.clues li::before{content:counter(c);grid-row:span 2;width:26px;height:26px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center;font-size:14px}
+.clues b{font-size:15px}.clues span{color:var(--muted);font-size:14px}
+.hold{margin:0;font-style:italic;color:var(--fg)}
+.mlines{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.mlines li::marker{color:var(--c)}
+.mlines .mean{color:var(--chalk);font-size:13.5px}
+.mim-soon{font-size:14px;color:var(--muted);background:var(--raise);border:1px dashed var(--line);border-radius:10px;padding:8px 12px}
+.answer{border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;background:var(--raise);padding:12px 16px}
+.answer summary{cursor:pointer;display:flex;flex-direction:column;gap:3px;list-style:none}
+.answer summary::-webkit-details-marker{display:none}
+.answer summary .eyebrow{color:var(--c)}
+.answer summary b{font-family:var(--f-display);font-size:17px}
+.answer .reveal{font-size:13px;color:var(--c);font-weight:700}
+.answer[open] .reveal{display:none}
+.answer p{margin:10px 0 0}
+.nextup{font-weight:700;color:var(--chalk);font-size:14px}
+.howto{font-size:14px;color:var(--muted);background:var(--raise);border-radius:10px;padding:10px 12px}
+.howto b{color:var(--fg)}
+.chlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.chrow{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:9px 11px;border-radius:11px;border:1px solid var(--line);background:var(--raise);cursor:pointer}
+.chrow:hover,.chrow:focus-visible{border-color:var(--c)}
+.chn{width:30px;height:30px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center}
+.chrow b{display:block;font-family:var(--f-display);font-size:16px}
+.chq{display:block;color:var(--muted);font-size:13.5px}
+.demo{display:flex;flex-direction:column;gap:8px}
+.wcst{display:flex;flex-direction:column;gap:10px}
+.wtargets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.wt{padding:0;border:2px solid transparent;border-radius:9px;background:none;cursor:pointer}
+.wt:hover,.wt:focus-visible{border-color:var(--c)}
+.wc{display:block;width:100%;height:auto}
+.wrow{display:grid;grid-template-columns:80px 1fr;gap:12px;align-items:start}
+.wcur svg{width:80px}
+.wlog{margin:0}.wstats{margin:4px 0 8px;font-size:13px}
+b.ok{color:#5fe08a}b.bad{color:#ff7a7a}
+.illu{display:flex;flex-direction:column;gap:8px}
+.illu svg,.illu img{width:100%;height:auto;border-radius:10px;display:block;background:#f6f3ee}
+.hb{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.hbt{font-family:var(--f-display);font-size:44px;font-weight:800;color:var(--muted)}
+.hbt.on{color:var(--c)}
+.hb .num{width:80px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit}
+.drmw{font-family:var(--f-display);font-size:34px;font-weight:800;text-align:center;padding:14px;background:var(--raise);border-radius:12px}
+.drmt{display:flex;flex-direction:column;gap:6px}
+.drmq{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center}
+.drmq .qopt{padding:5px 12px}
+.steps{display:flex;flex-direction:column;gap:6px}
+.stp{display:flex;flex-direction:column;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--raise);opacity:.45;transition:opacity .4s,border-color .4s}
+.stp.on{opacity:1;border-color:var(--c)}
+.stp span{font-size:13.5px;color:var(--muted)}
+.rpe canvas{width:100%;height:auto;border-radius:10px;display:block}
+.rpe .seg{display:flex;flex-wrap:wrap;gap:6px}
+.qitem{display:flex;flex-direction:column;gap:8px}
+.quiz{gap:14px}
+.figure img{background:#f6f3ee}
+.figure.narrow img{max-height:300px;object-fit:contain}
+.plabel{font-size:12px}
+
+#hudCanvas{width:100%;height:auto;display:block}
+#hudCanvas[hidden]{display:none}
+.hud{width:min(560px,calc(100vw - var(--panel-w) - 40px))}
+#panel .chips{position:static;display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start;overflow:visible;padding:0}
+.sidecap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 108px);transform:translateX(-50%);z-index:4;text-align:center;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:1px}
+.sidecap b{font-family:var(--f-display);font-size:18px;color:var(--c);background:rgba(11,14,20,.7);padding:3px 12px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 50%,transparent)}
+.sidecap span{font-size:12px;color:var(--muted)}
+.vdivider{position:fixed;top:0;width:1px;background:linear-gradient(transparent,var(--line) 20%,var(--line) 80%,transparent);z-index:3;pointer-events:none}
+.symgroups{display:flex;flex-direction:column;gap:10px}
+.symg{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--raise)}
+.symh{display:flex;flex-direction:column;margin-bottom:6px}.symh b{font-family:var(--f-display);font-size:15px}.symh span{font-size:12.5px;color:var(--muted)}
+.sym-pos .chip{--c:#ff8a5c}.sym-neg .chip{--c:#7ad7ff}.sym-cog .chip{--c:#c49bff}
+.symcard{border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:12px;padding:12px 14px;background:color-mix(in srgb,var(--c) 8%,var(--raise))}
+.symcard h4{margin:4px 0 6px;font-family:var(--f-display);font-size:17px}.symcard p{margin:0 0 6px;font-size:14px}
+.legend2{font-size:12.5px;color:var(--muted);margin:0}.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:#ff9a3c}
+.caveat{font-size:13.5px;color:var(--muted);background:var(--raise);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.caveat b{color:var(--fg)}
+.soon{font-size:13.5px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.drugmsg{font-size:14px;margin:8px 0 0}.agev{color:var(--c);margin:0 6px}
+@media (max-width:820px){ .sidecap{top:calc(env(safe-area-inset-top,0px) + 92px)} .sidecap b{font-size:14px} .hud{width:auto} }
+@media (max-width:820px){ #hudCanvas{display:none} .plabel{font-size:10.5px;padding:2px 6px} }
+
+.stagebtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);z-index:6;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.9);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer;backdrop-filter:blur(8px)}
+.stagebtn:hover{border-color:var(--chalk)}.stagebtn[aria-pressed="true"]{background:var(--chalk);color:#16130a;border-color:var(--chalk)}
+@media (max-width:820px){ .stagebtn{right:12px;top:calc(env(safe-area-inset-top,0px) + 14px);font-size:12px;padding:6px 10px} }
+
+.pctrl{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.pctrl .seg{display:flex;flex-wrap:wrap;gap:6px}
+.pctrl .seg button{flex:1 1 45%;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--raise);cursor:pointer;font-weight:700;font-size:13px;color:var(--fg)}
+.pctrl .seg button[aria-pressed="true"]{background:var(--c);color:#0b0e14;border-color:var(--c)}
+.spv{color:var(--c);margin:0 6px}
+
+#labels .simtag{pointer-events:auto;cursor:pointer;font-weight:700;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;gap:6px}
+#labels .simtag:hover{background:#f4d27a;color:#16130a}
+.sdot{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 8px currentColor}
+.simgrid{display:flex;flex-direction:column;gap:8px}.simg{display:flex;flex-direction:column;gap:6px}
+.simbtn{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:8px 12px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--sc);background:var(--raise);cursor:pointer;color:var(--fg)}
+.simbtn span{font-size:12.5px;color:var(--muted)}.simbtn[aria-pressed="true"]{background:color-mix(in srgb,var(--sc) 22%,var(--raise));border-color:var(--sc)}
+#sim{position:fixed;top:0;z-index:7;background:rgba(8,10,16,.94);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:10px;padding:96px 22px 22px;overflow:auto}
+#sim .simhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}#sim h3{margin:2px 0 0;font-family:var(--f-display);font-size:24px}
+.simbox{flex:1;min-height:0}.simnote{font-size:13px;color:var(--muted);margin:0}
+.simscene{display:flex;flex-direction:column;gap:12px;height:100%;position:relative}
+.simscene .task{margin:0;color:var(--muted)}.simscene .read{font-size:22px;line-height:1.45;margin:0;font-family:var(--f-display)}
+.whispers{position:absolute;inset:0;pointer-events:none}.whispers span{position:absolute;font-style:italic;color:rgba(255,140,120,.85);font-size:18px;animation:wh 2.6s ease forwards}
+@keyframes wh{0%{opacity:0;filter:blur(4px)}20%{opacity:.9;filter:blur(0)}100%{opacity:0;filter:blur(3px);transform:translateY(-12px)}}
+.salad .typed{font-size:21px;line-height:1.5;font-family:var(--f-display);margin:0;min-height:6em}
+.seeing canvas{width:100%;height:auto;border-radius:12px;display:block}
+.evts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.evts li{display:grid;grid-template-columns:36px 1fr;column-gap:10px;padding:10px 12px;border-radius:10px;background:var(--raise);border:1px solid var(--line);transition:all .8s}
+.evts .em{grid-row:span 2;font-size:26px}.evts .sal{opacity:0;max-height:0;color:#ffcc33;font-weight:700;transition:all .8s}
+.evts li.lit{border-color:#ffcc33;box-shadow:0 0 18px rgba(255,204,51,.35)}.evts li.lit .sal{opacity:1;max-height:3em}
+.flat{transition:filter 1.5s}.msgs{display:flex;flex-direction:column;gap:8px}.bub{align-self:flex-start;background:#2a7cff;color:#fff;padding:9px 13px;border-radius:16px 16px 16px 4px;font-size:16px}
+.meter{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}.meter i{display:block;height:10px;border-radius:5px;background:#5fe0a3;transition:width 1.5s;width:70%}
+.memory .num{font-family:var(--f-mono);font-size:48px;margin:0;letter-spacing:.06em}.num-in{width:140px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:20px}
+.flood .flicks{position:absolute;inset:0;pointer-events:none}.flood .flicks i{position:absolute;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.35),transparent 70%);animation:wh .7s ease forwards}
+@media (max-width:820px){ #sim{padding:60px 12px 12px} .simscene .read{font-size:17px} .salad .typed{font-size:16px} }
+
+#sim{box-sizing:border-box}
+.simbrain{display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--sc);background:var(--raise);border-radius:8px;padding:9px 12px;font-size:13.5px}
+.simbrain b{color:var(--sc)}
+#inset{position:fixed;left:20px;top:calc(env(safe-area-inset-top,0px) + 100px);z-index:6;width:260px;margin:0;background:rgba(12,15,21,.92);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:zoom-in;backdrop-filter:blur(8px)}
+#inset img{display:block;width:100%;height:auto}
+#inset figcaption{padding:8px 11px 10px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+#inset figcaption b{font-family:var(--f-display);font-size:15px}#inset .full{color:var(--fg);font-size:12px}
+.ins-empty{padding:14px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}.ins-empty b{color:var(--fg);font-family:var(--f-display);font-size:15px}
+#labels .rtag{pointer-events:auto;cursor:pointer;font-weight:700;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.16);color:var(--fg)}
+#labels .rtag:hover{background:#2a3044}#labels .rtag.sel{background:var(--chalk);color:#16130a}#labels .rtag.down{color:#a9c6ff}
+.sdot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.rchips{display:flex;flex-direction:column;gap:6px}
+.rchip{display:flex;flex-direction:column;align-items:flex-start;text-align:left;padding:7px 11px;border-radius:9px;border:1px solid var(--line);border-left:4px solid var(--rc);background:var(--raise);cursor:pointer;color:var(--fg)}
+.rchip span{font-size:12.5px;color:var(--muted)}.rchip[aria-pressed="true"]{background:color-mix(in srgb,var(--rc) 22%,var(--raise));border-color:var(--rc)}
+.note{color:var(--chalk)}
+.sw.cool{background:#4f8dff;margin-left:10px}
+.stagebtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 16px);right:calc(var(--panel-w) + 16px);z-index:6;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(17,21,30,.9);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer}
+.stagebtn[aria-pressed="true"]{background:var(--chalk);color:#16130a}
+@media (max-width:820px){ #inset{width:130px;left:10px;top:calc(env(safe-area-inset-top,0px) + 80px)} #inset figcaption span{display:none} .stagebtn{right:12px;font-size:12px;padding:6px 10px} }
+
+#labels .rtag.sel{color:#16130a!important}
+</style>
+</head><body>
+<div id="stage"></div>
+<div id="loading">Building the brain…</div>
+<div id="labels"></div>
+<header class="brand">
+  <a class="home-link" href="index.html">← All units</a>
+  <h1>Love and Bonding</h1>
+  <div class="brand-sub">The social brain</div>
+</header>
+<section class="hud" aria-label="Live readout">
+  <div class="eyebrow" id="hudTitle"></div>
+  
+  <div id="hudText" aria-live="polite"></div>
+</section>
+<aside id="panel"></aside>
+<div id="lightbox" hidden><img alt="Image, enlarged"></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ============ Content: Love and Bonding · the social brain ============ */
+const PAGE = { color:'#ff6f9a', eyebrow:'Unit 12 · Love and Bonding', h2:'The social brain',
+  lead:'One brain, many relationships. Pick a chapter, then **click any glowing region** to see where it is on a real MRI (top left) and what it does.',
+  homeView:{dir:[1,0.3,0.55], dist:4.4, tgt:[-6,-10,4]} };
+const UP = 'on', DOWN = 'down';
+/* r: name, full: what the abbreviation stands for, mni: [x,y,z] mm, deep: 3D structure key (else it glows on the cortex), color, fn: what it does, mri: caption */
+const REG = {
+  fusiform:{name:'Fusiform gyrus (face area)', mni:[-40,-52,-20], color:'#ff8fb0', fn:'Recognizes faces. “Fusiform” means spindle-shaped, after the long gyrus on the underside of the temporal lobe.', mri:'Fusiform gyrus, underside of the temporal lobe (coronal slice).'},
+  sts:{name:'STS', full:'superior temporal sulcus', mni:[-52,-50,10], color:'#7ad7ff', fn:'Reads social signals in motion: where someone is looking, facial expressions, body movement and the tone of a voice.', mri:'Posterior superior temporal sulcus.'},
+  amy:{name:'Amygdala', deep:'amy', mni:[-22,-4,-19], color:'#ff3355', fn:'Flags what’s emotionally important, especially threat. Reads fear in faces and helps make emotional events memorable.', mri:'Amygdala, outlined from the 3D model (both sides).'},
+  ains:{name:'Insula', full:'anterior and medial insula', deep:'ins', mni:[-36,10,2], color:'#a066ff', fn:'Senses your body’s internal state (heartbeat, gut) and turns it into feelings. The front part is active when you feel, or see someone else feel, pain or disgust: a root of empathy.', mri:'Insula, hidden inside the lateral sulcus.'},
+  mpfc:{name:'mPFC', full:'medial prefrontal cortex', mni:[-4,52,12], color:'#5b8cff', fn:'Thinks about people: yourself, others, what they want and how they see you. A core “theory of mind” hub.', mri:'Medial prefrontal cortex, inner surface of the frontal lobe (side view).'},
+  tpj:{name:'TPJ', full:'temporoparietal junction', mni:[-52,-56,26], color:'#f0a43a', fn:'Where the temporal and parietal lobes meet. Tracks what other people believe, even when they’re wrong (false beliefs), and separates “me” from “you.”', mri:'Temporoparietal junction.'},
+  ofc:{name:'OFC', full:'orbitofrontal cortex', mni:[-24,34,-16], color:'#36c3a5', fn:'Sits above the eye sockets (orbits). Weighs value and makes choices, including social ones: is this person worth it? Is this fair?', mri:'Orbitofrontal cortex, just above the eye sockets.'},
+  hip:{name:'Hippocampus', deep:'hip', mni:[-29,-22,-14], color:'#22c77a', fn:'Forms new memories, including the shared history that a relationship is built on.', mri:'Hippocampus, outlined from the 3D model (both sides).'},
+  dlpfc:{name:'Prefrontal cortex (DLPFC)', full:'dorsolateral prefrontal cortex', mni:[-42,32,30], color:'#5b8cff', fn:'Self-control, planning and applying rules and norms: “I want to, but I shouldn’t.”', mri:'Dorsolateral prefrontal cortex.'},
+  vta:{name:'VTA', full:'ventral tegmental area', mni:[-4,-16,-12], color:'#ffcc33', glow:true, fn:'A small dopamine factory in the midbrain. “Ventral tegmental” means the belly side of the midbrain floor (tegmentum = covering). It sends dopamine to the reward system when something good is coming.', mri:'VTA in the midbrain, just below the thalamus (side view).'},
+  nacc:{name:'Nucleus accumbens', deep:'nacc', mni:[-10,11,-8], color:'#ffcc33', fn:'The reward hub of the ventral striatum: wanting, craving and motivation. Latin for “nucleus leaning against” (the septum).', mri:'Nucleus accumbens, where the caudate and putamen meet.'},
+  caud:{name:'Caudate nucleus', deep:'caud', mni:[-14,12,10], color:'#2fc7d9', fn:'Part of the striatum. Tracks rewards and learns what to go after. “Caudate” means tailed, after its long C-shaped tail.', mri:'Caudate nucleus, next to the lateral ventricles.'},
+  put:{name:'Putamen', deep:'put', mni:[-25,1,0], color:'#3a7bff', fn:'Part of the striatum: habits, movement and reward learning. Latin for “shell.”', mri:'Putamen.'},
+  hypo:{name:'Hypothalamus', deep:'hypo', mni:[0,-4,-11], color:'#ff9f1c', fn:'Drives (hunger, sex, temperature) and makes oxytocin and vasopressin, which it sends to the posterior pituitary.', mri:'Hypothalamus, under the thalamus (side view).'},
+  pit:{name:'Posterior pituitary', deep:'pit', mni:[0,4,-30], color:'#ff6a2c', fn:'Releases oxytocin and vasopressin into the blood. The anterior (front) pituitary releases ACTH, the stress hormone that starts the cortisol response.', mri:'The pituitary hangs below the hypothalamus, outside brain tissue (it isn’t in this skull-stripped scan; circle shows where it sits).'},
+  acc:{name:'ACC', full:'anterior cingulate cortex', mni:[-4,28,24], color:'#c49bff', fn:'Wraps around the front of the corpus callosum (“cingulate” means belt). Notices conflict and errors and feels the “ouch” of pain, including social pain like rejection.', mri:'Anterior cingulate cortex, wrapped around the corpus callosum (side view).'},
+  vp:{name:'Ventral pallidum', mni:[-15,2,-8], color:'#e48aff', glow:true, fn:'An output station of the reward system. In prairie voles it’s packed with vasopressin receptors, and that’s key to male pair bonding.', mri:'Ventral pallidum, below the striatum.'},
+  thal:{name:'Thalamus', deep:'thal', mni:[-12,-17,8], color:'#3d8bff', fn:'The brain’s relay station for the senses, and part of the circuit active in maternal love.', mri:'Thalamus, outlined from the 3D model.'},
+  sn:{name:'Substantia nigra', deep:'sn', mni:[-10,-18,-11], color:'#c9c9d9', fn:'“Black substance”: dopamine neurons that feed the striatum. Active, with the VTA, when mothers see their own babies.', mri:'Substantia nigra in the midbrain.'},
+  cc:{name:'Corpus callosum', deep:'cc', mni:[0,-4,20], color:'#e8dcc8', fn:'The bridge of nerve fibers connecting the two hemispheres. Latin for “tough body.”', mri:'Corpus callosum, outlined from the 3D model (side view).'}
+};
+
+const CH = [
+ { id:'social', title:'The social brain', short:'Social brain', color:'#7ad7ff',
+   view:{dir:[1,0.3,0.4], dist:4.4, tgt:[-10,-6,4]},
+   regions:{fusiform:[UP,'Social perception: faces'], sts:[UP,'Social perception: gaze and expressions'], amy:[UP,'Empathy: emotion'], ains:[UP,'Empathy: feeling states'], mpfc:[UP,'Theory of mind'], tpj:[UP,'Theory of mind: others’ beliefs'], vta:[UP,'Bonding: oxytocin → reward'], nacc:[UP,'Bonding: reward'], ofc:[UP,'Social decision-making'], hip:[UP,'Memory of relationships'], dlpfc:[UP,'Morality: norms and control']},
+   q:'Why is the brain social?',
+   clues:[['Bigger cortex, bigger groups','Across primates, the larger the neocortex relative to the rest of the brain, the larger the social group.'],['Gossip is grooming','About 60% of human conversation is about relationships and personal experiences.'],['Seven social jobs','Seeing faces, empathizing, reading minds, bonding, choosing, remembering and following norms all use different regions.']],
+   hold:'Hold this question: did we get big brains to find food, or to manage each other?',
+   mim:{title:'Neocortex = “social helmet”', lines:[['A lemur, monkey, ape and human climb a ladder','each puts on a bigger helmet (neocortex)'],['The human’s helmet is huge and glowing','track people, manage drama, remember relationships'],['At the party: scattered fruit vs a pile of meat','the food theories, but the real chaos is the social drama']]},
+   secs:[
+     {h:'The social brain map', list:['**Social perception:** fusiform gyrus (faces), STS (gaze, expressions)','**Empathy:** amygdala (emotion), anterior insula (feeling states)','**Theory of mind:** mPFC, TPJ (understanding others’ thoughts)','**Bonding:** oxytocin → reward system (VTA, nucleus accumbens)','**Decision-making:** orbitofrontal cortex (social choices)','**Memory:** hippocampus (relationships over time)','**Morality:** prefrontal cortex (norms, behavior control)'], p:'Click any of these on the brain.'},
+     {h:'Primate brain evolution', img:['img/lb/primates.jpg','Bigger brains, different social worlds. From your slides.']},
+     {h:'The social brain hypothesis', p:'Robin Dunbar plotted neocortex ratio against group size across primates: the bigger the neocortex, the bigger the group. For humans, the line predicts about **150** stable relationships, now called “Dunbar’s number.” Language may have evolved as a cheaper way to “groom” many people at once, mostly through gossip.', img:['img/lb/dunbar.jpg','Neocortex ratio vs. group size (Dunbar, 1992).', true], src:'Dunbar, 1992; Dunbar, 1993'},
+     {more:['Careful: correlation isn’t causation','Bigger groups and bigger brains go together, but diet, lifespan and body size also covary. A 2017 study (DeCasien et al.) found diet predicted primate brain size better than group size. The social brain idea is still strong, but it’s debated.']}],
+   answer:'Probably both, but the social demands are huge. Tracking who is allied with whom, who can be trusted and what others are thinking takes a lot of neural machinery, and the regions on this brain each handle a piece of it. The neocortex–group size link supports the idea that social life helped drive brain expansion, though diet and other factors matter too.',
+   quiz:[{q:'Which pair handles theory of mind (understanding what others think)?', o:['mPFC and TPJ','VTA and nucleus accumbens','Fusiform gyrus and STS','Hippocampus and amygdala'], a:0, why:'The medial prefrontal cortex and temporoparietal junction are the core mentalizing network.'}],
+   refs:['Dunbar, R. I. M. (1992). Neocortex size as a constraint on group size in primates. J. Human Evolution.','Dunbar, R. I. M. (1993). Coevolution of neocortical size, group size and language in humans. Behavioral and Brain Sciences.','Frith, C. D. & Frith, U. (2006). The neural basis of mentalizing. Neuron.','DeCasien, A. R. et al. (2017). Primate brain size is predicted by diet but not sociality. Nature Ecology & Evolution.']},
+
+ { id:'voles', title:'Pair bonding: voles', short:'Voles', color:'#ff8fb0',
+   view:{dir:[1,0.25,0.5], dist:2.9, tgt:[-6,2,-14]}, paths:['oxy'],
+   regions:{hypo:[UP,'Makes oxytocin and vasopressin'], pit:[UP,'Releases them into the blood'], nacc:[UP,'Oxytocin receptors (prairie voles)'], vp:[UP,'Vasopressin V1a receptors (prairie voles)'], mpfc:[UP,'Oxytocin receptors (prairie voles)']},
+   q:'Why do some species bond… and others don’t?',
+   clues:[['Two nearly identical voles','Prairie voles pair for life. Montane voles are promiscuous and solitary.'],['Same hormones','Both species make oxytocin and vasopressin.'],['Different receptors','What differs is where the receptors are: prairie voles have them in the reward system.']],
+   hold:'Hold this question: if bonding depends on where receptors sit, how much of love is wiring?',
+   mim:{title:'Pair-ie and the mountain', lines:[['“Prairie” = pair-ie','pair bonding, monogamous'],['“Montane” = mountain: a vole alone on a mountain','not monogamous'],['fOXY Female = OXY','oxytocin → female bonding (“OXY = attach”)'],['Male = VASO','vasopressin → bonding + guarding (“VASO = protect”)']]},
+   secs:[
+     {h:'Oxytocin and vasopressin', p:'Both are made in the **hypothalamus** and released from the **posterior pituitary** (watch the pink pulses). Oxytocin is more important for female bonding, vasopressin for male bonding and mate guarding.', demo:'oxy'},
+     {h:'Prairie vs. montane voles', img:['img/lb/voles.jpg','Prairie voles vs. montane voles: same hormones, different receptor maps. From your slides.']},
+     {h:'How do we measure a pair bond?', p:'In the **partner preference test**, a vole can choose to huddle with its familiar partner, sit alone, or huddle with a stranger, each tethered in its own chamber. A bonded vole spends most of its time with its partner.', img:['img/lb/partner_test.jpg','Partner-preference test (Berendzen et al., Neuron, 2023).'], src:'Williams et al., 1992; Berendzen et al., 2023'},
+     {h:'The experiments', list:['Inject oxytocin into a female → bonding **without mating**','Inject vasopressin into a male → more partner preference','Block oxytocin (female) or vasopressin (male) receptors → **no bonding**, even after mating','Put the prairie vole’s vasopressin receptor gene into the ventral pallidum of male **meadow** voles → they start to prefer one partner (Lim et al., 2004)'], more:['A twist (2023)','Prairie voles bred without oxytocin receptors **still bonded** (Berendzen et al., 2023). Blocking a receptor in an adult isn’t the same as never having it; developing brains can find other routes. Good discussion question: how can both findings be true?'], src:'Williams et al., 1994; Winslow et al., 1993; Lim et al., 2004'},
+     {h:'Early experience: the lemon rats', p:'Male rat pups nursed by mothers whose nipples smelled of lemon (citral) later mated faster with lemon-scented females than unscented ones. Early sensory experience shapes adult desire.', src:'Fillion & Blass, 1986'}],
+   answer:'Because the same chemicals land in different places. Prairie voles have oxytocin and vasopressin receptors in reward areas (nucleus accumbens, ventral pallidum), so mating links the partner to reward. Montane voles make the same hormones but lack those receptors there. Wiring isn’t destiny, though: the 2023 knockout voles still bonded.',
+   quiz:[{q:'Where are oxytocin and vasopressin made?', o:['Hypothalamus','Posterior pituitary','Amygdala','Nucleus accumbens'], a:0, why:'Made in the hypothalamus, stored and released by the posterior pituitary.'},{q:'What mainly differs between prairie and montane voles?', o:['Where their oxytocin/vasopressin receptors are','Whether they make oxytocin','Their brain size','Their diet'], a:0, why:'Same hormones, different receptor maps.'}],
+   refs:['Insel, T. R. & Young, L. J. (2001). The neurobiology of attachment. Nature Reviews Neuroscience.','Williams, J. R. et al. (1994). Oxytocin administered centrally facilitates formation of a partner preference in female prairie voles. J. Neuroendocrinology.','Winslow, J. T. et al. (1993). A role for central vasopressin in pair bonding in monogamous prairie voles. Nature.','Lim, M. M. et al. (2004). Enhanced partner preference in a promiscuous species by manipulating the expression of a single gene. Nature.','Berendzen, K. M. et al. (2023). Oxytocin receptor is not required for social attachment in prairie voles. Neuron.','Fillion, T. J. & Blass, E. M. (1986). Infantile experience with suckling odors determines adult sexual behavior in male rats. Science.']},
+
+ { id:'love', title:'Love on the brain', short:'Love', color:'#ff6f9a',
+   view:{dir:[1,0.3,0.5], dist:3.6, tgt:[-10,-2,0]}, paths:['limbic'],
+   regions:{vta:[UP,'Dopamine: passionate love'], caud:[UP,'Reward: active seeing your partner'], put:[UP,'Reward'], ains:[UP,'Medial insula'], acc:[UP,'Anterior cingulate'], hip:[UP,'Memory'], hypo:[UP,'Hormones: oxytocin, vasopressin'], amy:[DOWN,'Quieter: less fear'], dlpfc:[DOWN,'Quieter: less critical judgment'], tpj:[DOWN,'Quieter: less “what are they thinking?”']},
+   q:'What is “love” in the brain?',
+   clues:[['Partner vs. friend','People in love looked at photos of their partner and of a same-age friend. Only the partner lit up certain areas.'],['A dopamine system','The VTA and caudate, reward areas, were among the strongest.'],['And some areas go quiet','The amygdala and parts of the frontal cortex turned down: less fear, less judgment.']],
+   hold:'Hold this question: is “love is blind” literally true?',
+   secs:[
+     {h:'Lights up vs. quiets down', p:'**Warm = more active** when seeing a loved one. **Blue = less active.** Click each region.', legend:true},
+     {h:'The studies', list:['**Bartels & Zeki (2000):** romantic partner vs. friends → medial insula, ACC, caudate, putamen; reduced activity in the amygdala and frontal cortex.','**Aron, Fisher et al. (2005):** people in the early, intense stage of love → right **VTA** and **caudate**, the dopamine reward system.','**Bartels & Zeki (2004):** maternal love overlaps with romantic love; both quiet regions for critical social judgment.','These areas also have dense **oxytocin and vasopressin receptors**, like the voles.'], src:'Bartels & Zeki, 2000, 2004; Aron et al., 2005'},
+     {h:'A partner becomes rewarding', img:['img/lb/partner_reward.jpg','How a person becomes linked with reward and motivation. From your slides.'], src:'Fisher et al., 2006'},
+     {h:'Maternal love', p:'Mothers viewing their own baby showed activity in the left **VTA**, **substantia nigra** and **thalamus**, all dopamine-rich, plus reduced amygdala activity.', src:'Bartels & Zeki, 2004'}],
+   answer:'In part, yes. Love activates the dopamine reward system (VTA, caudate) and hormone systems (hypothalamus), and it turns down areas for fear (amygdala) and critical judgment (prefrontal cortex, TPJ). That may help explain why we forgive partners more easily. But it’s not literally blind: the effect is relative, and long-term love looks calmer than early, intense love.',
+   quiz:[{q:'Seeing a loved one tends to make the amygdala…', o:['Less active','More active','Physically larger','Release oxytocin'], a:0, why:'Reduced amygdala activity: less fear and wariness.'}],
+   refs:['Bartels, A. & Zeki, S. (2000). The neural basis of romantic love. NeuroReport.','Bartels, A. & Zeki, S. (2004). The neural correlates of maternal and romantic love. NeuroImage.','Aron, A. et al. (2005). Reward, motivation, and emotion systems associated with early-stage intense romantic love. J. Neurophysiology.','Fisher, H. E., Aron, A. & Brown, L. L. (2006). Romantic love: a mammalian brain system for mate choice. Phil. Trans. R. Soc. B.']},
+
+ { id:'addiction', title:'Love as addiction', short:'Addiction', color:'#ffcc33',
+   view:{dir:[1,0.3,0.55], dist:3.0, tgt:[-12,4,-6]}, paths:['limbic'],
+   regions:{vta:[UP,'Dopamine source'], nacc:[UP,'Craving'], ofc:[UP,'Value'], ains:[UP,'Craving, distress'], acc:[UP,'Social pain']},
+   q:'Is love more like addiction than we think?',
+   clues:[['Same circuit','Romantic love and drugs both drive dopamine from the VTA to the nucleus accumbens.'],['Craving and withdrawal','Obsessive thoughts, intense highs, painful lows.'],['Rejection keeps it on','People just rejected by a partner still showed strong VTA and nucleus accumbens activity, plus areas linked to craving.']],
+   hold:'Hold this question: if love and cocaine use the same circuit, are they the same thing?',
+   secs:[
+     {h:'Watch the reward pathway', p:'Dopamine pulses run from the VTA to the nucleus accumbens.', demo:'reward'},
+     {h:'Rejected but still in love', p:'Helen Fisher’s team scanned people recently rejected by a partner while they looked at that partner’s photo. Reward areas (VTA, nucleus accumbens) and areas linked to craving and addiction (orbitofrontal cortex, insula, cingulate) were active.', img:['img/lb/rejection_paper.jpg','Fisher et al. (2010), J. Neurophysiology. From your slides.', true], src:'Fisher et al., 2010'},
+     {more:['What the overlap does and doesn’t prove','Sharing a circuit doesn’t make two things identical: food, music and money use it too. Love differs from drugs in its effects on health, its social context, and how it changes over time.']}],
+   answer:'Love uses the same dopamine reward circuit as addictive drugs, which helps explain the craving, obsession and painful withdrawal after a breakup. But many rewards use this circuit. The overlap shows love is a powerful natural drive, not that love is a drug.',
+   refs:['Fisher, H. E. et al. (2010). Reward, addiction, and emotion regulation systems associated with rejection in love. J. Neurophysiology.','Burkett, J. P. & Young, L. J. (2012). The behavioral, anatomical and pharmacological parallels between social attachment, love and addiction. Psychopharmacology.']},
+
+ { id:'orgasm', title:'Orgasm and bonding', short:'Orgasm', color:'#e48aff',
+   view:{dir:[1,0.25,0.5], dist:3.0, tgt:[-8,-2,-10]}, paths:['limbic','oxy'],
+   regions:{vta:[UP,'Dopamine'], nacc:[UP,'Reward, pleasure'], hypo:[UP,'Releases oxytocin'], pit:[UP,'Oxytocin into the blood'], amy:[DOWN,'Quieter'], ofc:[DOWN,'Quieter: less self-control']},
+   q:'Why does sex create bonds?',
+   clues:[['A chemical cocktail','Dopamine, oxytocin, endorphins and prolactin all rise.'],['The alarm turns down','Amygdala activity drops.'],['Oxytocin links pleasure to a partner','In voles, mating releases oxytocin and vasopressin that create the bond.']],
+   hold:'Hold this question: can you have desire without attachment, or attachment without desire?',
+   secs:[
+     {h:'The chemistry', img:['img/lb/sexual_chem.jpg','Chemistry of sexual response. From your slides.']},
+     {h:'On the brain', list:['**VTA and nucleus accumbens:** dopamine, pleasure and reward.','**Hypothalamus → pituitary:** oxytocin release, linked to closeness.','**Amygdala and orbitofrontal cortex quieter:** less vigilance and self-control.'], src:'Holstege et al., 2003; Georgiadis et al., 2006; Komisaruk et al., 2004'},
+     {h:'Bonding during sleep', p:'Couples who share a bed show more synchronized heart rhythms than when sleeping apart.', img:['img/lb/heart_sync.jpg','Heart rhythms can synchronize. From your slides.']}],
+   answer:'During sex, dopamine marks the experience as rewarding while oxytocin and vasopressin, released by the hypothalamus and pituitary, help link that reward to the specific partner, the same mechanism that forms bonds in prairie voles. But desire, romantic love and long-term attachment are partly separate systems, so each can occur without the others.',
+   refs:['Holstege, G. et al. (2003). Brain activation during human male ejaculation. J. Neuroscience.','Georgiadis, J. R. et al. (2006). Regional cerebral blood flow changes associated with clitorally induced orgasm in healthy women. European J. Neuroscience.','Komisaruk, B. R. et al. (2004). Brain activation during vaginocervical self-stimulation and orgasm in women. Brain Research.','Fisher, H. E. (1998). Lust, attraction, and attachment in mammalian reproduction. Human Nature.']},
+
+ { id:'jealousy', title:'Jealousy', short:'Jealousy', color:'#ff9f1c',
+   view:{dir:[1,0.3,0.5], dist:3.6, tgt:[-12,-2,0]},
+   regions:{amy:[UP,'Threat'], hypo:[UP,'Hormones, aggression'], acc:[UP,'Social pain, conflict'], ains:[UP,'Distress'], dlpfc:[UP,'Rumination; control']},
+   q:'When does protecting a bond become harmful?',
+   clues:[['Jealousy protects','It promotes vigilance and mate guarding when a valued relationship seems threatened.'],['Stress chemistry','Testosterone and cortisol rise when facing a rival.'],['When it becomes delusional','Othello syndrome: fixed false beliefs that a partner is unfaithful.']],
+   hold:'Hold this question: where is the line between caring and controlling?',
+   secs:[
+     {h:'Ordinary vs. pathological jealousy', img:['img/lb/jealousy.jpg','Ordinary vs. pathological jealousy. From your slides.']},
+     {h:'On the brain', p:'Studies are few and small. Imagining a partner’s infidelity activated the amygdala and hypothalamus more in men and the STS more in women in one Japanese fMRI study; social exclusion activates the ACC and insula. Treat these as early findings.', src:'Takahashi et al., 2006; Eisenberger et al., 2003'},
+     {h:'Chemistry', list:['**Testosterone:** competitive aggression and mate guarding.','**Dopamine:** wanting to regain a lost reward (the partner’s attention).','**Cortisol:** stress and vigilance when facing a rival.']}],
+   answer:'Ordinary jealousy is an alarm that helps protect a relationship. It becomes harmful when it’s constant, controlling, aggressive or delusional (Othello syndrome), when the alarm no longer matches reality.',
+   refs:['Takahashi, H. et al. (2006). Men and women show distinct brain activations during imagery of sexual and emotional infidelity. NeuroImage.','Eisenberger, N. I., Lieberman, M. D. & Williams, K. D. (2003). Does rejection hurt? An fMRI study of social exclusion. Science.']},
+
+ { id:'broken', title:'Broken bonds and stress', short:'Broken bonds', color:'#5ab8ff',
+   view:{dir:[1,0.2,0.45], dist:3.2, tgt:[-8,-6,-12]}, paths:['oxy'],
+   regions:{hypo:[UP,'Releases CRH'], pit:[UP,'Releases ACTH'], amy:[UP,'More reactive'], acc:[UP,'Social pain'], hip:[DOWN,'Chronic stress shrinks it']},
+   q:'Why does losing someone hurt physically?',
+   clues:[['Separated monkeys','Infant monkeys separated from their mothers showed agitation, then withdrawal and depression-like behavior.'],['Stress hormones','The HPA axis floods the body with cortisol.'],['Withdrawal','The reward system loses a source it depended on.']],
+   hold:'Hold this question: two people go through the same breakup. Why does one recover faster?',
+   secs:[
+     {h:'Mother–infant separation', img:['img/lb/monkey_sep.jpg','Rosenblum & Kaufman’s separation studies. From your slides.', true], src:'Kaufman & Rosenblum, 1967'},
+     {h:'The HPA axis', p:'**H**ypothalamus → **P**ituitary → **A**drenal glands. Stress → hypothalamus releases **CRH** (corticotropin-releasing hormone) → anterior pituitary releases **ACTH** (adrenocorticotropic hormone) → adrenal glands release **cortisol**. Cortisol normally shuts the loop off (negative feedback); chronic stress keeps it running.', img:['img/lb/hpa.jpg','The HPA axis: signal and feedback. From your slides.']},
+     {h:'Early bonds shape development', img:['img/lb/early_bonds.jpg','Early bonds shape development. From your slides.']}],
+   answer:'Because two systems are hit at once. The reward system loses something it was wired to seek (withdrawal), and the HPA axis floods the body with cortisol (fatigue, appetite changes, poor sleep). The social pain of rejection also uses the ACC, the same region involved in physical pain. Social support, sleep and new rewarding activities help both systems recover.',
+   quiz:[{q:'What does the HPA axis stand for?', o:['Hypothalamus–pituitary–adrenal','Hippocampus–prefrontal–amygdala','Hypothalamus–putamen–accumbens','Heart–pancreas–adrenal'], a:0, why:'Hypothalamus (CRH) → pituitary (ACTH) → adrenal glands (cortisol).'}],
+   refs:['Kaufman, I. C. & Rosenblum, L. A. (1967). Depression in infant monkeys separated from their mothers. Science.','Eisenberger, N. I. et al. (2003). Does rejection hurt? Science.','Sbarra, D. A. & Hazan, C. (2008). Coregulation, dysregulation, self-regulation. Personality and Social Psychology Review.']},
+
+ { id:'trauma', title:'Trauma and PTSD', short:'Trauma', color:'#ff5f7a',
+   view:{dir:[1,0.3,0.5], dist:3.9, tgt:[-10,-6,2]},
+   regions:{amy:[UP,'Hyperactive: heightened fear'], hip:[DOWN,'Smaller on average: past vs. present'], dlpfc:[DOWN,'Underactive: less regulation'], mpfc:[DOWN,'Underactive: fear doesn’t shut off'], acc:[DOWN,'Altered: emotional numbing'], cc:[DOWN,'Smaller after childhood abuse'], tpj:[DOWN,'Altered social cognition'], ains:[UP,'Altered body awareness']},
+   q:'Can stress change the brain, and can it change back?',
+   clues:[['Alarm stuck on','In PTSD, the amygdala tends to overreact and the prefrontal cortex under-regulates it.'],['Past feels present','A smaller or less active hippocampus may make it harder to tag a memory as “then, not now.”'],['Recovery is possible','Safe relationships, therapy and new learning reshape these circuits.']],
+   hold:'Hold this question: if trauma changes the brain, does healing change it back?',
+   secs:[
+     {h:'Click the regions', p:'**Warm = more active, blue = less active or smaller.** These are group averages: many trauma survivors don’t show them, and some differences may be risk factors that existed before the trauma (the twin studies of Gilbertson et al., 2002).', legend:true, src:'Gilbertson et al., 2002; Shin et al., 2006; Teicher et al., 2016'},
+     {h:'Depersonalization and derealization', p:'After severe trauma, some people feel detached from themselves or that the world isn’t real: a protective shutdown that can persist.', video:['vAqwBvqBGv8','depersonalization and derealization']},
+     {h:'Recovery', img:['img/lb/recovery.jpg','Stress can change the brain. Recovery is possible (McLaughlin et al., 2019). From your slides.'], list:['**Protective factors:** social support, secure attachments, positive early experiences.','**Neuroplasticity:** therapy (CBT, trauma-focused therapies, mindfulness) can change these circuits.','**Research frontier:** MDMA- and psilocybin-assisted therapy for PTSD are being studied; not yet approved treatments (the FDA declined MDMA-assisted therapy in 2024).']}],
+   answer:'Yes and yes, on average. Chronic or severe stress is linked to an overactive amygdala, an under-regulating prefrontal cortex and a smaller hippocampus. But the brain stays plastic: safe relationships, therapy and new learning can strengthen regulation and reduce fear responses. Brain differences are averages, not destiny.',
+   quiz:[{q:'In PTSD, the amygdala tends to be…', o:['Overactive','Underactive','Missing','Unchanged'], a:0, why:'Hyperactive amygdala → heightened fear and startle.'}],
+   refs:['Shin, L. M., Rauch, S. L. & Pitman, R. K. (2006). Amygdala, medial prefrontal cortex, and hippocampal function in PTSD. Annals of the NY Academy of Sciences.','Gilbertson, M. W. et al. (2002). Smaller hippocampal volume predicts pathologic vulnerability to psychological trauma. Nature Neuroscience.','Teicher, M. H., Samson, J. A., Anderson, C. M. & Ohashi, K. (2016). The effects of childhood maltreatment on brain structure, function and connectivity. Nature Reviews Neuroscience.','McLaughlin, K. A. et al. (2019). Childhood adversity and neural development. Annual Review of Developmental Psychology.']}
+];
+
+/* ============ Deep structures (schematic, MNI-placed) ============ */
+// S(x,y,z): MNI mm -> scene units. +x scene = subject's right? (S flips x) — we draw both hemispheres.
+const DEEP_DEF = {
+  thal:  {name:'Thalamus', color:'#3d8bff'},
+  hypo:  {name:'Hypothalamus', color:'#ff9f1c'},
+  pit:   {name:'Pituitary', color:'#ff6a2c'},
+  hip:   {name:'Hippocampus', color:'#22c77a'},
+  amy:   {name:'Amygdala', color:'#ff3355'},
+  ins:   {name:'Insula', color:'#a066ff'},
+  caud:  {name:'Caudate', color:'#2fc7d9'},
+  put:   {name:'Putamen', color:'#3a7bff'},
+  gp:    {name:'Globus pallidus', color:'#8fb8ff'},
+  nacc:  {name:'Nucleus accumbens', color:'#ffcc33'},
+  sn:    {name:'Substantia nigra', color:'#4a4a5e'},
+  stem:  {name:'Brainstem', color:'#c99a8a'},
+  cbl:   {name:'Cerebellum', color:'#b05cc0'}
+};
+function buildDeep(parent, mkMat){
+  const out = {}; Object.keys(DEEP_DEF).forEach(k => out[k] = {meshes:[], def:DEEP_DEF[k]});
+  const add = (k, m) => { m.userData.deep = k; parent.add(m); out[k].meshes.push(m); return m; };
+  const blob = (k, c, r, rot) => { const m = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), mkMat(DEEP_DEF[k].color)); m.position.copy(S(...c)); m.scale.set(r[0]/80, r[2]/80, r[1]/80); if (rot) m.rotation.set(...rot); return add(k, m); };
+  const tubeK = (k, pts, r0, r1) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p)));
+    const g = new THREE.TubeGeometry(curve, 64, 1, 14); const P = g.attributes.position, n = 65, rs = 15, ctr = V();
+    for (let i=0;i<=64;i++){ const t = i/64, rad = (r0 + (r1 - r0)*t)/80; curve.getPointAt(t, ctr); for (let j=0;j<rs;j++){ const idx = i*rs + j; const v = V().fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rad).add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
+    g.computeVertexNormals(); const m = new THREE.Mesh(g, mkMat(DEEP_DEF[k].color)); m.userData.curve = curve; return add(k, m); };
+  [1, -1].forEach(s => {
+    blob('thal', [s*11,-17,6], [7,15,8]);
+    tubeK('hip', [[s*24,-8,-22],[s*28,-18,-16],[s*30,-28,-8],[s*27,-36,-1],[s*20,-40,6]], 6.5, 3);
+    blob('amy', [s*22,-4,-19], [7,8,7]);
+    blob('ins', [s*37,-4,4], [2.5,19,11]);
+    tubeK('caud', [[s*12,14,8],[s*14,4,16],[s*17,-10,20],[s*22,-24,16],[s*28,-32,6],[s*30,-26,-6]], 7, 2.2);
+    blob('put', [s*25,2,1], [6,14,9]);
+    blob('gp', [s*18,-3,-1], [4,8,5.5]);
+    blob('nacc', [s*10,11,-8], [4,5,4]);
+    blob('sn', [s*10,-18,-11], [3,6,2.2]);
+  });
+  blob('hypo', [0,-4,-11], [7,9,5.5]);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.12, 12), mkMat(DEEP_DEF.pit.color)); stalk.position.copy(S(0,1,-22)); stalk.rotation.x = 0.35; add('pit', stalk);
+  blob('pit', [0,4,-30], [6,5,4.5]);
+  tubeK('stem', [[0,-20,-6],[0,-26,-24],[0,-31,-40],[0,-38,-60],[0,-42,-72]], 12, 8);
+  blob('cbl', [0,-66,-36], [44,23,17]);
+  return out;
+}
+
+/* ============ Scene: two glass brains (typical | schizophrenia), one camera, split viewports ============ */
+const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
+const S = (x,y,z) => V(-x/80, (z-10)/80, (y+18)/80);   // MNI mm -> scene; subject's left = +x
+const lin = h => new THREE.Color(h);
+const clamp = (x,a,b) => Math.max(a, Math.min(b, x));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), panel = $('#panel'), labelsEl = $('#labels');
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputEncoding = THREE.sRGBEncoding; renderer.setScissorTest(true); renderer.autoClear = false; stage.appendChild(renderer.domElement);
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 100);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 1.4; controls.maxDistance = 12; controls.enablePan = false;
+const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); const gr = g.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(0.35,'rgba(255,255,255,.55)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0,0,64,64); return new THREE.CanvasTexture(c); })();
+const sprite = (c, s) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:lin(c), transparent:true, depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending})); sp.scale.setScalar(s); return sp; };
+
+/* ---- per-side materials ---- */
+function glassMat(){
+  const m = new THREE.MeshStandardMaterial({color:lin('#e8cfc4'), roughness:0.6, transparent:true, opacity:0.035, depthWrite:false, side:THREE.DoubleSide});
+  m.userData.u = { uRim:{value:0.38}, uThin:{value:0} };
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, m.userData.u);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aThin; uniform float uThin; varying vec3 vN2; varying vec3 vV2;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed -= normal * uThin * aThin;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvN2 = normalize(normalMatrix*normal); vV2 = normalize(-mvPosition.xyz);');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uRim; varying vec3 vN2; varying vec3 vV2;')
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'float fr = pow(1.0 - abs(dot(normalize(vN2), normalize(vV2))), 2.5); vec4 diffuseColor = vec4( diffuse, opacity + uRim*fr );'); };
+  m.customProgramCacheKey = () => 'szglass'; return m; }
+const NH = 8;   // activity hotspots per brain
+function actMat(){
+  return new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+    uniforms:{ uP:{value:Array.from({length:NH}, () => new THREE.Vector4(0,0,0,0.1))}, uC:{value:Array.from({length:NH}, () => new THREE.Vector3(1,0.5,0.2))}, uI:{value:new Float32Array(NH)}, uThin:{value:0}, uT:{value:0} },
+    vertexShader:`attribute float aThin; uniform float uThin; varying vec3 vW; varying vec3 vN; varying vec3 vV;
+      void main(){ vec3 p = position - normal*uThin*aThin; vec4 w = modelMatrix*vec4(p,1.0); vW = w.xyz; vN = normalize(normalMatrix*normal); vec4 mv = viewMatrix*w; vV = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }`,
+    fragmentShader:`uniform vec4 uP[${NH}]; uniform vec3 uC[${NH}]; uniform float uI[${NH}]; uniform float uT; varying vec3 vW; varying vec3 vN; varying vec3 vV;
+      void main(){ vec3 col = vec3(0.0); for (int i=0;i<${NH};i++){ float d = length(vW - uP[i].xyz)/uP[i].w; col += uC[i]*uI[i]*exp(-d*d); }
+        float face = 0.55 + 0.45*abs(dot(normalize(vN), normalize(vV)));
+        gl_FragColor = vec4(col*face*1.25, 1.0); }` }); }
+const deepMat = c => new THREE.MeshStandardMaterial({color:lin(c), roughness:0.45, emissive:lin(c), emissiveIntensity:0.05, transparent:true, opacity:0.12, depthWrite:false});
+
+/* ---- ventricles (schematic lateral + third), scaled per side ---- */
+function buildVents(parent, k){
+  const mat = new THREE.MeshStandardMaterial({color:lin('#19d3ff'), roughness:0.25, emissive:lin('#00b8ff'), emissiveIntensity:0.45, transparent:true, opacity:0, depthWrite:false});
+  const ms = [];
+  const tubeR = (pts, rf) => { const curve = new THREE.CatmullRomCurve3(pts.map(p => S(...p))); const g = new THREE.TubeGeometry(curve, 64, 1, 12); const P = g.attributes.position, ctr = V(), v = V();
+    for (let i=0;i<=64;i++){ const t = i/64; curve.getPointAt(t, ctr); for (let j=0;j<13;j++){ const idx = i*13 + j; v.fromBufferAttribute(P, idx).sub(ctr).normalize().multiplyScalar(rf(t)/80); v.y *= 1.0; v.add(ctr); P.setXYZ(idx, v.x, v.y, v.z); } }
+    g.computeVertexNormals(); const m = new THREE.Mesh(g, mat); parent.add(m); ms.push(m); return m; };
+  [1, -1].forEach(s => {
+    // body + frontal horn + occipital horn + temporal horn, width grows with k
+    tubeR([[s*(8+2*k),26,8],[s*(10+3*k),10,18],[s*(12+4*k),-10,20],[s*(16+4*k),-30,14],[s*(20+3*k),-46,6],[s*(18+2*k),-58,2]], t => (t < 0.7 ? 3.2 + 3.4*Math.sin(Math.PI*Math.min(1, t/0.7)) : 3.5*(1 - (t - 0.7)/0.3) + 1)*(0.65 + 0.45*k));
+    tubeR([[s*(20+3*k),-40,8],[s*(28+2*k),-34,-4],[s*(30+2*k),-22,-14],[s*(28+2*k),-10,-20]], t => (2.6 - 1.4*t)*(0.65 + 0.45*k));
+  });
+  tubeR([[0,-4,0],[0,-14,2],[0,-24,0]], t => (1.4 + 0.8*Math.sin(Math.PI*t))*(0.6 + 0.5*k));
+  return {meshes:ms, mat}; }
+
+/* ---- dopamine pathways (left hemisphere) ---- */
+const PATH_DEF = {
+  limbic:  {c:'#ffcc33', pts:[[-4,-16,-12],[-6,-6,-13],[-8,4,-12],[-10,11,-8]]},
+  cortical:{c:'#7ad7ff', pts:[[-4,-16,-12],[-6,-4,-6],[-10,18,0],[-20,36,14],[-38,34,28]]},
+  nigro:   {c:'#c49bff', pts:[[-10,-18,-11],[-14,-10,0],[-16,4,10],[-14,12,10]]},
+  oxy:     {c:'#ff8fb0', pts:[[0,-4,-11],[1,0,-20],[2,3,-30]]}
+};
+function buildPaths(parent){ const out = {};
+  Object.entries(PATH_DEF).forEach(([k, d]) => { const curve = new THREE.CatmullRomCurve3(d.pts.map(p => S(...p)));
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 80, 0.017, 8), new THREE.MeshBasicMaterial({color:lin(d.c), transparent:true, opacity:0, depthWrite:false}));
+    m.renderOrder = 7; parent.add(m); out[k] = {curve, mesh:m, c:d.c}; }); return out; }
+
+/* ---- the two sides ---- */
+function mkScene(){ const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x554466, 0.6));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(3, 5, 6); sc.add(sun); const rim = new THREE.DirectionalLight(0xbcd2ff, 0.45); rim.position.set(-4, 2, -5); sc.add(rim); return sc; }
+const SIDES = [{key:'A', title:'', color:'#ffffff'}];
+SIDES.forEach(s => { s.scene = mkScene(); s.glass = glassMat(); s.act = actMat();
+  s.deep = buildDeep(s.scene, deepMat); Object.values(s.deep).forEach(o => o.meshes.forEach(m => { m.renderOrder = 4; }));
+  s.vent = buildVents(s.scene, s.key === 'B' ? 1.75 : 1); s.paths = buildPaths(s.scene); s.pulses = []; s.spawn = {limbic:0, cortical:0, nigro:0};
+  s.block = sprite('#ff5f7a', 0.0); s.block.position.copy(S(-10,11,-8)); s.scene.add(s.block); });
+
+/* ---- cortex (shared geometry) ---- */
+const cortexMeshes = [];
+async function loadCortex(){
+  const b64 = (await (await fetch('data/cortex.b64.txt')).text()).trim();
+  const bin = atob(b64); const u8 = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  const buf = u8.buffer, n = 32492, f = 64980; let off = 0;
+  const THIN = [1.0, 0.45, 0.9, 0.25];   // frontal, parietal, temporal, occipital (where gray-matter loss is greatest)
+  for (let h=0; h<2; h++){ const pos = new Int16Array(buf, off, n*3); off += n*6; const idx = new Uint16Array(buf, off, f*3); off += f*6; off += n; const lobe = new Uint8Array(buf, off, n); off += n;
+    const P = new Float32Array(n*3), A = new Float32Array(n);
+    for (let i=0;i<n;i++){ const v = S(pos[i*3]/300, pos[i*3+1]/300, pos[i*3+2]/300); P[i*3]=v.x; P[i*3+1]=v.y; P[i*3+2]=v.z; A[i] = lobe[i] < 4 ? THIN[lobe[i]] : 0.2; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P,3)); g.setAttribute('aThin', new THREE.BufferAttribute(A,1)); g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx),1)); g.computeVertexNormals();
+    SIDES.forEach(s => { const m = new THREE.Mesh(g, s.glass); m.renderOrder = 6; s.scene.add(m); const a = new THREE.Mesh(g, s.act); a.renderOrder = 8; s.scene.add(a); cortexMeshes.push(m); (s.ctx = s.ctx || []).push(m, a); }); } }
+
+/* ---- pulses ---- */
+function pulse(side, key, opts={}){ const P = side.paths[key]; const sp = sprite(opts.c || P.c, opts.size || 0.24); sp.visible = false; side.scene.add(sp);
+  side.pulses.push({curve:P.curve, sp, t:-(opts.delay || 0), dur:opts.dur || 1.3, stopAt:opts.stopAt || 1, cb:opts.cb}); }
+function updPulses(side, dt){ for (let i=side.pulses.length-1;i>=0;i--){ const p = side.pulses[i]; p.t += dt; const k = p.t/p.dur; if (k < 0) continue; p.sp.visible = true;
+  if (k >= p.stopAt){ side.scene.remove(p.sp); side.pulses.splice(i,1); if (p.cb) p.cb(); continue; }
+  p.sp.position.copy(p.curve.getPointAt(k)); p.sp.material.opacity = p.stopAt < 1 && k > p.stopAt - 0.12 ? (p.stopAt - k)/0.12 : 1; } }
+
+/* ---- real anatomy: BodyParts3D meshes (CC BY-SA 2.1 JP), fitted to MNI space; replace the schematic shapes ---- */
+const MORPH = [];   // schizophrenia-side meshes whose size changes (ventricles, hippocampus)
+const REAL = new Set(['thal','hypo','hip','amy','ins','caud','put','gp','stem','cbl']);
+async function loadRealDeep(){
+  const [meta, buf] = await Promise.all([fetch('data/deep.json').then(r => r.json()), fetch('data/deep.b64.txt').then(r => r.text()).then(t => { const bin = atob(t.trim()), u = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i] = bin.charCodeAt(i); return u.buffer; })]);
+  const geos = meta.map(p => { const q = new Int16Array(buf, p.off, p.nv*3), ix = new Uint16Array(buf, p.off + p.nv*6, p.nf*3), P = new Float32Array(p.nv*3);
+    for (let i=0;i<p.nv;i++){ const v = S(q[i*3]/50, q[i*3+1]/50, q[i*3+2]/50); P[i*3] = v.x; P[i*3+1] = v.y; P[i*3+2] = v.z; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setIndex(new THREE.BufferAttribute(ix, 1)); g.computeVertexNormals(); g.computeBoundingSphere();
+    return {p, g}; });
+  SIDES.forEach((s, si) => {
+    REAL.forEach(k => { const o = s.deep[k]; if (!o) return; const mat = o.meshes[0].material; o.meshes.forEach(m => s.scene.remove(m)); o.meshes = []; o.mat = mat; });
+    s.vent.meshes.forEach(m => s.scene.remove(m)); s.vent.meshes = [];
+    s.deep.cc = {meshes:[], def:{name:'Corpus callosum', color:'#e8dcc8'}}; const ccMat = deepMat('#e8dcc8');
+    geos.forEach(({p, g}) => { let mat, list;
+      if (p.g === 'vent'){ mat = s.vent.mat; list = s.vent.meshes; }
+      else if (p.g === 'cc'){ mat = ccMat; list = s.deep.cc.meshes; }
+      else if (s.deep[p.g]){ mat = s.deep[p.g].mat; list = s.deep[p.g].meshes; } else return;
+      const m = new THREE.Mesh(g, mat); m.renderOrder = 4; m.userData.deep = p.g;
+      // schizophrenia side: enlarged ventricles, smaller hippocampus (group-level differences, exaggerated a little to be visible)
+      // scene axes: x = left–right, y = up–down, z = front–back
+      if (si && (p.g === 'hip' || p.g === 'vent')){ m.userData.kind = p.g === 'hip' ? 'hip' : p.k; m.userData.c = g.boundingSphere.center.clone(); MORPH.push(m); }
+      s.scene.add(m); list.push(m); }); });
+}
+
+/* ============ State ============ */
+const CHI = Object.fromEntries(CH.map((c, i) => [c.id, i]));
+const state = { ch:null, reg:null, quiz:{}, cortex:true, speed:1 };
+let T = 0, tween = null, hudMsg = '';
+const side = SIDES[0];
+const cur = () => state.ch ? CH[CHI[state.ch]] : null;
+const regionsNow = () => { const c = cur(); if (c) return c.regions; const all = {}; Object.keys(REG).forEach(k => all[k] = [UP, '']); return all; };
+
+/* ============ Applying a chapter ============ */
+const TG = {hot:[], deep:{}, paths:{}, col:{}};
+const ORIG = {};
+function applyState(){ const c = cur(), R = regionsNow(); const U = side.act.uniforms;
+  // cortex glows for regions without a 3D structure
+  const hot = Object.entries(R).filter(([k]) => !REG[k].deep).slice(0, NH);
+  for (let i=0;i<NH;i++){ U.uI.value[i] = 0; const h = hot[i]; if (!h) continue; const r = REG[h[0]], p = S(...r.mni); U.uP.value[i].set(p.x, p.y, p.z, (h[0] === 'mpfc' || h[0] === 'acc' ? 13 : 11)/80);
+    const col = h[1][0] === DOWN ? lin('#4f8dff') : lin(r.color); U.uC.value[i].set(col.r, col.g, col.b); }
+  TG.hot = hot.map(([k, v]) => ({k, i:v[0] === DOWN ? 0.7 : 0.9}));
+  Object.keys(side.deep).forEach(k => TG.deep[k] = 0.06);
+  Object.entries(R).forEach(([k, v]) => { const r = REG[k]; if (r.deep && side.deep[r.deep]){ TG.deep[r.deep] = c ? 0.95 : 0.55; TG.col[r.deep] = v[0] === DOWN ? '#4f8dff' : null; } });
+  Object.keys(side.paths).forEach(k => TG.paths[k] = c && (c.paths || []).includes(k) ? 0.6 : 0);
+  buildTags(); }
+
+/* ============ Labels (clickable) ============ */
+let TAGS = [];
+function buildTags(){ labelsEl.innerHTML = ''; TAGS = []; const c = cur(), R = regionsNow();
+  Object.entries(R).forEach(([k, v]) => { const r = REG[k]; const el = document.createElement('button'); el.type = 'button'; el.className = 'plabel rtag' + (v[0] === DOWN ? ' down' : '') + (state.reg === k ? ' sel' : '');
+    el.innerHTML = `<span class="sdot" style="background:${v[0] === DOWN ? '#4f8dff' : r.color}"></span>${esc(r.name)}${v[0] === DOWN ? ' ↓' : ''}`; el.onclick = () => selectReg(k); labelsEl.appendChild(el); TAGS.push({el, world:S(...r.mni), k}); }); }
+const _v = V();
+function placeTags(){ const r = vp(); TAGS.forEach(t => { _v.copy(t.world).project(camera); if (_v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05){ t.el.style.opacity = 0; t.el.style.pointerEvents = 'none'; return; }
+  t.el.style.opacity = 1; t.el.style.pointerEvents = 'auto'; t.el.style.transform = `translate(${r.x + (_v.x*0.5+0.5)*r.w}px, ${(-_v.y*0.5+0.5)*r.h}px) translate(-50%, -140%)`; }); }
+
+/* ============ Viewport ============ */
+const isNarrow = () => innerWidth <= 820;
+const vp = () => { const W = innerWidth, Hh = innerHeight; return isNarrow() ? {x:0, y:Hh - Math.round(Hh*0.5), w:W, h:Math.round(Hh*0.5)} : {x:0, y:0, w:W - panel.offsetWidth, h:Hh}; };
+function resize(){ renderer.setSize(innerWidth, innerHeight); const r = vp(); camera.aspect = r.w/r.h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+function viewOf(){ if (state.reg){ const m = REG[state.reg].mni; return [S(m[0]*0.6, m[1], m[2]), 3.6, V(m[0] > 4 ? -1 : 1, 0.3, 0.35)]; }
+  const c = cur(), v = c ? c.view : PAGE.homeView; return [S(...v.tgt), v.dist, V(...v.dir)]; }
+function fly(){ const [t0, d, dir] = viewOf(); const P = t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 1.5 : 1)));
+  tween = {from:camera.position.clone(), to:P, tf:controls.target.clone(), tt:t0.clone(), t0:performance.now(), dur:1100}; }
+controls.addEventListener('start', () => { tween = null; });
+
+/* ============ Real-brain inset ============ */
+const inset = document.createElement('figure'); inset.id = 'inset'; document.body.appendChild(inset);
+function renderInset(){ const k = state.reg; if (!k){ inset.innerHTML = `<div class="ins-empty"><b>Real brain</b><span>Click a region to see it on an MRI scan.</span></div>`; return; }
+  const r = REG[k], c = cur(), note = c && c.regions[k] ? c.regions[k][1] : '';
+  inset.innerHTML = `<img src="img/lbmri/${k}.jpg" alt="MRI slice showing the ${esc(r.name)}"><figcaption><b style="color:${r.color}">${esc(r.name)}</b>${r.full ? `<span class="full">${esc(r.full)}</span>` : ''}<span>${esc(r.mri)}</span></figcaption>`;
+  hudMsg = `<b>${esc(r.name)}${r.full ? ` (${esc(r.full)})` : ''}.</b> ${esc(r.fn)}${note ? ` <span class="note">In this chapter: ${esc(note)}.</span>` : ''}`; }
+
+/* ============ Selecting ============ */
+function selectCh(id){ state.ch = id; state.reg = null; applyState(); renderInset(); hudMsg = ''; fly(); renderPanel(); panel.scrollTop = 0; try { history.replaceState(null, '', id ? '#' + id : location.pathname); } catch(e){} }
+function selectReg(k){ state.reg = state.reg === k ? null : k; if (!state.reg) hudMsg = ''; renderInset(); buildTags(); fly();
+  panel.querySelectorAll('[data-reg]').forEach(b => b.setAttribute('aria-pressed', b.dataset.reg === state.reg)); }
+// click on a 3D structure or the cortex → nearest region
+const ray = new THREE.Raycaster(), mouse = new THREE.Vector2(); let down = null;
+renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', e => { if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return; const r = vp(); if (e.clientX > r.w) return;
+  mouse.set(((e.clientX - r.x)/r.w)*2 - 1, -((e.clientY - (innerHeight - r.y - r.h))/r.h)*2 + 1); ray.setFromCamera(mouse, camera);
+  const R = regionsNow(); const deepKeys = Object.keys(R).filter(k => REG[k].deep);
+  const dm = deepKeys.flatMap(k => (side.deep[REG[k].deep] || {meshes:[]}).meshes.map(m => [m, k]));
+  const hd = ray.intersectObjects(dm.map(x => x[0]), false)[0]; if (hd){ selectReg(dm.find(x => x[0] === hd.object)[1]); return; }
+  const hc = state.cortex ? ray.intersectObjects(cortexMeshes, false)[0] : null; if (!hc) return;
+  let best = null, bd = 1e9; Object.keys(R).forEach(k => { const d = S(...REG[k].mni).distanceTo(hc.point); if (d < bd){ bd = d; best = k; } }); if (best && bd < 0.45) selectReg(best); });
+
+/* ============ Panel ============ */
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const yt = (id, title) => `<figure class="video" data-yt="${id}"><div class="video-frame"><a class="yt-card" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"><span class="yt-play">▶</span><span class="yt-t">Watch on YouTube</span></a></div><figcaption><b>Video:</b> ${esc(title)} <a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener">Open on YouTube ↗</a></figcaption></figure>`;
+const fig = (src, cap, narrow) => `<figure class="figure${narrow ? ' narrow' : ''}"><img src="${src}" alt="${esc(cap)}" data-zoom loading="lazy"><figcaption>${fmt(cap)}</figcaption></figure>`;
+const DEMO = {
+  oxy:{ html:() => `<div class="tries"><button class="try" data-a="oxy">▶ Release oxytocin and vasopressin</button></div>`, bind(r){ r.querySelector('button').onclick = () => { for (let i=0;i<5;i++) pulse(side, 'oxy', {delay:i*0.35, dur:1.4/state.speed}); hudMsg = '<b>Hypothalamus → posterior pituitary:</b> oxytocin and vasopressin travel down nerve fibers and are released into the blood. In the brain, they act wherever their receptors are.'; }; } },
+  reward:{ html:() => `<div class="tries"><button class="try">▶ See the partner (dopamine burst)</button></div>`, bind(r){ r.querySelector('button').onclick = () => { for (let i=0;i<8;i++) pulse(side, 'limbic', {delay:i*0.22, dur:1.2}); hudMsg = '<b>VTA → nucleus accumbens:</b> the same dopamine pathway activated by food, money and drugs.'; }; } }
+};
+function regionChips(c){ return `<div class="rchips">${Object.entries(c.regions).map(([k, v]) => `<button class="rchip${v[0] === DOWN ? ' down' : ''}" data-reg="${k}" aria-pressed="${state.reg === k}" style="--rc:${v[0] === DOWN ? '#4f8dff' : REG[k].color}"><b>${esc(REG[k].name)}${v[0] === DOWN ? ' ↓' : ''}</b><span>${esc(v[1])}</span></button>`).join('')}</div>`; }
+function secBlock(s){ return `<section class="sec">${s.h ? `<h3>${esc(s.h)}</h3>` : ''}${s.p ? `<p>${fmt(s.p)}</p>` : ''}
+  ${s.legend ? `<p class="legend2"><span class="sw"></span>more active <span class="sw cool"></span>less active / smaller</p>` : ''}
+  ${s.list ? `<ul class="blist">${s.list.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>` : ''}
+  ${s.demo ? `<div class="demo" data-demo="${s.demo}">${DEMO[s.demo].html()}</div>` : ''}
+  ${s.img ? fig(s.img[0], s.img[1], s.img[2]) : ''}${s.video ? yt(s.video[0], s.video[1]) : ''}
+  ${s.more ? `<details class="more"><summary>${esc(s.more[0])}</summary><p>${fmt(s.more[1])}</p></details>` : ''}${s.src ? `<p class="src">Source: ${esc(s.src)}</p>` : ''}</section>`; }
+function renderPanel(){ const c = cur();
+  if (!c){ panel.style.setProperty('--c', PAGE.color);
+    panel.innerHTML = `<div><div class="eyebrow">${esc(PAGE.eyebrow)}</div><h2>${esc(PAGE.h2)}</h2></div><p class="lead">${fmt(PAGE.lead)}</p>
+      <ol class="chlist">${CH.map((x, i) => `<li><button class="chrow" data-ch="${x.id}" style="--c:${x.color}"><span class="chn">${i + 1}</span><span><b>${esc(x.title)}</b><span class="chq">${esc(x.q)}</span></span></button></li>`).join('')}</ol>
+      <p class="src">MRI slices: MNI ICBM152 template (an average of 152 adult brains). 3D deep structures: BodyParts3D, © The Database Center for Life Science, CC Attribution-Share Alike 2.1 Japan. Cortex: Conte69. Glowing spots on the cortex mark approximate locations; VTA and ventral pallidum are approximate.</p>`;
+  } else { const i = CHI[c.id], prev = CH[i-1], next = CH[i+1]; panel.style.setProperty('--c', c.color);
+    panel.innerHTML = `<button class="back" id="toAll">← All chapters</button>
+      <div class="topic-head"><div class="eyebrow">Part ${i + 1} · ${esc(c.title)}</div><h2>${esc(c.q)}</h2></div>
+      <section class="mindq"><div class="eyebrow">The mind question</div><ol class="clues">${c.clues.map(([l, t]) => `<li><b>${esc(l)}</b><span>${fmt(t)}</span></li>`).join('')}</ol><p class="hold">${fmt(c.hold)}</p></section>
+      <section class="sec"><h3>Regions in this part</h3><p class="muted">Click one (here or on the brain) to see it on a real MRI.</p>${regionChips(c)}</section>
+      ${c.mim ? `<section class="sec"><div class="eyebrow">Memory hint · ${esc(c.mim.title)}</div><ul class="mlines">${c.mim.lines.map(([s, m]) => `<li><b>${esc(s)}</b> <span class="mean">${esc(m)}</span></li>`).join('')}</ul></section>` : ''}
+      ${(c.secs || []).map(secBlock).join('')}
+      <details class="answer"><summary><span class="eyebrow">Back to the question</span><b>${esc(c.q)}</b><span class="reveal">Think it over, then tap to see an answer</span></summary><p>${fmt(c.answer)}</p></details>
+      ${(c.quiz || []).length ? `<section class="quiz"><div class="eyebrow">Check yourself</div>${c.quiz.map((q, qi) => { const pick = state.quiz[c.id + qi]; return `<div class="qitem"><p class="q">${fmt(q.q)}</p><div class="qopts">${q.o.map((o, j) => `<button class="qopt" data-q="${qi}" data-a="${j}" ${pick !== undefined ? 'disabled' : ''} aria-pressed="${pick === j}">${esc(o)}</button>`).join('')}</div>${pick !== undefined ? `<p class="qfb ${pick === q.a ? 'ok' : 'bad'}">${pick === q.a ? 'Right.' : `Not quite: it’s “${esc(q.o[q.a])}.”`} ${fmt(q.why)}</p>` : ''}</div>`; }).join('')}</section>` : ''}
+      ${c.refs ? `<details class="refs"><summary>Sources</summary><ol>${c.refs.map(r => `<li>${esc(r)}</li>`).join('')}</ol></details>` : ''}
+      <div class="pager"><button class="btn" id="prevC">${prev ? '← ' + esc(prev.short) : '← All parts'}</button><button class="btn primary" id="nextC">${next ? esc(next.short) + ' →' : 'All parts'}</button></div>`;
+    $('#toAll').onclick = () => selectCh(null); $('#prevC').onclick = () => selectCh(prev ? prev.id : null); $('#nextC').onclick = () => selectCh(next ? next.id : null); }
+  panel.querySelectorAll('[data-ch]').forEach(b => b.onclick = () => selectCh(b.dataset.ch));
+  panel.querySelectorAll('[data-reg]').forEach(b => b.onclick = () => selectReg(b.dataset.reg));
+  panel.querySelectorAll('.qopt').forEach(b => b.onclick = () => { state.quiz[c.id + b.dataset.q] = +b.dataset.a; const y = panel.scrollTop; renderPanel(); panel.scrollTop = y; });
+  panel.querySelectorAll('[data-zoom]').forEach(im => im.onclick = () => { lb.querySelector('img').src = im.src; lb.hidden = false; });
+  panel.querySelectorAll('.demo').forEach(d => DEMO[d.dataset.demo].bind(d)); }
+const lb = $('#lightbox'); lb.onclick = () => { lb.hidden = true; };
+inset.onclick = () => { const im = inset.querySelector('img'); if (im){ lb.querySelector('img').src = im.src; lb.hidden = false; } };
+addEventListener('keydown', e => { if (e.key === 'Escape'){ if (!lb.hidden) lb.hidden = true; else if (state.reg) selectReg(state.reg); else if (state.ch) selectCh(null); }
+  if ((e.key === 'c' || e.key === 'C') && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) ctxBtn.click(); });
+const ctxBtn = document.createElement('button'); ctxBtn.className = 'stagebtn'; ctxBtn.type = 'button';
+const setCtx = () => { ctxBtn.setAttribute('aria-pressed', !state.cortex); ctxBtn.textContent = state.cortex ? '🧠 Hide outer brain' : '🧠 Show outer brain'; };
+ctxBtn.onclick = () => { state.cortex = !state.cortex; setCtx(); }; document.body.appendChild(ctxBtn); setCtx();
+
+/* ============ HUD + update ============ */
+const hudTitle = $('#hudTitle'), hudText = $('#hudText');
+function drawHud(){ const c = cur(); hudTitle.textContent = state.reg ? 'Region' : c ? `Part ${CHI[c.id] + 1} · ${c.title}` : 'The social brain';
+  const msg = hudMsg || (c ? 'Click a glowing region or label. Drag to turn, scroll to zoom. Press C to hide the outer brain.' : 'Pick a part on the right, or click any region on the brain.'); if (hudText.innerHTML !== msg) hudText.innerHTML = msg; }
+const ease = (a, b, k) => a + (b - a)*k;
+function update(dt){ const k = Math.min(1, dt*3.5), U = side.act.uniforms;
+  for (let i=0;i<NH;i++){ const h = TG.hot[i]; let g = h ? h.i : 0; if (h && state.reg){ g = h.k === state.reg ? 1.25 + 0.25*Math.sin(T*4) : g*0.35; } U.uI.value[i] = ease(U.uI.value[i], g, k); }
+  Object.entries(side.deep).forEach(([key, o]) => o.meshes.forEach(m => { let g = TG.deep[key] ?? 0.06; const selKey = state.reg && REG[state.reg].deep;
+      if (state.reg) g = key === selKey ? 1 : Math.min(g, 0.1); if ((key === 'ins' || key === 'cc') && key !== selKey) g = Math.min(g, 0.4);
+      m.material.opacity = ease(m.material.opacity, g, k); m.material.depthWrite = g > 0.6;
+      if (!ORIG[key]) ORIG[key] = m.material.color.clone(); const tc = TG.col[key] ? lin(TG.col[key]) : ORIG[key]; m.material.color.lerp(tc, k); m.material.emissive.lerp(tc, k);
+      m.material.emissiveIntensity = key === selKey ? 0.35 + 0.2*Math.sin(T*4) : g > 0.6 ? 0.1 : 0.02; }));
+  Object.entries(side.paths).forEach(([key, p]) => { p.mesh.material.opacity = ease(p.mesh.material.opacity, TG.paths[key] || 0, k); p.mesh.visible = p.mesh.material.opacity > 0.01; });
+  side.vent.mat.opacity = 0; side.vent.meshes.forEach(m => m.visible = false);
+  side.cv = ease(side.cv ?? 1, state.cortex ? 1 : 0, k); side.glass.userData.u.uRim.value = 0.38*side.cv; side.glass.opacity = 0.035*side.cv; (side.ctx || []).forEach(m => m.visible = side.cv > 0.03);
+  // glowing points for regions without a 3D model (VTA, ventral pallidum)
+  GLOWS.forEach(g => { const R = regionsNow(); const on = !!R[g.k]; g.sp.material.opacity = ease(g.sp.material.opacity, on ? (state.reg === g.k ? 1 : state.reg ? 0.3 : 0.85) : 0, k); g.sp.scale.setScalar(0.22 + (state.reg === g.k ? 0.08*Math.sin(T*4) : 0)); });
+  updPulses(side, dt); }
+const GLOWS = Object.entries(REG).filter(([k, r]) => r.glow).map(([k, r]) => { const sp = sprite(r.color, 0.22); sp.position.copy(S(...r.mni)); sp.material.opacity = 0; side.scene.add(sp); return {k, sp}; });
+let last = performance.now();
+function frame(now){ const dt = Math.min(0.05, (now - last)/1000); last = now; T += dt;
+  if (tween){ const kk = Math.min(1, (now - tween.t0)/tween.dur), e = kk < 0.5 ? 2*kk*kk : 1 - Math.pow(-2*kk + 2, 2)/2; camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (kk >= 1) tween = null; }
+  controls.update(); update(dt); drawHud();
+  renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true); const r = vp(); renderer.setViewport(r.x, r.y, r.w, r.h); renderer.setScissor(r.x, r.y, r.w, r.h); renderer.render(side.scene, camera);
+  placeTags(); requestAnimationFrame(frame); }
+resize(); const start = (location.hash || '').slice(1); state.ch = CHI[start] !== undefined ? start : null; applyState(); renderInset(); renderPanel();
+{ const [t0, d, dir] = viewOf(); camera.position.copy(t0.clone().add(dir.normalize().multiplyScalar(d*(isNarrow() ? 1.5 : 1)))); controls.target.copy(t0); }
+Promise.all([loadCortex(), loadRealDeep().then(applyState)]).catch(e => console.warn(e)).finally(() => { const l = $('#loading'); if (l) l.remove(); });
+requestAnimationFrame(frame);
+
+</script>
+<script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
+function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
+hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+</body></html>
