@@ -12,7 +12,7 @@
   color-scheme: dark;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
-  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#949cae; --chalk:#f4d27a;
   --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
   --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
@@ -74,7 +74,7 @@ input[type=range]{flex:1;accent-color:var(--chalk);height:28px;margin:0}
 .mimage{position:fixed;right:calc(var(--panel-w) + 18px);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:5;width:300px;background:rgba(15,19,28,.9);border:1px solid var(--line);border-radius:14px;padding:12px 14px;backdrop-filter:blur(8px)}
 .mimage canvas{width:100%;height:auto;display:block;border-radius:8px;margin-top:6px}
 .mimage .cap{font-size:12.5px;color:var(--muted);margin-top:6px}
-.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
+.mimage h2,.mimage h4{margin:2px 0 0;font-family:var(--f-display);font-size:16px}
 
 /* labels on the neuron */
 #labels{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
@@ -199,8 +199,17 @@ body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:fl
   .parts{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- Accessibility (WCAG 2.1 AA) ---- */
+.skip-link{position:fixed;left:12px;top:-80px;z-index:10000;background:#ffd166;color:#16130a;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+.skip-link:focus{top:12px;outline:3px solid #fff;outline-offset:2px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+#panel:focus{outline:none}
 </style>
 </head><body>
+<a class="skip-link" href="#panel">Skip to the lesson</a>
+
 <div id="stage"></div>
 <div id="loading">Building the neuron…</div>
 <div id="labels"></div>
@@ -237,7 +246,7 @@ body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:fl
 
 <section class="mimage lab-only" aria-label="Memory image">
   <div class="eyebrow" id="mimEyebrow">Mimage · myelinated</div>
-  <h4 id="mimTitle">A skipping stone</h4>
+  <h2 id="mimTitle">A skipping stone</h2>
   <canvas id="mimCanvas" width="560" height="200"></canvas>
   <div class="cap" id="mimCap">The signal touches down only at the nodes and skips the stretches between.</div>
 </section>
@@ -898,7 +907,7 @@ function drawMimage(){
   // node markers
   touchX.forEach(x => { mctx.fillStyle = 'rgba(255,181,71,.55)'; mctx.fillRect(x-1, water-2, 2, 6); });
   if (!sunk){ mctx.fillStyle = '#c8ccd6'; mctx.beginPath(); mctx.ellipse(sx, sy, 13, 6, -0.15, 0, Math.PI*2); mctx.fill(); }
-  mctx.fillStyle = '#6e7689'; mctx.font = '18px IBM Plex Mono, monospace'; mctx.textAlign = 'left'; mctx.fillText('nodes = touch points', 12, 24);
+  mctx.fillStyle = '#949cae'; mctx.font = '18px IBM Plex Mono, monospace'; mctx.textAlign = 'left'; mctx.fillText('nodes = touch points', 12, 24);
 }
 
 /* ============ Cards ============ */
@@ -1388,4 +1397,50 @@ requestAnimationFrame(frame);
 <script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
 function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
 hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+<script>
+/* Accessibility helpers: landmarks for floating 3D overlays, a text alternative for the WebGL canvas,
+   and reduced motion. Runs once now and again whenever the page adds new overlays. */
+(function(){
+  var NAMES = {stage:'Interactive 3D model', labels:'Labels on the 3D model', inset:'Real brain image', loading:'Loading status', sim:'Symptom simulator', gol:'Game of Life grid'};
+  var HIDE = /(^|\s)(plabel|lobe-label|sidecap)(\s|$)/;
+  var LANDMARK = /^(HEADER|NAV|MAIN|ASIDE|FOOTER|SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/;
+  var INTERACTIVE = /^(BUTTON|A|INPUT|SELECT|TEXTAREA|DETAILS|LABEL|FIGURE|IMG|VIDEO|IFRAME)$/;
+  var h1 = document.querySelector('h1');
+  var topic = h1 ? h1.textContent.trim() : document.title;
+  var used = {};
+  var FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex]';
+  function fixCanvas(c){
+    if (c.hasAttribute('aria-label') || c.id === 'gol') return;
+    c.setAttribute('role','img');
+    c.setAttribute('aria-label', topic + ': interactive 3D model. Drag to rotate and scroll to zoom. Everything shown in the model is also explained in the lesson panel, and the buttons there control the model.');
+  }
+  function fix(el){
+    if (el.nodeType !== 1 || el.dataset.a11y || LANDMARK.test(el.tagName)) return;
+    if (el.classList.contains('skip-link')) return;
+    if (el.tagName === 'SECTION' && el.hasAttribute('aria-label')) return;
+    var r = el.getAttribute('role');
+    if (r && r !== 'presentation' && r !== 'none' && r !== 'region' && r !== 'img') { if (r === 'dialog' || r === 'alertdialog' || r === 'status' || r === 'alert') return; }
+    el.dataset.a11y = '1';
+    if (HIDE.test(el.className) && !el.querySelector(FOCUSABLE)) { el.setAttribute('aria-hidden','true'); return; }
+    var name = NAMES[el.id] || el.getAttribute('aria-label') || (el.querySelector(FOCUSABLE) ? 'Model controls' : 'Model overlay');
+    used[name] = (used[name] || 0) + 1; if (used[name] > 1) name += ' ' + used[name];
+    if (INTERACTIVE.test(el.tagName) || el.tagName === 'CANVAS' || (r && r !== 'region' && r !== 'presentation' && r !== 'none')) {
+      var w = document.createElement('div'); w.setAttribute('role','region'); w.setAttribute('aria-label', name); w.dataset.a11y = '1';
+      el.parentNode.insertBefore(w, el); w.appendChild(el);
+      if (el.tagName === 'CANVAS') fixCanvas(el);
+      return;
+    }
+    el.setAttribute('role','region'); el.setAttribute('aria-label', name);
+  }
+  function sweep(){
+    Array.prototype.forEach.call(document.body.children, fix);
+    document.querySelectorAll('#stage canvas, [id^="stage"] canvas').forEach(fixCanvas);
+  }
+  sweep();
+  new MutationObserver(sweep).observe(document.body, {childList:true});
+  var st = document.getElementById('stage'); if (st) new MutationObserver(sweep).observe(st, {childList:true});
+  var p = document.getElementById('panel'); if (p && !p.hasAttribute('tabindex')) p.setAttribute('tabindex','-1');
+  if (p && !p.hasAttribute('aria-label')) p.setAttribute('aria-label','Lesson');
+})();
+</script>
 </body></html>

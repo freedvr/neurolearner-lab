@@ -12,7 +12,7 @@
   color-scheme: dark;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
-  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#949cae; --chalk:#f4d27a;
   --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
   --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
@@ -237,8 +237,17 @@ body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:fl
 .qa{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .qa .q{font-weight:700}.qa .a{color:var(--muted);font-size:14px}
 @media (max-width:820px){ .hud{left:10px;right:10px;width:auto;bottom:calc(52% + 8px);padding:8px 10px} #hudText{font-size:12.5px;min-height:0} #hudCanvas{max-height:90px;object-fit:contain} }
+
+/* ---- Accessibility (WCAG 2.1 AA) ---- */
+.skip-link{position:fixed;left:12px;top:-80px;z-index:10000;background:#ffd166;color:#16130a;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+.skip-link:focus{top:12px;outline:3px solid #fff;outline-offset:2px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+#panel:focus{outline:none}
 </style>
 </head><body>
+<a class="skip-link" href="#panel">Skip to the lesson</a>
+
 <div id="stage"></div>
 <div id="loading">Loading the brain…</div>
 <div id="labels"></div>
@@ -1003,14 +1012,14 @@ function chartSVG(){
   const W = 420, H = 300, x0 = 54, y0 = 16, w = W - x0 - 14, h = H - y0 - 44;
   const tx = t => x0 + (t + 3.5)/(7.5)*w, sy = s => y0 + (1 - (s + 2.5)/(4.5))*h;
   const gx = [[-3,'1 ms'],[-1,'0.1 s'],[0,'1 s'],[1.8,'1 min'],[3.6,'1 hr']], gy = [[-2,'cell'],[-1,'0.1 mm'],[0,'1 mm'],[1,'1 cm'],[2,'brain']];
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Methods by spatial and temporal resolution">`;
+  let g = `<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Chart: methods by spatial and temporal resolution. Each point is a button.">`;
   gx.forEach(([t,l]) => g += `<line x1="${tx(t)}" y1="${y0}" x2="${tx(t)}" y2="${y0+h}" stroke="var(--line)"/><text x="${tx(t)}" y="${y0+h+16}" text-anchor="middle" fill="var(--faint)" font-size="10.5" font-family="IBM Plex Mono, monospace">${l}</text>`);
   gy.forEach(([s,l]) => g += `<line x1="${x0}" y1="${sy(s)}" x2="${x0+w}" y2="${sy(s)}" stroke="var(--line)"/><text x="${x0-6}" y="${sy(s)+4}" text-anchor="end" fill="var(--faint)" font-size="10.5" font-family="IBM Plex Mono, monospace">${l}</text>`);
   g += `<text x="${x0 + w/2}" y="${H-6}" text-anchor="middle" fill="var(--muted)" font-size="11.5">How fast it sees changes → slower</text>`;
   g += `<text x="12" y="${y0 + h/2}" text-anchor="middle" fill="var(--muted)" font-size="11.5" transform="rotate(-90 12 ${y0+h/2})">Detail → coarser</text>`;
   METHODS.filter(x => !x.more).forEach(M => { const cx = tx(M.t), cy = sy(M.s), col = RW[M.rw][0];
     const shape = M.inv >= 2 ? `<rect x="${cx-8}" y="${cy-8}" width="16" height="16" transform="rotate(45 ${cx} ${cy})" fill="${col}"/>` : `<circle cx="${cx}" cy="${cy}" r="8.5" fill="${col}"/>`;
-    g += `<g class="pt" data-m="${M.id}" tabindex="0" role="button" aria-label="${esc(M.title)}">${shape}<text x="${cx + 12}" y="${cy + 4}" fill="var(--fg)" font-size="12" font-weight="700">${esc(M.short)}</text></g>`; });
+    g += `<g class="pt" data-m="${M.id}" tabindex="0" role="button" aria-label="${esc(M.short)}: ${esc(M.title)}">${shape}<text x="${cx + 12}" y="${cy + 4}" fill="var(--fg)" font-size="12" font-weight="700">${esc(M.short)}</text></g>`; });
   return g + '</svg>';
 }
 
@@ -1090,7 +1099,7 @@ function frame(now){
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - (last||now))/1000); last = now; T += dt; U.uTime.value = T;
   if (tween){ const k = Math.min(1, (now - tween.t0)/tween.dur), e = ease(k); camera.position.lerpVectors(tween.from, tween.to, e); controls.target.lerpVectors(tween.tf, tween.tt, e); if (k >= 1) tween = null; }
-  if (!state.m && !tween) controls.autoRotate = true; else controls.autoRotate = false;
+  if (!state.m && !tween && !matchMedia('(prefers-reduced-motion: reduce)').matches) controls.autoRotate = true; else controls.autoRotate = false;
   controls.autoRotateSpeed = 0.5; controls.update();
   if (lh) updScene(dt);
   renderer.render(scene, camera);
@@ -1106,5 +1115,51 @@ renderPanel();
 requestAnimationFrame(frame);
 loadCortex().then(() => { buildEcog(); $('#loading').hidden = true; resize(); })
   .catch(err => { $('#loading').textContent = 'The brain model could not load. Reload the page to try again.'; console.error(err); });
+</script>
+<script>
+/* Accessibility helpers: landmarks for floating 3D overlays, a text alternative for the WebGL canvas,
+   and reduced motion. Runs once now and again whenever the page adds new overlays. */
+(function(){
+  var NAMES = {stage:'Interactive 3D model', labels:'Labels on the 3D model', inset:'Real brain image', loading:'Loading status', sim:'Symptom simulator', gol:'Game of Life grid'};
+  var HIDE = /(^|\s)(plabel|lobe-label|sidecap)(\s|$)/;
+  var LANDMARK = /^(HEADER|NAV|MAIN|ASIDE|FOOTER|SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/;
+  var INTERACTIVE = /^(BUTTON|A|INPUT|SELECT|TEXTAREA|DETAILS|LABEL|FIGURE|IMG|VIDEO|IFRAME)$/;
+  var h1 = document.querySelector('h1');
+  var topic = h1 ? h1.textContent.trim() : document.title;
+  var used = {};
+  var FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex]';
+  function fixCanvas(c){
+    if (c.hasAttribute('aria-label') || c.id === 'gol') return;
+    c.setAttribute('role','img');
+    c.setAttribute('aria-label', topic + ': interactive 3D model. Drag to rotate and scroll to zoom. Everything shown in the model is also explained in the lesson panel, and the buttons there control the model.');
+  }
+  function fix(el){
+    if (el.nodeType !== 1 || el.dataset.a11y || LANDMARK.test(el.tagName)) return;
+    if (el.classList.contains('skip-link')) return;
+    if (el.tagName === 'SECTION' && el.hasAttribute('aria-label')) return;
+    var r = el.getAttribute('role');
+    if (r && r !== 'presentation' && r !== 'none' && r !== 'region' && r !== 'img') { if (r === 'dialog' || r === 'alertdialog' || r === 'status' || r === 'alert') return; }
+    el.dataset.a11y = '1';
+    if (HIDE.test(el.className) && !el.querySelector(FOCUSABLE)) { el.setAttribute('aria-hidden','true'); return; }
+    var name = NAMES[el.id] || el.getAttribute('aria-label') || (el.querySelector(FOCUSABLE) ? 'Model controls' : 'Model overlay');
+    used[name] = (used[name] || 0) + 1; if (used[name] > 1) name += ' ' + used[name];
+    if (INTERACTIVE.test(el.tagName) || el.tagName === 'CANVAS' || (r && r !== 'region' && r !== 'presentation' && r !== 'none')) {
+      var w = document.createElement('div'); w.setAttribute('role','region'); w.setAttribute('aria-label', name); w.dataset.a11y = '1';
+      el.parentNode.insertBefore(w, el); w.appendChild(el);
+      if (el.tagName === 'CANVAS') fixCanvas(el);
+      return;
+    }
+    el.setAttribute('role','region'); el.setAttribute('aria-label', name);
+  }
+  function sweep(){
+    Array.prototype.forEach.call(document.body.children, fix);
+    document.querySelectorAll('#stage canvas, [id^="stage"] canvas').forEach(fixCanvas);
+  }
+  sweep();
+  new MutationObserver(sweep).observe(document.body, {childList:true});
+  var st = document.getElementById('stage'); if (st) new MutationObserver(sweep).observe(st, {childList:true});
+  var p = document.getElementById('panel'); if (p && !p.hasAttribute('tabindex')) p.setAttribute('tabindex','-1');
+  if (p && !p.hasAttribute('aria-label')) p.setAttribute('aria-label','Lesson');
+})();
 </script>
 </body></html>

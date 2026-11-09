@@ -12,7 +12,7 @@
 :root{
   color-scheme: dark;
   --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#161c29; --line:#283044;
-  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#949cae; --chalk:#f4d27a;
   --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -44,10 +44,19 @@ a.unit:hover,a.unit:focus-visible{border-color:var(--c);transform:translateY(-3p
 .how p{margin:0;color:var(--muted);font-size:15px}
 .how .n{font-family:var(--f-mono);font-size:12px;color:var(--chalk)}
 footer{margin-top:44px;color:var(--faint);font-size:12.5px}
+
+/* ---- Accessibility (WCAG 2.1 AA) ---- */
+.skip-link{position:fixed;left:12px;top:-80px;z-index:10000;background:#ffd166;color:#16130a;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+.skip-link:focus{top:12px;outline:3px solid #fff;outline-offset:2px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+#panel:focus{outline:none}
 </style>
 </head><body>
+<a class="skip-link" href="#main">Skip to the units</a>
 
-<main class="wrap">
+
+<main class="wrap" id="main" tabindex="-1">
   <div class="prof">Professor Freed</div>
   <div class="eyebrow">Neuroscience 101</div>
   <h1>See it, move it, <em>remember</em> it.</h1>
@@ -194,6 +203,10 @@ footer{margin-top:44px;color:var(--faint);font-size:12.5px}
     <div><div class="n">03</div><h3>Quiz yourself</h3><p>Turn on “Quiz me” in Neuroanatomy to hide the answers, and predict what the neuron will do before you press Fire.</p></div>
   </section>
 
+  <section id="access" aria-labelledby="accessTitle" style="margin-top:28px">
+    <h2 id="accessTitle" style="font-size:18px">Accessibility</h2>
+    <p>This site aims to meet WCAG 2.1 Level AA, the standard required for public colleges under the ADA. Every unit works with a keyboard: press Tab to reach “Skip to the lesson,” and every part of each 3D model can be chosen from buttons in the lesson panel, which also explain in text everything the model shows. Animation slows or stops if your device is set to reduce motion. Simulations that use sound show the same content on screen. If something doesn’t work for you, tell Professor Freed and it will be fixed or you’ll get an equivalent version.</p>
+  </section>
   <footer>Built for Professor Freed’s students. 3D brain surface: Conte69 (Van Essen et al.). MRI: MNI ICBM152 template. Other image credits appear with each image.</footer>
 </main>
 </body>

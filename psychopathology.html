@@ -12,7 +12,7 @@
   color-scheme: dark;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
   --bg:#0b0e14; --bg-2:#141a27; --panel:#11151e; --raise:#1a2030; --line:#283044;
-  --fg:#eceef4; --muted:#a3abbc; --faint:#6e7689; --chalk:#f4d27a;
+  --fg:#eceef4; --muted:#a3abbc; --faint:#949cae; --chalk:#f4d27a;
   --na:#ffb547; --k:#a58bff; --ca:#5fe0a3; --nt:#ff6fa5; --light:#7ad7ff; --hot:#ff7a59;
   --f-display:"Bricolage Grotesque","Avenir Next",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,sans-serif;
@@ -256,7 +256,7 @@ body[data-scene="membrane"] #memHud, body[data-scene="bump"] #bumpHud{display:fl
 .more summary{cursor:pointer;color:var(--c);font-weight:700;font-size:14px}
 .more p{margin:6px 0 0;font-size:14px;color:var(--muted)}
 .mindq{background:color-mix(in srgb,var(--c) 12%,var(--raise));border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.mindq .eyebrow{color:var(--c)}
+.mindq .eyebrow{color:color-mix(in srgb,var(--c) 55%,#fff)}
 .clues{margin:0;padding:0;list-style:none;counter-reset:c;display:flex;flex-direction:column;gap:9px}
 .clues li{counter-increment:c;display:grid;grid-template-columns:28px 1fr;column-gap:10px}
 .clues li::before{content:counter(c);grid-row:span 2;width:26px;height:26px;border-radius:50%;background:var(--c);color:#0b0e14;font-weight:800;display:grid;place-items:center;font-size:14px}
@@ -374,8 +374,17 @@ b.ok{color:#5fe08a}b.bad{color:#ff7a7a}
 #sim{box-sizing:border-box}
 .simbrain{display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--sc);background:var(--raise);border-radius:8px;padding:9px 12px;font-size:13.5px}
 .simbrain b{color:var(--sc)}
+
+/* ---- Accessibility (WCAG 2.1 AA) ---- */
+.skip-link{position:fixed;left:12px;top:-80px;z-index:10000;background:#ffd166;color:#16130a;padding:10px 16px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+.skip-link:focus{top:12px;outline:3px solid #fff;outline-offset:2px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid #ffd166;outline-offset:2px}
+#panel:focus{outline:none}
 </style>
 </head><body>
+<a class="skip-link" href="#panel">Skip to the lesson</a>
+
 <div id="stage"></div>
 <div id="loading">Building two brains…</div>
 <div id="labels"></div>
@@ -1044,8 +1053,8 @@ function drawDopa(){ const rows = [['limbic','Mesolimbic','#ffcc33'],['cortical'
   hx.fillStyle = '#a3abbc'; hx.fillText('Typical', 210, 18); hx.fillText('Schizophrenia', 560, 18);
   rows.forEach(([k, l, c], i) => { const y = 58 + i*62; hx.fillStyle = '#eceef4'; hx.fillText(l, 12, y);
     ['A','B'].forEach((K, j) => { const x0 = 200 + j*350, w = 300; hx.fillStyle = '#1a2030'; hx.fillRect(x0, y - 14, w, 28); const v = clamp(SIG[K][k]/3, 0, 1); hx.fillStyle = c; hx.globalAlpha = 0.9; hx.fillRect(x0, y - 14, w*v, 28); hx.globalAlpha = 1;
-      hx.strokeStyle = '#6e7689'; hx.setLineDash([4,4]); hx.beginPath(); hx.moveTo(x0 + w/3, y - 18); hx.lineTo(x0 + w/3, y + 18); hx.stroke(); hx.setLineDash([]); }); });
-  hx.fillStyle = '#6e7689'; hx.font = '600 13px "Atkinson Hyperlegible", system-ui'; hx.fillText('dashed line = typical level · bars = dopamine reaching its target', 200, 228); }
+      hx.strokeStyle = '#949cae'; hx.setLineDash([4,4]); hx.beginPath(); hx.moveTo(x0 + w/3, y - 18); hx.lineTo(x0 + w/3, y + 18); hx.stroke(); hx.setLineDash([]); }); });
+  hx.fillStyle = '#949cae'; hx.font = '600 13px "Atkinson Hyperlegible", system-ui'; hx.fillText('dashed line = typical level · bars = dopamine reaching its target', 200, 228); }
 function drawP50(){ const t = (T % 2.4)/2.4; hx.font = '700 16px "Atkinson Hyperlegible", system-ui'; hx.textBaseline = 'middle';
   [['Typical', 1, 0.22, '#7ad7ff'], ['Schizophrenia', 0.8, 0.72, '#ff8a5c']].forEach(([l, a1, a2, c], j) => { const x0 = 20 + j*445, w = 415, y0 = 140;
     hx.fillStyle = '#eceef4'; hx.fillText(l, x0, 20);
@@ -1127,4 +1136,50 @@ requestAnimationFrame(frame);
 <script>(function(){var framed=false;try{framed=window.self!==window.top}catch(e){framed=true}
 function hydrate(){document.querySelectorAll('figure.video[data-yt]').forEach(function(f){if(f.dataset.done)return;f.dataset.done=1;if(framed)return;var id=f.dataset.yt,box=f.querySelector('.video-frame');box.innerHTML='<iframe src="https://www.youtube-nocookie.com/embed/'+id+'?rel=0" title="'+(f.dataset.title||'Video')+'" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>';});}
 hydrate();new MutationObserver(hydrate).observe(document.body,{childList:true,subtree:true});})();</script>
+<script>
+/* Accessibility helpers: landmarks for floating 3D overlays, a text alternative for the WebGL canvas,
+   and reduced motion. Runs once now and again whenever the page adds new overlays. */
+(function(){
+  var NAMES = {stage:'Interactive 3D model', labels:'Labels on the 3D model', inset:'Real brain image', loading:'Loading status', sim:'Symptom simulator', gol:'Game of Life grid'};
+  var HIDE = /(^|\s)(plabel|lobe-label|sidecap)(\s|$)/;
+  var LANDMARK = /^(HEADER|NAV|MAIN|ASIDE|FOOTER|SCRIPT|STYLE|LINK|TEMPLATE|NOSCRIPT)$/;
+  var INTERACTIVE = /^(BUTTON|A|INPUT|SELECT|TEXTAREA|DETAILS|LABEL|FIGURE|IMG|VIDEO|IFRAME)$/;
+  var h1 = document.querySelector('h1');
+  var topic = h1 ? h1.textContent.trim() : document.title;
+  var used = {};
+  var FOCUSABLE = 'a[href],button,input,select,textarea,[tabindex]';
+  function fixCanvas(c){
+    if (c.hasAttribute('aria-label') || c.id === 'gol') return;
+    c.setAttribute('role','img');
+    c.setAttribute('aria-label', topic + ': interactive 3D model. Drag to rotate and scroll to zoom. Everything shown in the model is also explained in the lesson panel, and the buttons there control the model.');
+  }
+  function fix(el){
+    if (el.nodeType !== 1 || el.dataset.a11y || LANDMARK.test(el.tagName)) return;
+    if (el.classList.contains('skip-link')) return;
+    if (el.tagName === 'SECTION' && el.hasAttribute('aria-label')) return;
+    var r = el.getAttribute('role');
+    if (r && r !== 'presentation' && r !== 'none' && r !== 'region' && r !== 'img') { if (r === 'dialog' || r === 'alertdialog' || r === 'status' || r === 'alert') return; }
+    el.dataset.a11y = '1';
+    if (HIDE.test(el.className) && !el.querySelector(FOCUSABLE)) { el.setAttribute('aria-hidden','true'); return; }
+    var name = NAMES[el.id] || el.getAttribute('aria-label') || (el.querySelector(FOCUSABLE) ? 'Model controls' : 'Model overlay');
+    used[name] = (used[name] || 0) + 1; if (used[name] > 1) name += ' ' + used[name];
+    if (INTERACTIVE.test(el.tagName) || el.tagName === 'CANVAS' || (r && r !== 'region' && r !== 'presentation' && r !== 'none')) {
+      var w = document.createElement('div'); w.setAttribute('role','region'); w.setAttribute('aria-label', name); w.dataset.a11y = '1';
+      el.parentNode.insertBefore(w, el); w.appendChild(el);
+      if (el.tagName === 'CANVAS') fixCanvas(el);
+      return;
+    }
+    el.setAttribute('role','region'); el.setAttribute('aria-label', name);
+  }
+  function sweep(){
+    Array.prototype.forEach.call(document.body.children, fix);
+    document.querySelectorAll('#stage canvas, [id^="stage"] canvas').forEach(fixCanvas);
+  }
+  sweep();
+  new MutationObserver(sweep).observe(document.body, {childList:true});
+  var st = document.getElementById('stage'); if (st) new MutationObserver(sweep).observe(st, {childList:true});
+  var p = document.getElementById('panel'); if (p && !p.hasAttribute('tabindex')) p.setAttribute('tabindex','-1');
+  if (p && !p.hasAttribute('aria-label')) p.setAttribute('aria-label','Lesson');
+})();
+</script>
 </body></html>
